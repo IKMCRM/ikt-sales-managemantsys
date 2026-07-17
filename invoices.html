@@ -831,6 +831,12 @@
       const customerVal = document.getElementById('inv-filter-customer').value;
       const salesRepVal = document.getElementById('inv-filter-salesrep').value;
 
+      const storedUsersRaw = localStorage.getItem('crm_users_list');
+      const allUsers = storedUsersRaw ? JSON.parse(storedUsersRaw) : [];
+      const selectedUserObj = allUsers.find(u => 
+        u.fullname && u.fullname.toLowerCase() === salesRepVal.toLowerCase()
+      );
+
       const activePill = document.querySelector('.i-status-pill.active');
       const statusVal = activePill ? activePill.getAttribute('data-status') : 'ALL';
 
@@ -849,9 +855,35 @@
         const matchesCustomer = !customerVal || i.customer_id === customerVal;
         const matchesStatus = statusVal === 'ALL' || i.status === statusVal;
         
-        const salesRepId = i.sales_person_id || i.sales_person || '';
-        const salesRepName = userMap.get(salesRepId) || salesRepId; // Try to map ID to name, else use the value itself
-        const matchesSalesRep = salesRepVal === 'ALL' || salesRepName.toLowerCase() === salesRepVal.toLowerCase();
+        const salesRepId = i.sales_person_id || '';
+        const salesRepText = i.sales_person || '';
+        
+        // Resolve names using the robust SupabaseDB utility
+        const nameFromId = salesRepId ? window.SupabaseDB.getUsernameOrDisplayName(salesRepId, true) : '';
+        const nameFromText = salesRepText ? window.SupabaseDB.getUsernameOrDisplayName(salesRepText, true) : '';
+        
+        const orderVals = [
+          salesRepId,
+          salesRepText,
+          nameFromId,
+          nameFromText
+        ].map(n => String(n).trim().toLowerCase()).filter(Boolean);
+
+        const filterVals = [salesRepVal];
+        if (selectedUserObj) {
+          if (selectedUserObj.fullname) filterVals.push(selectedUserObj.fullname);
+          if (selectedUserObj.username) filterVals.push(selectedUserObj.username);
+          if (selectedUserObj.id) filterVals.push(selectedUserObj.id);
+        }
+        const filterValsLower = filterVals.map(f => String(f).trim().toLowerCase()).filter(Boolean);
+
+        const matchesSalesRep = salesRepVal === 'ALL' || orderVals.some(oVal => 
+          filterValsLower.some(fVal => 
+            oVal === fVal || 
+            oVal.includes(fVal) || 
+            fVal.includes(oVal)
+          )
+        );
 
         return matchesSearch && matchesCustomer && matchesStatus && matchesSalesRep;
       });
@@ -896,7 +928,7 @@
                 <span class="d-inline-block me-2" title="Updated by"><i class="fa fa-pen text-secondary" style="font-size: 9px;"></i> ${i.updated_by ? window.SupabaseDB.getUsernameOrDisplayName(i.updated_by) : 'System'}</span>
               </div>
             </td>
-            <td class="small text-secondary">${i.sales_person || '-'}</td>
+            <td class="small text-secondary">${window.SupabaseDB.getUsernameOrDisplayName(i.sales_person_id || i.sales_person, true) || i.sales_person || '-'}</td>
             <td class="small">
               <div><strong>Issue:</strong> ${i.invoice_date}</div>
               <div class="text-xs text-danger"><strong>Due:</strong> ${i.due_date}</div>

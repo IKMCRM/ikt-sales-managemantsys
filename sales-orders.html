@@ -592,6 +592,12 @@
       const statusVal = document.getElementById('so-filter-status').value;
       const salesRepVal = document.getElementById('so-filter-salesrep').value;
 
+      const storedUsersRaw = localStorage.getItem('crm_users_list');
+      const allUsers = storedUsersRaw ? JSON.parse(storedUsersRaw) : [];
+      const selectedUserObj = allUsers.find(u => 
+        u.fullname && u.fullname.toLowerCase() === salesRepVal.toLowerCase()
+      );
+
       const tbody = document.getElementById('so-table-body');
       tbody.innerHTML = '';
 
@@ -599,9 +605,35 @@
         const localStatus = so.status || 'Pending';
         const matchesStatus = statusVal === 'ALL' || localStatus === statusVal;
         
-        const salesRepId = so.sales_person_id || so.sales_person || '';
-        const salesRepName = userMap.get(salesRepId) || salesRepId; // Try to map ID to name, else use the value itself (which might be a name)
-        const matchesSalesRep = salesRepVal === 'ALL' || salesRepName.toLowerCase() === salesRepVal.toLowerCase();
+        const salesRepId = so.sales_person_id || '';
+        const salesRepText = so.sales_person || '';
+        
+        // Resolve names using the robust SupabaseDB utility
+        const nameFromId = salesRepId ? window.SupabaseDB.getUsernameOrDisplayName(salesRepId, true) : '';
+        const nameFromText = salesRepText ? window.SupabaseDB.getUsernameOrDisplayName(salesRepText, true) : '';
+        
+        const orderVals = [
+          salesRepId,
+          salesRepText,
+          nameFromId,
+          nameFromText
+        ].map(n => String(n).trim().toLowerCase()).filter(Boolean);
+
+        const filterVals = [salesRepVal];
+        if (selectedUserObj) {
+          if (selectedUserObj.fullname) filterVals.push(selectedUserObj.fullname);
+          if (selectedUserObj.username) filterVals.push(selectedUserObj.username);
+          if (selectedUserObj.id) filterVals.push(selectedUserObj.id);
+        }
+        const filterValsLower = filterVals.map(f => String(f).trim().toLowerCase()).filter(Boolean);
+
+        const matchesSalesRep = salesRepVal === 'ALL' || orderVals.some(oVal => 
+          filterValsLower.some(fVal => 
+            oVal === fVal || 
+            oVal.includes(fVal) || 
+            fVal.includes(oVal)
+          )
+        );
         
         const custName = so.customer ? so.customer.customer_name : '-';
         const projName = so.project_name || '';
@@ -722,7 +754,7 @@
             <td><strong class="font-monospace text-primary">${soNo}</strong></td>
             <td><span class="badge bg-secondary font-monospace" style="font-size: 0.85rem;">${so.job_no || '-'}</span></td>
             <td><span class="font-monospace text-dark fw-bold">${so.po_no || '-'}</span></td>
-            <td><span class="text-muted small">${so.sales_person || 'System'}</span></td>
+            <td><span class="text-muted small">${window.SupabaseDB.getUsernameOrDisplayName(so.sales_person_id || so.sales_person, true) || so.sales_person || 'System'}</span></td>
             <td><span class="text-primary fw-bold font-monospace">${so.target_delivery_date ? new Date(so.target_delivery_date).toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: 'numeric'}) : '-'}</span></td>
             <td>${custName}</td>
             <td>
