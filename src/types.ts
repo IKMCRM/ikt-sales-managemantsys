@@ -321,3 +321,9 @@ export interface Receipt {
   customer_name?: string;
 }
 
+declare global {
+  interface Window {
+    SupabaseDB: any;
+  }
+}
+
