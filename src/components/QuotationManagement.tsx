@@ -1259,7 +1259,6 @@ function QuoteForm({ id, onClose, quotations, customers, onToast }: any) {
                 Approved {!isApiyut ? " (เฉพาะ @apiyut Admin เท่านั้น)" : ""}
               </option>
               <option value="Rejected">Rejected</option>
-              <option value="Invoiced">Approved (Invoiced)</option>
             </select>
           </div>
           <div>
