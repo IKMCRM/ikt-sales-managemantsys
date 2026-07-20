@@ -6,7 +6,8 @@ import {
   Briefcase, Target, TrendingUp, DollarSign, CheckCircle2, XCircle, Clock, Percent,
   Plus, Search, Filter, Download, KanbanSquare, List, LayoutDashboard, LineChart as LineChartIcon,
   ChevronRight, Calendar, AlertCircle, Edit, Trash2, Shield, Settings,
-  ArrowRight, Phone, Mail, MoreVertical, X, Tag, FileText, UploadCloud, UserCircle2, Activity
+  ArrowRight, Phone, Mail, MoreVertical, X, Tag, FileText, UploadCloud, UserCircle2, Activity,
+  ArrowLeft
 } from 'lucide-react';
 
 type ViewMode = 'dashboard' | 'list' | 'kanban' | 'forecast' | 'detail' | 'form';
@@ -64,6 +65,13 @@ export default function OpportunityManagement() {
       {/* Header */}
       <div className="bg-white border-b border-slate-200 px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 sticky top-0 z-30 shadow-sm">
         <div className="flex items-center gap-4">
+          <a
+            href="index.html"
+            className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-sm font-bold border border-slate-200 transition-colors shadow-sm"
+            title="ย้อนกลับหน้าหลัก"
+          >
+            <ArrowLeft className="w-4 h-4" /> ย้อนกลับ
+          </a>
           <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-md">
             <Briefcase className="w-6 h-6" />
           </div>
