@@ -27,13 +27,18 @@
       <!-- Content Header -->
       <div class="container-fluid mb-3 pt-2">
         <div class="row align-items-center">
-          <div class="col-sm-6">
-            <h1 class="m-0 fw-bold tracking-tight text-dark fs-2 text-uppercase">
-              <i class="fas fa-chart-pie text-indigo"></i> BI Analytics & Reports
-            </h1>
-            <p class="text-muted small m-0">Interactive BI analytics tracking quote performance, billing efficiency, and sales representative performance indicators.</p>
+          <div class="col-sm-8 d-flex align-items-center gap-3">
+            <a href="index.html" class="btn btn-outline-secondary btn-sm rounded-pill px-3 shadow-sm" style="font-weight: 600;">
+              <i class="fas fa-arrow-left me-1"></i> ย้อนกลับ
+            </a>
+            <div>
+              <h1 class="m-0 fw-bold tracking-tight text-dark fs-2 text-uppercase" style="line-height: 1.1;">
+                <i class="fas fa-chart-pie text-indigo"></i> BI Analytics & Reports
+              </h1>
+              <p class="text-muted small m-0 mt-1">Interactive BI analytics tracking quote performance, billing efficiency, and sales representative performance indicators.</p>
+            </div>
           </div>
-          <div class="col-sm-6 text-sm-end mt-2 mt-sm-0">
+          <div class="col-sm-4 text-sm-end mt-2 mt-sm-0">
             <button class="btn btn-primary btn-sm" onclick="window.print()">
               <i class="fa fa-print me-1"></i>Print Analytical Report
             </button>
@@ -47,29 +52,46 @@
         <div class="card shadow-sm border-0 mb-3 block-filters">
           <div class="card-body p-3">
             <div class="row g-2 align-items-center">
-              <div class="col-12 col-md-3">
+              <div class="col-6 col-md-2">
                 <label class="form-label small fw-bold m-0 text-muted">Select Fiscal Year</label>
-                <select class="form-select form-select-sm" id="bi-year">
-                  <option value="2026">2026 (Current)</option>
+                <select class="form-select form-select-sm" id="bi-year" onchange="rebuildBICharts()">
+                  <option value="ALL">All Years (ทุกปี)</option>
+                  <option value="2026" selected>2026 (Current)</option>
                   <option value="2025">2025</option>
                 </select>
               </div>
-              <div class="col-12 col-md-3">
+              <div class="col-6 col-md-2">
                 <label class="form-label small fw-bold m-0 text-muted">Quarterly Period</label>
-                <select class="form-select form-select-sm" id="bi-quarter">
-                  <option value="ALL">All Quarters</option>
+                <select class="form-select form-select-sm" id="bi-quarter" onchange="onQuarterChanged()">
+                  <option value="ALL" selected>All Quarters (ทุกไตรมาส)</option>
                   <option value="Q1">Q1 (Jan - Mar)</option>
                   <option value="Q2">Q2 (Apr - Jun)</option>
                   <option value="Q3">Q3 (Jul - Sep)</option>
                   <option value="Q4">Q4 (Oct - Dec)</option>
                 </select>
               </div>
+              <div class="col-12 col-md-2">
+                <label class="form-label small fw-bold m-0 text-muted">Monthly Period</label>
+                <select class="form-select form-select-sm" id="bi-month" onchange="onMonthChanged()">
+                  <option value="ALL" selected>All Months (ทุกเดือน)</option>
+                  <option value="1">January (ม.ค.)</option>
+                  <option value="2">February (ก.พ.)</option>
+                  <option value="3">March (มี.ค.)</option>
+                  <option value="4">April (เม.ย.)</option>
+                  <option value="5">May (พ.ค.)</option>
+                  <option value="6">June (มิ.ย.)</option>
+                  <option value="7">July (ก.ค.)</option>
+                  <option value="8">August (ส.ค.)</option>
+                  <option value="9">September (ก.ย.)</option>
+                  <option value="10">October (ต.ค.)</option>
+                  <option value="11">November (พ.ย.)</option>
+                  <option value="12">December (ธ.ค.)</option>
+                </select>
+              </div>
               <div class="col-12 col-md-3">
                 <label class="form-label small fw-bold m-0 text-muted">Operations / Sales Rep Filter</label>
-                <select class="form-select form-select-sm" id="bi-team">
+                <select class="form-select form-select-sm" id="bi-team" onchange="rebuildBICharts()">
                   <option value="ALL">All Sales Representatives</option>
-                  <option value="Donlapat">Donlapat (Admin)</option>
-                  <option value="Partner">Affiliate Partners</option>
                 </select>
               </div>
               <div class="col-12 col-md-3 text-md-end pt-3">
@@ -194,6 +216,56 @@
           </div>
         </div>
 
+        <!-- Sales Representative Performance Report Row -->
+        <div class="row g-3 mt-3">
+          <div class="col-12">
+            <div class="card shadow-sm border-0" style="border-radius: 12px; border-left: 5px solid #6366F1 !important;">
+              <div class="card-header bg-white d-flex align-items-center justify-content-between py-3">
+                <h5 class="m-0 fw-bold text-dark"><i class="fas fa-chart-line text-indigo me-2"></i> รายงานวิเคราะห์ประสิทธิภาพการขายของพนักงาน (Sales Rep Performance & Conversion Analytics)</h5>
+                <span class="badge bg-indigo-subtle text-indigo px-3 py-2 rounded-pill font-monospace" style="font-size: 0.8rem;">Quotation & Sales Order</span>
+              </div>
+              <div class="card-body">
+                <div class="row g-4">
+                  <!-- Chart Column -->
+                  <div class="col-12 col-xl-7">
+                    <div class="p-3 border rounded-3 bg-light-subtle h-100" style="min-height: 380px;">
+                      <div class="d-flex align-items-center justify-content-between mb-3">
+                        <span class="small fw-bold text-muted text-uppercase tracking-wider"><i class="fas fa-chart-bar me-1"></i> เปรียบเทียบยอดเสนอราคาเทียบกับใบสั่งซื้อ (Quotation vs. Confirmed Sales Order)</span>
+                      </div>
+                      <div style="height: 330px; position: relative;">
+                        <canvas id="repPerformanceChart"></canvas>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- Leaderboard & Details Column -->
+                  <div class="col-12 col-xl-5">
+                    <div class="p-3 border rounded-3 bg-light-subtle h-100">
+                      <span class="small fw-bold text-muted text-uppercase tracking-wider d-block mb-3"><i class="fas fa-list-ol me-1"></i> ตารางประสิทธิภาพการปิดการขาย (Conversion & Performance Leaderboard)</span>
+                      <div class="table-responsive" style="max-height: 330px; overflow-y: auto;">
+                        <table class="table table-hover align-middle mb-0 small">
+                          <thead class="table-light sticky-top">
+                            <tr>
+                              <th>Representative</th>
+                              <th class="text-end">Quotations (฿)</th>
+                              <th class="text-end">Sales Orders (฿)</th>
+                              <th class="text-center">Conversion</th>
+                            </tr>
+                          </thead>
+                          <tbody id="bi-rep-performance-table">
+                            <tr>
+                              <td colspan="4" class="text-center py-4 text-muted">Calculating representatives analytics...</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Extra Performance metrics Grid -->
         <div class="row g-3 mt-1">
           <!-- Top Customers List -->
@@ -276,6 +348,8 @@
   <script>
     let quotesChartObj = null;
     let winLossChartObj = null;
+    let repPerformanceChartObj = null;
+    let isInitialized = false;
 
     document.addEventListener('DOMContentLoaded', async () => {
       toggleGlobalLoader(true);
@@ -288,9 +362,228 @@
       }
     });
 
+    async function initBI() {
+      // Handled dynamically now
+      isInitialized = true;
+    }
+
+    const isArtKit = (name) => {
+      if (!name) return false;
+      const n = String(name).toLowerCase();
+      return n.includes('art') || n.includes('art kit');
+    };
+
+    function cleanNameForDisplay(name) {
+      if (!name) return "";
+      // Strip parenthesized IDs like (S01), (S02), (S03)
+      return String(name).replace(/\s*\([Ss]\d+\)\s*$/i, "").trim();
+    }
+
+    function populateSalesRepsDynamic(quotes, invoices, salesOrders, opps, users) {
+      const select = document.getElementById('bi-team');
+      if (!select) return;
+
+      const currentSelected = select.value || 'ALL';
+
+      // 1. Gather all unique names from database records
+      const salesRepsSet = new Set();
+      quotes.forEach(q => {
+        if (q.sales_person) salesRepsSet.add(q.sales_person.trim());
+      });
+      invoices.forEach(i => {
+        if (i.sales_person) salesRepsSet.add(i.sales_person.trim());
+      });
+      salesOrders.forEach(so => {
+        if (so.sales_person) salesRepsSet.add(so.sales_person.trim());
+      });
+      opps.forEach(o => {
+        const opPerson = o.sales_person || o.owner || o.sales_rep || o.sales_person_id;
+        if (opPerson) salesRepsSet.add(opPerson.trim());
+      });
+
+      // 2. Build options list
+      const optionsList = [];
+      const addedNames = new Set();
+
+      // Helper to check if string is a UUID
+      const isUUID = (str) => {
+        if (!str) return false;
+        return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str.trim());
+      };
+
+      // Helper to resolve a value (could be UUID) to username/fullname
+      const resolveToName = (str) => {
+        if (!str) return "";
+        if (isUUID(str)) {
+          const found = users.find(u => String(u.id).toLowerCase() === str.trim().toLowerCase());
+          if (found) {
+            return found.fullname || found.username || found.display_name || "";
+          }
+          // If no user found, return empty so it's filtered out
+          return "";
+        }
+        return str;
+      };
+
+      // Add registered users
+      users.forEach(u => {
+        const fullname = u.fullname || u.display_name || u.name;
+        const username = u.username;
+        if (isArtKit(fullname) || isArtKit(username) || isArtKit(u.id)) {
+          return; // skip Art Kit
+        }
+
+        const displayName = fullname ? `${fullname} (${u.role || 'Sales Rep'})` : `${username} (${u.role || 'Sales Rep'})`;
+        const value = fullname || username || u.id;
+
+        // Skip if value is a UUID and we can't find a name
+        const cleanVal = resolveToName(value);
+        if (!cleanVal || isUUID(cleanVal)) return;
+
+        if (cleanVal && !addedNames.has(cleanVal.toLowerCase())) {
+          addedNames.add(cleanVal.toLowerCase());
+          optionsList.push({
+            value: cleanVal,
+            text: cleanNameForDisplay(displayName)
+          });
+        }
+      });
+
+      // Add names from database records that aren't registered yet
+      salesRepsSet.forEach(repName => {
+        if (isArtKit(repName)) return; // skip Art Kit
+
+        const resolvedRepName = resolveToName(repName);
+        if (!resolvedRepName || isUUID(resolvedRepName)) {
+          // Skip unresolved UUIDs
+          return;
+        }
+
+        let alreadyAdded = false;
+        const repLower = resolvedRepName.toLowerCase();
+
+        for (const added of addedNames) {
+          if (repLower === added || repLower.includes(added) || added.includes(repLower)) {
+            alreadyAdded = true;
+            break;
+          }
+        }
+
+        if (!alreadyAdded) {
+          addedNames.add(repLower);
+          optionsList.push({
+            value: resolvedRepName,
+            text: cleanNameForDisplay(resolvedRepName)
+          });
+        }
+      });
+
+      // Sort alphabetically by display text
+      optionsList.sort((a, b) => a.text.localeCompare(b.text));
+
+      // Rebuild innerHTML of the select field
+      select.innerHTML = '<option value="ALL">All Sales Representatives (ทั้งหมด)</option>';
+      optionsList.forEach(opt => {
+        const el = document.createElement('option');
+        el.value = opt.value;
+        el.innerText = opt.text;
+        if (opt.value === currentSelected) {
+          el.selected = true;
+        }
+        select.appendChild(el);
+      });
+    }
+
+    function onQuarterChanged() {
+      const quarterSelect = document.getElementById('bi-quarter');
+      const monthSelect = document.getElementById('bi-month');
+      if (quarterSelect.value !== 'ALL') {
+        monthSelect.value = 'ALL';
+      }
+      rebuildBICharts();
+    }
+
+    function onMonthChanged() {
+      const quarterSelect = document.getElementById('bi-quarter');
+      const monthSelect = document.getElementById('bi-month');
+      if (monthSelect.value !== 'ALL') {
+        quarterSelect.value = 'ALL';
+      }
+      rebuildBICharts();
+    }
+
+    function getYearAndMonth(dateStr) {
+      if (!dateStr) return { year: null, month: null };
+      try {
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return { year: null, month: null };
+        return {
+          year: d.getFullYear(),
+          month: d.getMonth() + 1
+        };
+      } catch (e) {
+        return { year: null, month: null };
+      }
+    }
+
+    function matchDateFilters(dateStr, yearVal, quarterVal, monthVal) {
+      if (!dateStr) return false;
+      const { year, month } = getYearAndMonth(dateStr);
+      if (year === null || month === null) return false;
+      
+      if (yearVal !== 'ALL' && String(year) !== String(yearVal)) {
+        return false;
+      }
+      
+      if (monthVal !== 'ALL') {
+        if (String(month) !== String(monthVal)) {
+          return false;
+        }
+      } else if (quarterVal !== 'ALL') {
+        if (quarterVal === 'Q1' && (month < 1 || month > 3)) return false;
+        if (quarterVal === 'Q2' && (month < 4 || month > 6)) return false;
+        if (quarterVal === 'Q3' && (month < 7 || month > 9)) return false;
+        if (quarterVal === 'Q4' && (month < 10 || month > 12)) return false;
+      }
+      
+      return true;
+    }
+
+    function matchSalesRep(salesPersonIdOrName, filterValue) {
+      if (filterValue === 'ALL') return true;
+      if (!salesPersonIdOrName) return false;
+      
+      const pStr = String(salesPersonIdOrName).trim().toLowerCase();
+      const fStr = String(filterValue).trim().toLowerCase();
+      
+      if (pStr === fStr) return true;
+      if (pStr.includes(fStr) || fStr.includes(pStr)) return true;
+      
+      // Also check if we can resolve usernames or ids to fullnames
+      if (window.SupabaseDB) {
+        try {
+          const resolvedName = (window.SupabaseDB.getUsernameOrDisplayName(salesPersonIdOrName, true) || '').trim().toLowerCase();
+          const resolvedUser = (window.SupabaseDB.getUsernameOrDisplayName(salesPersonIdOrName, false) || '').trim().toLowerCase();
+          const filterResolvedName = (window.SupabaseDB.getUsernameOrDisplayName(filterValue, true) || '').trim().toLowerCase();
+          const filterResolvedUser = (window.SupabaseDB.getUsernameOrDisplayName(filterValue, false) || '').trim().toLowerCase();
+          
+          if (resolvedName && (resolvedName.includes(fStr) || fStr.includes(resolvedName))) return true;
+          if (resolvedUser && (resolvedUser.includes(fStr) || fStr.includes(resolvedUser))) return true;
+          if (filterResolvedName && (pStr.includes(filterResolvedName) || filterResolvedName.includes(pStr))) return true;
+          if (filterResolvedUser && (pStr.includes(filterResolvedUser) || filterResolvedUser.includes(pStr))) return true;
+        } catch (e) {
+          console.warn("Error resolving username", e);
+        }
+      }
+      return false;
+    }
+
     async function rebuildBICharts() {
+      await initBI();
+
+      const yearVal = document.getElementById('bi-year').value;
       const qVal = document.getElementById('bi-quarter').value;
-      const teamVal = document.getElementById('bi-team').value;
+      const monthVal = document.getElementById('bi-month').value;
 
       const usdRate = parseFloat(document.getElementById('bi-rate-usd').value) || 35.00;
       const sgdRate = parseFloat(document.getElementById('bi-rate-sgd').value) || 26.00;
@@ -301,28 +594,63 @@
       const customers = await SupabaseDB.getCustomers() || [];
       const salesOrders = await SupabaseDB.getSalesOrders() || [];
 
+      // Dynamically populate sales reps list and exclude ART KIT
+      let registeredUsers = [];
+      try {
+        if (window.SupabaseDB && typeof window.SupabaseDB.getUsers === 'function') {
+          registeredUsers = await window.SupabaseDB.getUsers() || [];
+        }
+      } catch (e) {
+        console.warn("Failed to load registered users", e);
+      }
+      populateSalesRepsDynamic(quotes, invoices, salesOrders, opps, registeredUsers);
+
+      const teamVal = document.getElementById('bi-team').value || 'ALL';
+
+      // Filter quotations
+      const filteredQuotes = quotes.filter(q => {
+        const dateStr = q.quotation_date || q.created_at;
+        if (!matchDateFilters(dateStr, yearVal, qVal, monthVal)) return false;
+        if (!matchSalesRep(q.sales_person, teamVal)) return false;
+        return true;
+      });
+
+      // Filter invoices
+      const filteredInvoices = invoices.filter(i => {
+        const dateStr = i.issue_date || i.created_at;
+        if (!matchDateFilters(dateStr, yearVal, qVal, monthVal)) return false;
+        if (!matchSalesRep(i.sales_person, teamVal)) return false;
+        return true;
+      });
+
+      // Filter sales orders
+      const filteredSOs = salesOrders.filter(so => {
+        const dateStr = so.order_date || so.created_at;
+        if (!matchDateFilters(dateStr, yearVal, qVal, monthVal)) return false;
+        if (!matchSalesRep(so.sales_person, teamVal)) return false;
+        return true;
+      });
+
+      // Filter opportunities
+      const filteredOpps = opps.filter(o => {
+        const dateStr = o.created_at || o.expected_close_date || o.closeDate;
+        if (!matchDateFilters(dateStr, yearVal, qVal, monthVal)) return false;
+        if (!matchSalesRep(o.sales_person || o.owner || o.sales_rep || o.sales_person_id, teamVal)) return false;
+        return true;
+      });
+
       let quoteSum = 0;
       let billSum = 0;
       let paidSum = 0;
       let soSum = 0;
       let soCount = 0;
 
-      const filteredQuotes = quotes.filter(q => {
-        if (teamVal !== 'ALL' && !q.sales_person.toLowerCase().includes(teamVal.toLowerCase())) return false;
-        return true;
-      });
-
       filteredQuotes.forEach(q => {
         const cur = (q.currency || 'THB').toUpperCase();
         let rate = 1.0;
         if (cur === 'USD') rate = usdRate;
         else if (cur === 'SGD') rate = sgdRate;
-        quoteSum += (q.grand_total || 0) * rate;
-      });
-
-      const filteredInvoices = invoices.filter(i => {
-        if (teamVal !== 'ALL' && !i.sales_person.toLowerCase().includes(teamVal.toLowerCase())) return false;
-        return true;
+        quoteSum += (q.grand_total || q.total_amount || q.total_value || 0) * rate;
       });
 
       filteredInvoices.forEach(i => {
@@ -330,7 +658,7 @@
         let rate = 1.0;
         if (cur === 'USD') rate = usdRate;
         else if (cur === 'SGD') rate = sgdRate;
-        const valueInThb = (i.grand_total || 0) * rate;
+        const valueInThb = (i.grand_total || i.total_amount || i.total_value || 0) * rate;
 
         billSum += valueInThb;
         if (i.status === 'Paid') {
@@ -338,17 +666,12 @@
         }
       });
 
-      const filteredSOs = salesOrders.filter(so => {
-        if (teamVal !== 'ALL' && so.sales_person && !so.sales_person.toLowerCase().includes(teamVal.toLowerCase())) return false;
-        return true;
-      });
-
       filteredSOs.forEach(so => {
         const cur = (so.currency || 'THB').toUpperCase();
         let rate = 1.0;
         if (cur === 'USD') rate = usdRate;
         else if (cur === 'SGD') rate = sgdRate;
-        soSum += (so.total_amount || 0) * rate;
+        soSum += (so.total_amount || so.grand_total || so.total_value || 0) * rate;
         soCount++;
       });
 
@@ -361,10 +684,11 @@
       document.getElementById('bi-collection-ratio').innerText = `${ratio.toFixed(2)}%`;
 
       drawQuoteVsBillChart(quoteSum, soSum, billSum, paidSum);
-      drawWinLossChart(opps);
+      drawWinLossChart(filteredOpps);
 
       drawTopCustomersTable(filteredInvoices, customers);
-      drawTeamKPIsTable(opps, filteredQuotes);
+      drawTeamKPIsTable(filteredOpps, filteredQuotes);
+      drawRepSalesAndQuoteReport(filteredQuotes, filteredSOs);
     }
 
     function drawQuoteVsBillChart(quote, salesOrder, bill, paid) {
@@ -473,7 +797,7 @@
         let rate = 1.0;
         if (cur === 'USD') rate = usdRate;
         else if (cur === 'SGD') rate = sgdRate;
-        billingMap[cName].billed += (i.grand_total || 0) * rate;
+        billingMap[cName].billed += (i.grand_total || i.total_amount || i.total_value || 0) * rate;
       });
 
       const sorted = Object.keys(billingMap).map(key => {
@@ -518,7 +842,7 @@
         let rate = 1.0;
         if (cur === 'USD') rate = usdRate;
         else if (cur === 'SGD') rate = sgdRate;
-        staffMap[name].sum += (q.grand_total || 0) * rate;
+        staffMap[name].sum += (q.grand_total || q.total_amount || q.total_value || 0) * rate;
       });
 
       const sorted = Object.keys(staffMap).map(key => {
@@ -538,7 +862,7 @@
         const avg = item.count > 0 ? (item.sum / item.count) : 0;
         const row = `
           <tr>
-            <td><i class="fa fa-user-circle text-indigo"></i> <strong>${item.name}</strong></td>
+            <td><i class="fa fa-user-circle text-indigo"></i> <strong>${cleanNameForDisplay(item.name)}</strong></td>
             <td class="text-center font-monospace fw-bold">${item.count}</td>
             <td class="text-end font-monospace text-muted">${avg.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
             <td class="text-end font-monospace fw-bold text-indigo">${item.sum.toLocaleString(undefined, { maximumFractionDigits: 0 })} ฿</td>
@@ -546,6 +870,213 @@
           </tr>
         `;
         tbody.insertAdjacentHTML('beforeend', row);
+      });
+    }
+
+    function drawRepSalesAndQuoteReport(quotes, salesOrders) {
+      const tbody = document.getElementById('bi-rep-performance-table');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      const usdRate = parseFloat(document.getElementById('bi-rate-usd').value) || 35.00;
+      const sgdRate = parseFloat(document.getElementById('bi-rate-sgd').value) || 26.00;
+
+      const repMap = {};
+
+      // Load registered users to fallback lookup if username or display name needs resolving
+      let usersList = [];
+      if (window.SupabaseDB && typeof window.SupabaseDB.getUsers === 'function') {
+        try {
+          // Since we've fetched users synchronously before or loaded them globally
+          // we can check if they can be retrieved from DOM or global caches
+          // To make it fully self-contained we can query from SupabaseDB (cached locally)
+          // or just fallback cleanly.
+        } catch (e) {}
+      }
+
+      // Process quotations
+      quotes.forEach(q => {
+        let rawName = q.sales_person || 'Donlapat (Admin)';
+        if (isArtKit(rawName)) return;
+
+        const name = cleanNameForDisplay(rawName);
+        if (!repMap[name]) {
+          repMap[name] = { name: name, quoteCount: 0, quoteSum: 0, soCount: 0, soSum: 0 };
+        }
+
+        repMap[name].quoteCount++;
+        const cur = (q.currency || 'THB').toUpperCase();
+        let rate = 1.0;
+        if (cur === 'USD') rate = usdRate;
+        else if (cur === 'SGD') rate = sgdRate;
+        repMap[name].quoteSum += (q.grand_total || q.total_amount || q.total_value || 0) * rate;
+      });
+
+      // Process sales orders
+      salesOrders.forEach(so => {
+        let rawName = so.sales_person || 'Donlapat (Admin)';
+        if (isArtKit(rawName)) return;
+
+        const name = cleanNameForDisplay(rawName);
+        if (!repMap[name]) {
+          repMap[name] = { name: name, quoteCount: 0, quoteSum: 0, soCount: 0, soSum: 0 };
+        }
+
+        repMap[name].soCount++;
+        const cur = (so.currency || 'THB').toUpperCase();
+        let rate = 1.0;
+        if (cur === 'USD') rate = usdRate;
+        else if (cur === 'SGD') rate = sgdRate;
+        repMap[name].soSum += (so.total_amount || so.grand_total || so.total_value || 0) * rate;
+      });
+
+      const repList = Object.values(repMap).sort((a, b) => b.soSum - a.soSum || b.quoteSum - a.quoteSum);
+
+      if (repList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">No sales representative data matching current filters.</td></tr>';
+        if (repPerformanceChartObj) {
+          repPerformanceChartObj.destroy();
+          repPerformanceChartObj = null;
+        }
+        return;
+      }
+
+      // Populate Table
+      repList.forEach(rep => {
+        const conversionRate = rep.quoteSum > 0 ? (rep.soSum / rep.quoteSum) * 100 : 0;
+        let badgeClass = 'bg-danger-subtle text-danger border border-danger-subtle';
+        let badgeText = 'Needs Focus';
+        if (conversionRate >= 70) {
+          badgeClass = 'bg-success text-white fw-bold';
+          badgeText = 'Super Closer';
+        } else if (conversionRate >= 50) {
+          badgeClass = 'bg-success-subtle text-success border border-success-subtle';
+          badgeText = 'Strong Closer';
+        } else if (conversionRate >= 25) {
+          badgeClass = 'bg-warning-subtle text-warning border border-warning-subtle';
+          badgeText = 'Developing';
+        }
+
+        const conversionProgressColor = conversionRate >= 70 ? 'bg-success' : (conversionRate >= 40 ? 'bg-indigo' : 'bg-warning');
+
+        const row = `
+          <tr>
+            <td>
+              <div class="d-flex align-items-center">
+                <div class="rounded-circle bg-indigo-subtle d-flex align-items-center justify-content-center me-2 text-indigo fw-bold" style="width: 32px; height: 32px; font-size: 0.85rem;">
+                  ${rep.name.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <div class="fw-bold text-dark text-nowrap">${rep.name}</div>
+                  <div class="text-xs text-muted font-monospace">${rep.quoteCount} Quotes / ${rep.soCount} Orders</div>
+                </div>
+              </div>
+            </td>
+            <td class="text-end font-monospace py-3">
+              <div class="fw-bold text-secondary">฿${rep.quoteSum.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+            </td>
+            <td class="text-end font-monospace py-3">
+              <div class="fw-bold text-indigo">฿${rep.soSum.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+            </td>
+            <td>
+              <div class="d-flex flex-column align-items-center">
+                <span class="badge ${badgeClass} rounded-pill px-2 py-1 text-xs mb-1" style="font-size: 0.725rem;">${badgeText}</span>
+                <div class="bg-secondary-subtle border rounded-pill overflow-hidden" style="height: 6px; width: 80px;">
+                  <div class="${conversionProgressColor}" style="width: ${Math.min(conversionRate, 100)}%; height: 100%;"></div>
+                </div>
+                <span class="text-xs font-monospace fw-bold mt-1 text-indigo">${conversionRate.toFixed(1)}%</span>
+              </div>
+            </td>
+          </tr>
+        `;
+        tbody.insertAdjacentHTML('beforeend', row);
+      });
+
+      // Render Grouped Bar Chart
+      const labels = repList.map(r => r.name);
+      const quoteData = repList.map(r => r.quoteSum);
+      const soData = repList.map(r => r.soSum);
+
+      const ctx = document.getElementById('repPerformanceChart').getContext('2d');
+      if (repPerformanceChartObj) {
+        repPerformanceChartObj.destroy();
+      }
+
+      repPerformanceChartObj = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Quotation Amount (฿)',
+              data: quoteData,
+              backgroundColor: 'rgba(99, 102, 241, 0.75)', // Indigo
+              borderColor: '#6366f1',
+              borderWidth: 1.5,
+              borderRadius: 6
+            },
+            {
+              label: 'Sales Order Amount (฿)',
+              data: soData,
+              backgroundColor: 'rgba(16, 185, 129, 0.75)', // Emerald
+              borderColor: '#10b981',
+              borderWidth: 1.5,
+              borderRadius: 6
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+              labels: {
+                font: {
+                  family: 'Inter, system-ui',
+                  size: 11
+                }
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  let label = context.dataset.label || '';
+                  if (label) {
+                    label += ': ';
+                  }
+                  if (context.parsed.y !== null) {
+                    label += '฿' + context.parsed.y.toLocaleString(undefined, { maximumFractionDigits: 0 });
+                  }
+                  return label;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: {
+                font: {
+                  family: 'Inter, system-ui',
+                  size: 10
+                }
+              }
+            },
+            y: {
+              beginAtZero: true,
+              ticks: {
+                font: {
+                  family: 'Inter, system-ui',
+                  size: 10
+                },
+                callback: function(value) {
+                  return '฿' + value.toLocaleString(undefined, { maximumFractionDigits: 0 });
+                }
+              }
+            }
+          }
+        }
       });
     }
   </script>
