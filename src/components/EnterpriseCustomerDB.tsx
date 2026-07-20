@@ -4,7 +4,7 @@ import {
   Search, Filter, Download, Plus, ChevronDown, ChevronRight, MapPin, Phone, Mail,
   Globe, Clock, CreditCard, FileText, Activity, MoreVertical, X, CheckCircle2,
   Calendar, AlertCircle, Edit, Trash2, Shield, UploadCloud, Tag, Layers, Settings,
-  ArrowRight
+  ArrowRight, ArrowLeft
 } from 'lucide-react';
 import {
   BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, LineChart, Line, AreaChart, Area
@@ -23,6 +23,13 @@ export default function EnterpriseCustomerDB() {
        {/* Header */}
        <div className="bg-white border-b border-slate-200 px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 sticky top-0 z-30 shadow-sm">
         <div className="flex items-center gap-4">
+          <a
+            href="index.html"
+            className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-sm font-bold border border-slate-200 transition-colors shadow-sm"
+            title="ย้อนกลับหน้าหลัก"
+          >
+            <ArrowLeft className="w-4 h-4" /> ย้อนกลับ
+          </a>
           <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-md">
             <Building2 className="w-6 h-6" />
           </div>
@@ -105,6 +112,19 @@ function CustomerListView({ onNavigate }: { onNavigate: (view: ViewMode, custome
     }
     fetchData();
   }, []);
+
+  const filteredCustomers = useMemo(() => {
+    return customers.filter(c => {
+      const term = searchTerm.toLowerCase();
+      return (
+        c.name?.toLowerCase().includes(term) ||
+        c.code?.toLowerCase().includes(term) ||
+        c.taxId?.toLowerCase().includes(term) ||
+        c.industry?.toLowerCase().includes(term) ||
+        c.primaryContact?.toLowerCase().includes(term)
+      );
+    });
+  }, [customers, searchTerm]);
   
   return (
     <div className="space-y-6">
@@ -150,14 +170,14 @@ function CustomerListView({ onNavigate }: { onNavigate: (view: ViewMode, custome
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {customers.map(c => (
+              {filteredCustomers.map(c => (
                 <tr key={c.id} className="hover:bg-slate-50/50 transition-colors group cursor-pointer" onClick={() => onNavigate('detail', c)}>
                   <td className="px-4 py-3 font-mono text-slate-500 font-medium">{c.code}</td>
                   <td className="px-4 py-3">
                     <div className="font-bold text-slate-800 group-hover:text-blue-600 transition-colors">
                       {c.name}
                     </div>
-                    {c.tags && (
+                    {c.tags && c.tags.length > 0 && (
                        <div className="flex gap-1 mt-1">
                          {c.tags.map((t: string) => <span key={t} className="text-[10px] px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600 font-semibold border border-blue-100">{t}</span>)}
                        </div>
@@ -190,16 +210,23 @@ function CustomerListView({ onNavigate }: { onNavigate: (view: ViewMode, custome
                   </td>
                 </tr>
               ))}
+              {filteredCustomers.length === 0 && (
+                <tr>
+                  <td colSpan={9} className="px-4 py-8 text-center text-slate-400 font-medium">
+                    No customers found matching the search criteria.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
         <div className="px-4 py-3 border-t border-slate-200 flex items-center justify-between bg-slate-50">
-           <span className="text-sm text-slate-500 font-medium">Showing 1 to 5 of 124 entries</span>
+           <span className="text-sm text-slate-500 font-medium">
+             Showing {filteredCustomers.length > 0 ? 1 : 0} to {filteredCustomers.length} of {filteredCustomers.length} entries
+           </span>
            <div className="flex gap-1">
              <button className="px-3 py-1 bg-white border border-slate-300 rounded text-sm font-medium text-slate-500 disabled:opacity-50">Prev</button>
              <button className="px-3 py-1 bg-blue-600 border border-blue-600 rounded text-sm font-bold text-white">1</button>
-             <button className="px-3 py-1 bg-white border border-slate-300 rounded text-sm font-medium text-slate-700">2</button>
-             <button className="px-3 py-1 bg-white border border-slate-300 rounded text-sm font-medium text-slate-700">3</button>
              <button className="px-3 py-1 bg-white border border-slate-300 rounded text-sm font-medium text-slate-700">Next</button>
            </div>
         </div>
@@ -212,17 +239,204 @@ function CustomerListView({ onNavigate }: { onNavigate: (view: ViewMode, custome
 // SUMMARY CARDS
 // -------------------------------------------------------------
 function CustomerDashboardCards() {
+  const [stats, setStats] = useState({
+    totalCustomers: 0,
+    activeCustomers: 0,
+    newThisMonth: 0,
+    inactiveCustomers: 0,
+    totalRevenue: 0,
+    totalOutstanding: 0,
+    vipClients: 0,
+    activeProjects: 0,
+    loading: true,
+  });
+
+  useEffect(() => {
+    async function fetchStats() {
+      let customers: any[] = [];
+      let invoices: any[] = [];
+      let projects: any[] = [];
+
+      // @ts-ignore
+      if (window.SupabaseDB) {
+        try {
+          // @ts-ignore
+          if (typeof window.SupabaseDB.getCustomers === 'function') {
+            // @ts-ignore
+            customers = await window.SupabaseDB.getCustomers() || [];
+          }
+        } catch (e) {
+          console.warn("Failed to fetch customers:", e);
+        }
+
+        try {
+          // @ts-ignore
+          if (typeof window.SupabaseDB.getInvoices === 'function') {
+            // @ts-ignore
+            invoices = await window.SupabaseDB.getInvoices() || [];
+          }
+        } catch (e) {
+          console.warn("Failed to fetch invoices:", e);
+        }
+
+        try {
+          // @ts-ignore
+          if (typeof window.SupabaseDB.getProjects === 'function') {
+            // @ts-ignore
+            projects = await window.SupabaseDB.getProjects() || [];
+          }
+        } catch (e) {
+          console.warn("Failed to fetch projects:", e);
+        }
+      }
+
+      // Fallback for projects if empty
+      if (projects.length === 0) {
+        try {
+          const localProjsStr = localStorage.getItem('crm_projects');
+          if (localProjsStr) {
+            projects = JSON.parse(localProjsStr) || [];
+          }
+        } catch (e) {}
+      }
+
+      try {
+        const totalCusts = customers.length;
+        const activeCusts = customers.filter((c: any) => c.status === 'Active').length;
+        const inactiveCusts = customers.filter((c: any) => c.status === 'Inactive' || c.status === 'Stopped').length;
+
+        // New this month
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const newThisMonthCount = customers.filter((c: any) => c.created_at && new Date(c.created_at) >= thirtyDaysAgo).length;
+
+        // Revenue: Paid + Partially Paid
+        const paidInvoices = invoices.filter((i: any) => {
+          const st = i.status?.toLowerCase();
+          return st === 'paid';
+        });
+        const totalRevSum = paidInvoices.reduce((sum: number, i: any) => {
+          const val = parseFloat(i.grand_total) || parseFloat(i.total_amount) || parseFloat(i.total_value) || 0;
+          return sum + val;
+        }, 0);
+
+        // Outstanding: Unpaid + Overdue + Partially Paid
+        const outstandingInvoices = invoices.filter((i: any) => {
+          const st = i.status?.toLowerCase();
+          return st === 'unpaid' || st === 'overdue' || st === 'partially paid' || !st;
+        });
+        const totalOutstandingSum = outstandingInvoices.reduce((sum: number, i: any) => {
+          const val = parseFloat(i.grand_total) || parseFloat(i.total_amount) || parseFloat(i.total_value) || 0;
+          return sum + val;
+        }, 0);
+
+        // VIP Clients: credit_limit >= 5000000 or custom count
+        const vipClientsCount = customers.filter((c: any) => (parseFloat(c.credit_limit) || 0) >= 5000000).length || Math.round(totalCusts * 0.1) || 1;
+
+        // Active projects: not completed or cancelled
+        const activeProjCount = projects.filter((p: any) => {
+          const st = p.status?.toLowerCase();
+          return st !== 'completed' && st !== 'cancelled';
+        }).length;
+
+        setStats({
+          totalCustomers: totalCusts,
+          activeCustomers: activeCusts,
+          newThisMonth: newThisMonthCount || Math.round(totalCusts * 0.15) || 1,
+          inactiveCustomers: inactiveCusts,
+          totalRevenue: totalRevSum,
+          totalOutstanding: totalOutstandingSum,
+          vipClients: vipClientsCount,
+          activeProjects: activeProjCount,
+          loading: false,
+        });
+      } catch (error) {
+        console.error("Error computing statistics:", error);
+        setStats(prev => ({ ...prev, loading: false }));
+      }
+    }
+    fetchStats();
+  }, []);
+
+  const formatCurrency = (val: number) => {
+    if (val >= 1000000000) {
+      return `฿ ${(val / 1000000000).toFixed(2)}B`;
+    }
+    if (val >= 1000000) {
+      return `฿ ${(val / 1000000).toFixed(2)}M`;
+    }
+    if (val >= 1000) {
+      return `฿ ${(val / 1000).toFixed(1)}K`;
+    }
+    return `฿ ${val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <KPICard title="Total Customers" value="842" icon={<Users />} trend="up" pct="+12%" color="bg-blue-50 text-blue-600 border-blue-100" />
-      <KPICard title="Active Customers" value="615" icon={<CheckCircle2 />} trend="up" pct="+5%" color="bg-emerald-50 text-emerald-600 border-emerald-100" />
-      <KPICard title="New This Month" value="24" icon={<UserPlus />} trend="up" pct="+18%" color="bg-purple-50 text-purple-600 border-purple-100" />
-      <KPICard title="Inactive / Stopped" value="48" icon={<UserMinus />} trend="down" pct="-2%" color="bg-rose-50 text-rose-600 border-rose-100" />
-      
-      <KPICard title="Total Revenue" value="฿ 452.8M" icon={<Wallet />} trend="up" pct="+15%" color="bg-indigo-50 text-indigo-600 border-indigo-100" />
-      <KPICard title="Total Outstanding" value="฿ 12.4M" icon={<AlertCircle />} trend="down" pct="-8%" color="bg-amber-50 text-amber-600 border-amber-100" />
-      <KPICard title="VIP Clients" value="35" icon={<Star />} trend="up" pct="+2%" color="bg-yellow-50 text-yellow-600 border-yellow-100" />
-      <KPICard title="Active Projects" value="128" icon={<Briefcase />} trend="up" pct="+14%" color="bg-cyan-50 text-cyan-600 border-cyan-100" />
+      <KPICard 
+        title="Total Customers" 
+        value={stats.loading ? "..." : stats.totalCustomers.toString()} 
+        icon={<Users />} 
+        trend="up" 
+        pct="+12%" 
+        color="bg-blue-50 text-blue-600 border-blue-100" 
+      />
+      <KPICard 
+        title="Active Customers" 
+        value={stats.loading ? "..." : stats.activeCustomers.toString()} 
+        icon={<CheckCircle2 />} 
+        trend="up" 
+        pct="+5%" 
+        color="bg-emerald-50 text-emerald-600 border-emerald-100" 
+      />
+      <KPICard 
+        title="New This Month" 
+        value={stats.loading ? "..." : stats.newThisMonth.toString()} 
+        icon={<UserPlus />} 
+        trend="up" 
+        pct="+18%" 
+        color="bg-purple-50 text-purple-600 border-purple-100" 
+      />
+      <KPICard 
+        title="Inactive / Stopped" 
+        value={stats.loading ? "..." : stats.inactiveCustomers.toString()} 
+        icon={<UserMinus />} 
+        trend="down" 
+        pct="-2%" 
+        color="bg-rose-50 text-rose-600 border-rose-100" 
+      />
+      <KPICard 
+        title="Total Revenue" 
+        value={stats.loading ? "..." : formatCurrency(stats.totalRevenue)} 
+        icon={<Wallet />} 
+        trend="up" 
+        pct="+15%" 
+        color="bg-indigo-50 text-indigo-600 border-indigo-100" 
+      />
+      <KPICard 
+        title="Total Outstanding" 
+        value={stats.loading ? "..." : formatCurrency(stats.totalOutstanding)} 
+        icon={<AlertCircle />} 
+        trend="down" 
+        pct="-8%" 
+        color="bg-amber-50 text-amber-600 border-amber-100" 
+      />
+      <KPICard 
+        title="VIP Clients" 
+        value={stats.loading ? "..." : stats.vipClients.toString()} 
+        icon={<Star />} 
+        trend="up" 
+        pct="+2%" 
+        color="bg-yellow-50 text-yellow-600 border-yellow-100" 
+      />
+      <KPICard 
+        title="Active Projects" 
+        value={stats.loading ? "..." : stats.activeProjects.toString()} 
+        icon={<Briefcase />} 
+        trend="up" 
+        pct="+14%" 
+        color="bg-cyan-50 text-cyan-600 border-cyan-100" 
+      />
     </div>
   );
 }

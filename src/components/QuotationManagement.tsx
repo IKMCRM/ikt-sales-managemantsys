@@ -61,6 +61,13 @@ export default function QuotationManagement() {
   const [printId, setPrintId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ msg: string; type: 'success' | 'err' } | null>(null);
 
+  const currentEmail = typeof localStorage !== "undefined" ? localStorage.getItem("crm_user_email") : "";
+  const currentName = typeof localStorage !== "undefined" ? localStorage.getItem("crm_user_fullname") : "";
+  const isApiyut = 
+    currentEmail?.toLowerCase().includes("apiyut") || 
+    currentName?.toLowerCase().includes("apiyut") ||
+    (typeof localStorage !== "undefined" && localStorage.getItem("crm_user_role") === "Admin");
+
   const showToast = (msg: string, type: 'success' | 'err') => {
     setToast({ msg, type });
     setTimeout(() => {
@@ -143,6 +150,11 @@ export default function QuotationManagement() {
   const handleDelete = async (id: string) => {
     const q = quotations.find((quote) => quote.id === id);
     if (!q) return;
+
+    if (!isApiyut) {
+      showToast("เฉพาะผู้ดูแลระบบ (Admin) เท่านั้นที่สามารถลบใบเสนอราคาได้", "err");
+      return;
+    }
 
     // @ts-ignore
     if (window.SupabaseDB) {
@@ -399,6 +411,12 @@ function QuoteList({
   showToast,
 }: any) {
   const [search, setSearch] = useState("");
+  const currentEmail = typeof localStorage !== "undefined" ? localStorage.getItem("crm_user_email") : "";
+  const currentName = typeof localStorage !== "undefined" ? localStorage.getItem("crm_user_fullname") : "";
+  const isApiyut = 
+    currentEmail?.toLowerCase().includes("apiyut") || 
+    currentName?.toLowerCase().includes("apiyut") ||
+    (typeof localStorage !== "undefined" && localStorage.getItem("crm_user_role") === "Admin");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [salesRepFilter, setSalesRepFilter] = useState("ALL");
 
@@ -597,13 +615,23 @@ function QuoteList({
                     >
                       <Copy className="w-4 h-4" />
                     </button>
-                    <button
-                      onClick={() => onDelete(q.id)}
-                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded cursor-pointer"
-                      title="ลบใบเสนอราคา (Delete)"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {isApiyut ? (
+                      <button
+                        onClick={() => onDelete(q.id)}
+                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded cursor-pointer"
+                        title="ลบใบเสนอราคา (Delete)"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    ) : (
+                      <button
+                        className="p-1.5 text-slate-200 cursor-not-allowed"
+                        title="เฉพาะผู้ดูแลระบบ (Admin) เท่านั้นที่สามารถลบได้"
+                        disabled
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                     {q.status === "Approved" || q.status === "Accepted" ? (
                       <button
                         onClick={async () => {
@@ -762,13 +790,6 @@ function QuoteForm({ id, onClose, quotations, customers, onToast }: any) {
       setExchangeRate(27.0);
     }
   };
-
-  const currentEmail = typeof localStorage !== "undefined" ? localStorage.getItem("crm_user_email") : "";
-  const currentName = typeof localStorage !== "undefined" ? localStorage.getItem("crm_user_fullname") : "";
-  const isApiyut = 
-    currentEmail?.toLowerCase().includes("apiyut") || 
-    currentName?.toLowerCase().includes("apiyut") ||
-    (typeof localStorage !== "undefined" && localStorage.getItem("crm_user_role") === "Admin");
 
   const selectedCust = customers.find((c: any) => c.id === selectedCustomerId);
 
@@ -1255,8 +1276,8 @@ function QuoteForm({ id, onClose, quotations, customers, onToast }: any) {
             >
               <option value="Draft">Draft</option>
               <option value="Sent">Sent</option>
-              <option value="Approved" disabled={!isApiyut}>
-                Approved {!isApiyut ? " (เฉพาะ @apiyut Admin เท่านั้น)" : ""}
+              <option value="Approved">
+                Approved
               </option>
               <option value="Rejected">Rejected</option>
             </select>
