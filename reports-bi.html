@@ -375,8 +375,8 @@
 
     function cleanNameForDisplay(name) {
       if (!name) return "";
-      // Strip parenthesized IDs like (S01), (S02), (S03)
-      return String(name).replace(/\s*\([Ss]\d+\)\s*$/i, "").trim();
+      // Strip parenthesized IDs like (S01), (S02), (S03) and roles like (Sales Manager), (Admin), (Auditor), etc.
+      return String(name).replace(/\s*\([^)]*\)/g, "").trim();
     }
 
     function populateSalesRepsDynamic(quotes, invoices, salesOrders, opps, users) {
@@ -385,109 +385,27 @@
 
       const currentSelected = select.value || 'ALL';
 
-      // 1. Gather all unique names from database records
-      const salesRepsSet = new Set();
-      quotes.forEach(q => {
-        if (q.sales_person) salesRepsSet.add(q.sales_person.trim());
-      });
-      invoices.forEach(i => {
-        if (i.sales_person) salesRepsSet.add(i.sales_person.trim());
-      });
-      salesOrders.forEach(so => {
-        if (so.sales_person) salesRepsSet.add(so.sales_person.trim());
-      });
-      opps.forEach(o => {
-        const opPerson = o.sales_person || o.owner || o.sales_rep || o.sales_person_id;
-        if (opPerson) salesRepsSet.add(opPerson.trim());
-      });
+      const allowedReps = [
+        "Nopparat Tosa-ard",
+        "Tanat Kusuwannakul",
+        "Tepdecha Deekaew",
+        "Thiha Soe",
+        "Nichapa Kosol",
+        "Upadee Tititanaporn",
+        "Chaweewan Somsri",
+        "Apiyut Noeikhiaw"
+      ];
 
-      // 2. Build options list
-      const optionsList = [];
-      const addedNames = new Set();
-
-      // Helper to check if string is a UUID
-      const isUUID = (str) => {
-        if (!str) return false;
-        return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str.trim());
-      };
-
-      // Helper to resolve a value (could be UUID) to username/fullname
-      const resolveToName = (str) => {
-        if (!str) return "";
-        if (isUUID(str)) {
-          const found = users.find(u => String(u.id).toLowerCase() === str.trim().toLowerCase());
-          if (found) {
-            return found.fullname || found.username || found.display_name || "";
-          }
-          // If no user found, return empty so it's filtered out
-          return "";
-        }
-        return str;
-      };
-
-      // Add registered users
-      users.forEach(u => {
-        const fullname = u.fullname || u.display_name || u.name;
-        const username = u.username;
-        if (isArtKit(fullname) || isArtKit(username) || isArtKit(u.id)) {
-          return; // skip Art Kit
-        }
-
-        const displayName = fullname ? `${fullname} (${u.role || 'Sales Rep'})` : `${username} (${u.role || 'Sales Rep'})`;
-        const value = fullname || username || u.id;
-
-        // Skip if value is a UUID and we can't find a name
-        const cleanVal = resolveToName(value);
-        if (!cleanVal || isUUID(cleanVal)) return;
-
-        if (cleanVal && !addedNames.has(cleanVal.toLowerCase())) {
-          addedNames.add(cleanVal.toLowerCase());
-          optionsList.push({
-            value: cleanVal,
-            text: cleanNameForDisplay(displayName)
-          });
-        }
-      });
-
-      // Add names from database records that aren't registered yet
-      salesRepsSet.forEach(repName => {
-        if (isArtKit(repName)) return; // skip Art Kit
-
-        const resolvedRepName = resolveToName(repName);
-        if (!resolvedRepName || isUUID(resolvedRepName)) {
-          // Skip unresolved UUIDs
-          return;
-        }
-
-        let alreadyAdded = false;
-        const repLower = resolvedRepName.toLowerCase();
-
-        for (const added of addedNames) {
-          if (repLower === added || repLower.includes(added) || added.includes(repLower)) {
-            alreadyAdded = true;
-            break;
-          }
-        }
-
-        if (!alreadyAdded) {
-          addedNames.add(repLower);
-          optionsList.push({
-            value: resolvedRepName,
-            text: cleanNameForDisplay(resolvedRepName)
-          });
-        }
-      });
-
-      // Sort alphabetically by display text
-      optionsList.sort((a, b) => a.text.localeCompare(b.text));
+      // Sort alphabetically by name
+      allowedReps.sort();
 
       // Rebuild innerHTML of the select field
       select.innerHTML = '<option value="ALL">All Sales Representatives (ทั้งหมด)</option>';
-      optionsList.forEach(opt => {
+      allowedReps.forEach(name => {
         const el = document.createElement('option');
-        el.value = opt.value;
-        el.innerText = opt.text;
-        if (opt.value === currentSelected) {
+        el.value = name;
+        el.innerText = name;
+        if (name === currentSelected) {
           el.selected = true;
         }
         select.appendChild(el);
@@ -832,7 +750,8 @@
 
       const staffMap = {};
       quotes.forEach(q => {
-        const name = q.sales_person || 'Donlapat (Admin)';
+        const rawName = q.sales_person || 'Donlapat (Admin)';
+        const name = cleanNameForDisplay(rawName);
         if (!staffMap[name]) {
           staffMap[name] = { count: 0, sum: 0 };
         }
