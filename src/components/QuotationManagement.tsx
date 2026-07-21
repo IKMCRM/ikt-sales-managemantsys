@@ -852,21 +852,8 @@ function QuoteForm({ id, onClose, quotations, customers, onToast }: any) {
     const fd = new FormData(e.target);
 
     // Verify if trying to set status to Approved
+    // เซลลทุกคนสามารถปรับ Status ได้ตามต้องการ (All sales representatives can now change the status)
     const statusVal = fd.get("status");
-    if (statusVal === "Approved") {
-      const activeEmail = typeof localStorage !== "undefined" ? localStorage.getItem("crm_user_email") : "";
-      const activeName = typeof localStorage !== "undefined" ? localStorage.getItem("crm_user_fullname") : "";
-      const activeRole = typeof localStorage !== "undefined" ? localStorage.getItem("crm_user_role") : "";
-      const userIsApiyut = 
-        activeEmail?.toLowerCase().includes("apiyut") || 
-        activeName?.toLowerCase().includes("apiyut") ||
-        activeRole === "Admin";
-      
-      if (!userIsApiyut) {
-        setErrorMsg("คนที่ Approved ได้ต้องเป็น User @apiyut Admin เท่านั้น");
-        return;
-      }
-    }
 
     const subtotal = calculateTotal();
     const tax = subtotal * 0.07;
