@@ -1375,6 +1375,12 @@ const SupabaseDB = {
          console.warn("Cloud addQuotation failed, completed locally", err);
        }
     }
+    await this.addActivity(
+      "สร้างใบเสนอราคา",
+      "Quotation",
+      newQuote.id,
+      `สร้างใบเสนอราคาใหม่ ${newQuote.quotation_no} สำหรับโครงการ "${newQuote.project_name || 'N/A'}" มูลค่า ฿${parseFloat(newQuote.grand_total || 0).toLocaleString()}`
+    );
     return newQuote;
   },
 
@@ -1442,6 +1448,12 @@ const SupabaseDB = {
           console.warn("Cloud updateQuotation failed, completed locally", e);
         }
       }
+      await this.addActivity(
+        "แก้ไขใบเสนอราคา",
+        "Quotation",
+        updatedQuote.id,
+        `แก้ไขข้อมูลใบเสนอราคา ${updatedQuote.quotation_no} สำหรับโครงการ "${updatedQuote.project_name || 'N/A'}" (สถานะ: ${updatedQuote.status || 'N/A'})`
+      );
       return updatedQuote;
     }
     throw new Error("Quotation not found");
@@ -1453,7 +1465,8 @@ const SupabaseDB = {
       throw new Error("Only Administrators are authorized to delete quotations.");
     }
     const quotes = JSON.parse(localStorage.getItem('crm_quotations')) || [];
-    const filtered = quotes.filter(q => q.id !== id);
+    const q = quotes.find(item => item.id === id);
+    const filtered = quotes.filter(item => item.id !== id);
     localStorage.setItem('crm_quotations', JSON.stringify(filtered));
 
     const isCloud = await this.testConnection();
@@ -1463,6 +1476,14 @@ const SupabaseDB = {
       } catch (e) {
         console.warn("Cloud deleteQuotation failed, completed locally", e);
       }
+    }
+    if (q) {
+      await this.addActivity(
+        "ลบใบเสนอราคา",
+        "Quotation",
+        id,
+        `ลบใบเสนอราคาหมายเลข ${q.quotation_no} ของโครงการ "${q.project_name || 'N/A'}"`
+      );
     }
     return true;
   },
@@ -1558,6 +1579,12 @@ const SupabaseDB = {
         console.warn("Cloud addSalesOrder failed, completed locally", err);
       }
     }
+    await this.addActivity(
+      "สร้างใบสั่งขาย",
+      "Sales Order",
+      prepared.id,
+      `สร้างใบสั่งขายใหม่หมายเลข ${prepared.so_no} สำหรับโครงการ "${prepared.project_name || 'N/A'}" ยอดสั่งซื้อ ฿${parseFloat(prepared.total_amount || 0).toLocaleString()}`
+    );
     return prepared;
   },
 
@@ -1588,6 +1615,12 @@ const SupabaseDB = {
           console.warn("Cloud updateSalesOrder failed, completed locally", e);
         }
       }
+      await this.addActivity(
+        "แก้ไขใบสั่งขาย",
+        "Sales Order",
+        updated.id,
+        `แก้ไขข้อมูลใบสั่งขายหมายเลข ${updated.so_no} สำหรับโครงการ "${updated.project_name || 'N/A'}" (สถานะ: ${updated.status || 'N/A'})`
+      );
       return updated;
     }
     throw new Error("Sales order not found");
@@ -1599,7 +1632,8 @@ const SupabaseDB = {
       throw new Error("Only Administrators are authorized to delete sales orders.");
     }
     const sos = JSON.parse(localStorage.getItem('crm_sales_orders')) || [];
-    const filtered = sos.filter(s => s.id !== id);
+    const s = sos.find(item => item.id === id);
+    const filtered = sos.filter(item => item.id !== id);
     localStorage.setItem('crm_sales_orders', JSON.stringify(filtered));
 
     const isCloud = await this.testConnection();
@@ -1609,6 +1643,14 @@ const SupabaseDB = {
       } catch (e) {
         console.warn("Cloud deleteSalesOrder failed, completed locally", e);
       }
+    }
+    if (s) {
+      await this.addActivity(
+        "ลบใบสั่งขาย",
+        "Sales Order",
+        id,
+        `ลบใบสั่งขายหมายเลข ${s.so_no} ของโครงการ "${s.project_name || 'N/A'}"`
+      );
     }
     return true;
   },
@@ -1955,6 +1997,10 @@ const SupabaseDB = {
         mappedTargetType = 'Customer';
       } else if (targetTypeLower === 'opportunity') {
         mappedTargetType = 'Opportunity';
+      } else if (targetTypeLower === 'quotation') {
+        mappedTargetType = 'Quotation';
+      } else if (targetTypeLower === 'sales_order' || targetTypeLower === 'salesorder') {
+        mappedTargetType = 'Sales Order';
       }
 
       return {

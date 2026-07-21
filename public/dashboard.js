@@ -436,6 +436,14 @@ function renderRecentTimeline(activities, customers, opportunities) {
       typeBadge = '<span class="badge bg-warning text-dark rounded-pill px-2" style="font-size:9px;">Opportunity</span>';
       iconHTML = '<div class="timeline-circle bg-warning text-dark rounded-circle shadow-sm d-flex align-items-center justify-content-center" style="width: 28px; height: 28px;"><i class="fa fa-handshake small"></i></div>';
     }
+    if (act.target_type === 'Quotation') {
+      typeBadge = '<span class="badge bg-info text-dark rounded-pill px-2" style="font-size:9px;">Quotation</span>';
+      iconHTML = '<div class="timeline-circle bg-info text-dark rounded-circle shadow-sm d-flex align-items-center justify-content-center" style="width: 28px; height: 28px;"><i class="fa fa-file-invoice-dollar small"></i></div>';
+    }
+    if (act.target_type === 'Sales Order') {
+      typeBadge = '<span class="badge bg-success text-white rounded-pill px-2" style="font-size:9px;">Sales Order</span>';
+      iconHTML = '<div class="timeline-circle bg-success text-white rounded-circle shadow-sm d-flex align-items-center justify-content-center" style="width: 28px; height: 28px;"><i class="fa fa-shopping-cart small"></i></div>';
+    }
 
     const timeLoc = 'en-US';
     const dateObj = new Date(act.created_at);
