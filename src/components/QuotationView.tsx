@@ -948,11 +948,15 @@ export default function QuotationView({
                   <div className="font-bold text-black mb-1">Terms & Conditions:</div>
                   <div className="flex flex-col" style={{ gap: '1px' }}>
                     {viewingQuote.terms_conditions ? (
-                      viewingQuote.terms_conditions.split('\n').map((line: string, lIdx: number) => (
-                        <p key={lIdx} className="m-0 p-0" style={{ margin: '0px 0px 1px 0px', padding: 0, lineHeight: '1.1' }}>
-                          {line.startsWith('-') || line.startsWith('•') ? line : `- ${line}`}
-                        </p>
-                      ))
+                      viewingQuote.terms_conditions.split('\n').map((line: string, lIdx: number) => {
+                        const trimmed = line.trim();
+                        const hasBullet = trimmed.startsWith('-') || trimmed.startsWith('•') || /^\d+\./.test(trimmed);
+                        return (
+                          <p key={lIdx} className="m-0 p-0" style={{ margin: '0px 0px 1px 0px', padding: 0, lineHeight: '1.1' }}>
+                            {hasBullet ? line : `- ${line}`}
+                          </p>
+                        );
+                      })
                     ) : (
                       <>
                         <p className="m-0 p-0" style={{ margin: '0px 0px 1px 0px', padding: 0, lineHeight: '1.1' }}>- 30 days validity from date of quotation.</p>

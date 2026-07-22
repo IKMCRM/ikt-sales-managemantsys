@@ -1476,7 +1476,7 @@ function QuoteForm({ id, onClose, quotations, customers, onToast }: any) {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="space-y-5">
           <div>
             <label className="block text-sm font-bold text-slate-700 mb-1.5">
               Remarks / Notes
@@ -1490,17 +1490,31 @@ function QuoteForm({ id, onClose, quotations, customers, onToast }: any) {
             />
           </div>
           <div>
-            <label className="block text-sm font-bold text-slate-700 mb-1.5">
-              Terms & Conditions
-            </label>
+            <div className="flex justify-between items-center mb-1.5">
+              <label className="block text-sm font-bold text-slate-700">
+                Terms & Conditions
+              </label>
+              <button
+                type="button"
+                onClick={() => {
+                  const textarea = document.getElementsByName("terms")[0] as HTMLTextAreaElement;
+                  if (textarea) {
+                    textarea.value = "1. 30 days validity from date of quotation.\n2. All prices above are quoted in THB \n3. All prices does not include 7% VAT\n4. Payment term: 30 Days from date of invoice.\n5. Please state our IKM reference no. on your work/purchase order.\n6. IKM Testing shall not be liable for loss or damage or delay or failure in performance  hereunder arising or resulting directly  or indirectly from amongst other things such as epidemics and/or quarantine restrictions.\n7. If contract or PO is cancelled after mobilization has started, then all expenses incurred shall beinvoiced to Client.\n8. Above price will be charged by unit rate and actual.";
+                  }
+                }}
+                className="text-[11px] font-bold text-blue-600 hover:underline px-2 py-0.5 bg-blue-50 hover:bg-blue-100 rounded transition-all cursor-pointer"
+              >
+                Reset to Standard Text
+              </button>
+            </div>
             <textarea
               name="terms"
               defaultValue={
                 initialQuote?.terms_conditions ||
-                "1. Price validity 30 days.\n2. Payment terms 30 days.\n3. Delivery within schedule."
+                "1. 30 days validity from date of quotation.\n2. All prices above are quoted in THB \n3. All prices does not include 7% VAT\n4. Payment term: 30 Days from date of invoice.\n5. Please state our IKM reference no. on your work/purchase order.\n6. IKM Testing shall not be liable for loss or damage or delay or failure in performance  hereunder arising or resulting directly  or indirectly from amongst other things such as epidemics and/or quarantine restrictions.\n7. If contract or PO is cancelled after mobilization has started, then all expenses incurred shall beinvoiced to Client.\n8. Above price will be charged by unit rate and actual."
               }
-              rows={3}
-              className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 resize-y"
+              rows={12}
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 resize-y font-mono text-slate-800 leading-relaxed"
             />
           </div>
         </div>
@@ -1799,11 +1813,15 @@ function PrintPreview({ id, onClose, onEdit, quotations, customers }: any) {
           <div className="font-bold text-black mb-1">Terms & Conditions:</div>
           <div className="flex flex-col" style={{ gap: '1px' }}>
             {quote.terms_conditions ? (
-              quote.terms_conditions.split('\n').map((line: string, lIdx: number) => (
-                <p key={lIdx} className="m-0 p-0" style={{ margin: '0px 0px 1px 0px', padding: 0, lineHeight: '1.1' }}>
-                  {line.startsWith('-') || line.startsWith('•') ? line : `- ${line}`}
-                </p>
-              ))
+              quote.terms_conditions.split('\n').map((line: string, lIdx: number) => {
+                const trimmed = line.trim();
+                const hasBullet = trimmed.startsWith('-') || trimmed.startsWith('•') || /^\d+\./.test(trimmed);
+                return (
+                  <p key={lIdx} className="m-0 p-0" style={{ margin: '0px 0px 1px 0px', padding: 0, lineHeight: '1.1' }}>
+                    {hasBullet ? line : `- ${line}`}
+                  </p>
+                );
+              })
             ) : (
               <>
                 <p className="m-0 p-0" style={{ margin: '0px 0px 1px 0px', padding: 0, lineHeight: '1.1' }}>- 30 days validity from date of quotation.</p>

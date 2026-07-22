@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Building2, 
   Target, 
@@ -35,7 +35,7 @@ import {
   Bell
 } from 'lucide-react';
 import { phpCodebase, PHPFile } from './data/phpCodebase';
-import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
+import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 
 // Define Interface types for simulation state
 interface CustomerSim {
@@ -301,6 +301,43 @@ export default function App() {
   const totalDealsCount = opportunities.length;
   const wonDealsCount = opportunities.filter(o => o.status === 'Won').length;
   const winRatio = totalDealsCount > 0 ? ((wonDealsCount / totalDealsCount) * 100).toFixed(1) : '0';
+
+  // Compute monthly trend for the pipeline forecast chart in simulated dashboard
+  const monthlyTrendData = useMemo(() => {
+    const grouped: { [key: string]: number } = {};
+    opportunities.forEach(opp => {
+      if (opp.status === 'Lost' || opp.status === 'Cancelled') return;
+      if (!opp.expected_close_date) return;
+      const monthStr = opp.expected_close_date.substring(0, 7); // "YYYY-MM"
+      grouped[monthStr] = (grouped[monthStr] || 0) + opp.estimated_value;
+    });
+
+    const engMonths = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const sortedKeys = Object.keys(grouped).sort();
+    
+    // Fallback if no data
+    if (sortedKeys.length === 0) {
+      return [
+        { name: 'Jan 26', value: 1500000 },
+        { name: 'Feb 26', value: 2400000 },
+        { name: 'Mar 26', value: 850000 },
+        { name: 'Apr 26', value: 1200000 },
+        { name: 'May 26', value: 1800000 },
+        { name: 'Jun 26', value: 2200000 },
+      ];
+    }
+
+    return sortedKeys.map(key => {
+      const [yr, mo] = key.split('-');
+      const monthIdx = parseInt(mo, 10) - 1;
+      const shortYr = yr.substring(2);
+      const mName = engMonths[monthIdx] || 'Jan';
+      return {
+        name: `${mName} ${shortYr}`,
+        value: grouped[key]
+      };
+    });
+  }, [opportunities]);
 
   // Modal displays toggle
   const [showCustomerModal, setShowCustomerModal] = useState(false);
@@ -1024,30 +1061,60 @@ export default function App() {
                         </div>
                       </div>
 
-                      {/* Right: Audit Logs Timeline */}
-                      <div className="bg-slate-900 border border-slate-800 rounded-2xl lg:col-span-5 p-5">
+                      {/* Right: Sales Pipeline Forecast Timeline */}
+                      <div className="bg-slate-900 border border-slate-800 rounded-2xl lg:col-span-5 p-5 flex flex-col">
                         <div className="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
                           <h3 className="text-sm font-black text-white flex items-center gap-2">
-                            <Clock className="w-4 h-4 text-emerald-400" />
-                            ประวัติกิจกรรมขายล่าสุด (Audit Trail)
+                            <TrendingUp className="w-4 h-4 text-emerald-400" />
+                            ส่วนวิเคราะห์แนวโน้มยอดเงินตามเป้าหมายเวลา (Sales Pipeline Forecast)
                           </h3>
-                          <span className="text-[10px] text-emerald-400 font-bold bg-emerald-950/50 border border-emerald-900 py-0.5 px-2.5 rounded-full">PHP Active</span>
+                          <span className="text-[10px] text-emerald-400 font-bold bg-emerald-950/50 border border-emerald-900 py-0.5 px-2.5 rounded-full">MySQL Trends</span>
                         </div>
-
-                        <div className="space-y-4 max-h-[290px] overflow-y-auto pr-1">
-                          {auditLogs.map(log => (
-                            <div key={log.id} className="border-b border-slate-850 pb-2.5 last:border-b-0">
-                              <div className="flex justify-between items-start mb-1">
-                                <span className="text-xs font-bold text-slate-200">{log.action}</span>
-                                <span className="text-[9px] font-mono text-indigo-400">{log.created_at.substring(11, 16)} น.</span>
-                              </div>
-                              <span className="text-[10px] text-slate-400 block mb-1">โดย {log.fullname} • ({log.role})</span>
-                              <p className="text-[11px] text-slate-500 m-0 leading-relaxed">{log.details}</p>
-                            </div>
-                          ))}
+                        <div className="flex-1 min-h-[240px]">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={monthlyTrendData}>
+                              <XAxis dataKey="name" stroke="#64748b" fontSize={10} tickLine={false} />
+                              <YAxis stroke="#64748b" fontSize={10} tickLine={false} tickFormatter={(val) => `฿${(val / 1000).toFixed(0)}k`} />
+                              <Tooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px' }} itemStyle={{ color: '#fff' }} />
+                              <Line type="monotone" dataKey="value" stroke="#10b981" strokeWidth={3} activeDot={{ r: 8 }} dot={{ r: 4 }} name="Forecast Value" />
+                            </LineChart>
+                          </ResponsiveContainer>
                         </div>
                       </div>
 
+                    </div>
+
+                    {/* Recent Activities Feed (Audit Trail) at the very bottom, stretching fully */}
+                    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 mt-6">
+                      <div className="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+                        <h3 className="text-sm font-black text-white flex items-center gap-2">
+                          <Clock className="w-4 h-4 text-indigo-400" />
+                          ประวัติกิจกรรมขายล่าสุด (Audit Trail)
+                        </h3>
+                        <span className="text-[10px] text-indigo-400 font-bold bg-indigo-950/50 border border-indigo-900 py-0.5 px-2.5 rounded-full">PHP Active</span>
+                      </div>
+
+                      <div className="space-y-4">
+                        {auditLogs.map(log => (
+                          <div key={log.id} className="border-b border-slate-850 pb-3 last:border-b-0 flex items-start gap-3">
+                            <div className="p-2 bg-slate-950/50 border border-slate-800 rounded-xl text-center" style={{ width: '40px', height: '40px' }}>
+                              <i className={`fa ${
+                                log.target_type === 'system' ? 'fa-laptop-code text-indigo-400' : 
+                                (log.target_type === 'opportunity' ? 'fa-bullseye text-amber-400' : 
+                                (log.target_type === 'customer' ? 'fa-building text-emerald-400' : 'fa-history text-cyan-400'))
+                              } text-sm`}></i>
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex justify-between items-start mb-1">
+                                <span className="text-xs font-black text-slate-200">{log.action}</span>
+                                <span className="text-[10px] font-mono text-indigo-400">{log.created_at} น.</span>
+                              </div>
+                              <span className="text-[10px] text-slate-400 block mb-1">โดย {log.fullname} • ({log.role})</span>
+                              <p className="text-[11px] text-slate-400 m-0 leading-relaxed">{log.details}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 )}

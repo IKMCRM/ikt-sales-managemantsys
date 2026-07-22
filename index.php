@@ -248,14 +248,29 @@ try {
         </div>
       </div>
 
-      <!-- Recent Activities Feed -->
+      <!-- Monthly Forecast Line Chart (Takes previous place of Recent Activities) -->
       <div class="col-12 col-lg-5">
         <div class="card border-0 shadow-sm rounded-4 bg-white h-100">
+          <div class="card-header bg-white border-bottom py-3 d-flex align-items-center justify-content-between">
+            <h5 class="m-0 fw-bold text-slate-800"><i class="fas fa-chart-line text-success me-1"></i> ส่วนวิเคราะห์แนวโน้มยอดเงินตามเป้าหมายเวลา (Sales Pipeline Forecast)</h5>
+            <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-2.5">MySQL Trends</span>
+          </div>
+          <div class="card-body py-4" style="height: 320px; position: relative;">
+            <canvas id="pipelineChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Activities Feed (Timeline Feed) moved to the bottom, full width (col-12), displaying fully with no fixed scroll height -->
+    <div class="row g-4 mt-1">
+      <div class="col-12">
+        <div class="card border-0 shadow-sm rounded-4 bg-white">
           <div class="card-header bg-white border-bottom py-3 d-flex align-items-center justify-content-between" style="background-color: transparent;">
             <h5 class="m-0 fw-bold text-slate-800"><i class="fas fa-history text-indigo me-1"></i> ประวัติกิจกรรมขายล่าสุด (Recent Activities)</h5>
             <span class="badge bg-indigo bg-opacity-10 text-indigo rounded-pill px-2.5 py-1" style="background-color: rgba(102, 16, 242, 0.1); color: #6610f2;">Audit Trail</span>
           </div>
-          <div class="card-body p-3 overflow-y-auto" style="height: 380px;">
+          <div class="card-body p-4">
             <div class="timeline timeline-inverse">
               <?php if (empty($recentLogs)): ?>
                 <p class="text-center text-muted p-5">ไม่พบกิจกรรมล่าสุดของระบบ</p>
@@ -281,21 +296,6 @@ try {
                 <?php endforeach; ?>
               <?php endif; ?>
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="row g-4 mt-1">
-      <!-- Monthly Forecast Line Chart -->
-      <div class="col-12">
-        <div class="card border-0 shadow-sm rounded-4 bg-white">
-          <div class="card-header bg-white border-bottom py-3 d-flex align-items-center justify-content-between">
-            <h5 class="m-0 fw-bold text-slate-800"><i class="fas fa-chart-line text-success me-1"></i> ส่วนวิเคราะห์แนวโน้มยอดเงินตามเป้าหมายเวลา (Sales Pipeline Forecast)</h5>
-            <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-2.5">MySQL Trends</span>
-          </div>
-          <div class="card-body py-4" style="height: 350px; position: relative;">
-            <canvas id="pipelineChart"></canvas>
           </div>
         </div>
       </div>
