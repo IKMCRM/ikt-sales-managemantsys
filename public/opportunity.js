@@ -130,21 +130,17 @@ function highlightMatch(text, query) {
 function initOpportunitiesEvents() {
   const searchInput = document.getElementById('opportunity-search-input');
   const salesRepSelect = document.getElementById('opportunity-filter-salesrep');
+  const stageSelect = document.getElementById('opportunity-filter-stage');
   const statusSelectors = document.querySelectorAll('.opp-status-pill-filter');
 
   function applyAllFilters() {
     const q = searchInput ? searchInput.value.toLowerCase().trim() : '';
     const selectedSalesRep = salesRepSelect ? salesRepSelect.value : 'ALL';
-    
-    let activeStatus = 'ALL';
-    const activePill = document.querySelector('.opp-status-pill-filter.active');
-    if (activePill) {
-      activeStatus = activePill.getAttribute('data-status');
-    }
+    const selectedStage = stageSelect ? stageSelect.value : 'ALL';
 
     const filtered = allOpportunitiesCached.filter(o => {
-      // 1. Status Filter
-      if (activeStatus !== 'ALL' && o.status !== activeStatus) {
+      // 1. Status / Stage Filter
+      if (selectedStage !== 'ALL' && o.status !== selectedStage) {
         return false;
       }
 
@@ -183,6 +179,23 @@ function initOpportunitiesEvents() {
     salesRepSelect.addEventListener('change', applyAllFilters);
   }
 
+  if (stageSelect) {
+    stageSelect.addEventListener('change', (e) => {
+      const val = e.target.value;
+      // Sync to status pills row
+      statusSelectors.forEach(btn => {
+        const btnStatus = btn.getAttribute('data-status');
+        if (btnStatus === val) {
+          statusSelectors.forEach(b => b.classList.remove('active', 'btn-primary'));
+          statusSelectors.forEach(b => b.classList.add('btn-outline-secondary'));
+          btn.classList.add('active', 'btn-primary');
+          btn.classList.remove('btn-outline-secondary');
+        }
+      });
+      applyAllFilters();
+    });
+  }
+
   // Quick Status Filter buttons
   statusSelectors.forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -191,6 +204,11 @@ function initOpportunitiesEvents() {
 
       btn.classList.add('active', 'btn-primary');
       btn.classList.remove('btn-outline-secondary');
+
+      const btnStatus = btn.getAttribute('data-status');
+      if (stageSelect) {
+        stageSelect.value = btnStatus;
+      }
 
       applyAllFilters();
     });

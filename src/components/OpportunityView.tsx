@@ -39,6 +39,7 @@ interface OpportunityViewProps {
 }
 
 const SERVICE_TYPES = [
+  'Product Sales',
   'Industrial Cleaning',
   'Mechanical Service',
   'Testing Service',
@@ -469,23 +470,27 @@ export default function OpportunityView({
 
       {/* Multi filter Panel */}
       <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex flex-col gap-4 text-slate-700">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
           
           {/* Search Input */}
-          <div className="relative">
-            <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
-            <input
-              id="search-opportunity"
-              type="text"
-              placeholder="Search Deal No, Project Name, Customer..."
-              value={searchTerm}
-              onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-              className="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:outline-none text-slate-800 font-sans"
-            />
+          <div className="flex flex-col gap-1.5">
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Search Deals</span>
+            <div className="relative">
+              <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
+              <input
+                id="search-opportunity"
+                type="text"
+                placeholder="Search Deal No, Project Name..."
+                value={searchTerm}
+                onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                className="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:outline-none text-slate-800 font-sans"
+              />
+            </div>
           </div>
 
-          {/* Status Filter */}
-          <div>
+          {/* Pipeline Stage Filter */}
+          <div className="flex flex-col gap-1.5">
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Pipeline Stage</span>
             <select
               id="filter-status"
               value={statusFilter}
@@ -500,7 +505,8 @@ export default function OpportunityView({
           </div>
 
           {/* Service Type Filter */}
-          <div>
+          <div className="flex flex-col gap-1.5">
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Service Segment</span>
             <select
               id="filter-service"
               value={serviceFilter}
@@ -515,7 +521,8 @@ export default function OpportunityView({
           </div>
 
           {/* Sales person filter */}
-          <div>
+          <div className="flex flex-col gap-1.5">
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider">Sales Representative</span>
             <select
               id="filter-sales"
               value={salesFilter}
