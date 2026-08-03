@@ -2321,36 +2321,40 @@ export const CRMService = {
   },
 
   async generateSalesOrderNumber(): Promise<string> {
-    const isCloud = await this.checkCloudConnection();
-    if (isCloud && getConnectivityMode()) {
-      try {
-        // ดึงเลขล่าสุดจากฐานข้อมูล
-        const soList: SalesOrder[] = await apiFetch('/sales_orders?select=so_no&order=created_at.desc&limit=1');
-        
-        const currentYear = new Date().getFullYear().toString().slice(-2);
-        
-        if (soList && soList.length > 0) {
-            const lastSoNo = soList[0].so_no; // ตัวอย่าง: SO-001-26
-            const parts = lastSoNo.split('-');
-            
-            if (parts.length === 3) {
-                const seq = parseInt(parts[1], 10);
-                const year = parts[2];
-                
-                if (year === currentYear) {
-                    const nextSeq = (seq + 1).toString().padStart(3, '0');
-                    return `SO-${nextSeq}-${year}`;
-                }
-            }
+    const now = new Date();
+    const yr = now.getFullYear().toString().slice(-2);
+    const mo = String(now.getMonth() + 1).padStart(2, '0');
+    const targetMonthPrefix = `${yr}-${mo}`;
+
+    try {
+      let soList: SalesOrder[] = LocalDB.getSalesOrders();
+      const isCloud = await this.checkCloudConnection();
+      if (isCloud && getConnectivityMode()) {
+        const cloudSOs: SalesOrder[] = await apiFetch('/sales_orders?select=so_no&order=created_at.desc&limit=50');
+        if (cloudSOs && cloudSOs.length > 0) {
+          soList = cloudSOs;
         }
-        // กรณีไม่มีข้อมูล หรือเริ่มปีใหม่
-        return `SO-001-${currentYear}`;
-      } catch (e) {
-        console.error('Error generating SO number:', e);
       }
+
+      let maxSeq = 0;
+      soList.forEach(s => {
+        if (s.so_no) {
+          const match = s.so_no.match(/(\d{2}-\d{2})-(\d+)/);
+          if (match && match[1] === targetMonthPrefix) {
+            const seq = parseInt(match[2], 10);
+            if (!isNaN(seq) && seq > maxSeq) {
+              maxSeq = seq;
+            }
+          }
+        }
+      });
+
+      const nextSeq = String(maxSeq + 1).padStart(3, '0');
+      return `SO-${targetMonthPrefix}-${nextSeq}`;
+    } catch (e) {
+      console.error('Error generating SO number:', e);
+      return `SO-${targetMonthPrefix}-001`;
     }
-    // Fallback หรือกรณีออฟไลน์
-    return 'SO-001-' + new Date().getFullYear().toString().slice(-2);
   },
 
   async deleteActivity(id: string): Promise<boolean> {
@@ -2500,22 +2504,25 @@ export const CRMService = {
   async insertQuotation(quote: Omit<Quotation, 'id' | 'quotation_no' | 'created_at'>): Promise<Quotation> {
     const list = LocalDB.getQuotations();
     const qDate = quote.issue_date || new Date().toISOString().slice(0, 10);
-    const yr = qDate.split('-')[0].slice(-2); // e.g. "26"
+    const dateParts = qDate.split('-');
+    const yr = dateParts[0].slice(-2);
+    const mo = dateParts[1] ? dateParts[1].padStart(2, '0') : '08';
+    const targetMonthPrefix = `${yr}-${mo}`;
 
-    let seq = 4241;
-    if (list.length > 0) {
-      const seqs = list.map(q => {
-        const match = q.quotation_no.match(/^QT-(\d{4})-\d{2}/);
-        return match ? parseInt(match[1], 10) : 0;
-      });
-      const validSeqs = seqs.filter(s => s >= 4241);
-      if (validSeqs.length > 0) {
-        seq = Math.max(...validSeqs, 0) + 1;
-      } else {
-        seq = 4241;
+    let maxSeq = 0;
+    list.forEach(q => {
+      if (q.quotation_no) {
+        const match = q.quotation_no.match(/(\d{2}-\d{2})-(\d+)/);
+        if (match && match[1] === targetMonthPrefix) {
+          const seq = parseInt(match[2], 10);
+          if (!isNaN(seq) && seq > maxSeq) {
+            maxSeq = seq;
+          }
+        }
       }
-    }
-    const nextCode = `QT-${String(seq).padStart(4, '0')}-${yr}`;
+    });
+
+    const nextCode = `QT-${targetMonthPrefix}-${String(maxSeq + 1).padStart(3, '0')}`;
     const newId = crypto.randomUUID();
 
     const prepared: Quotation = {
@@ -2830,30 +2837,25 @@ export const CRMService = {
   async insertInvoice(payload: Omit<Invoice, 'id' | 'invoice_no' | 'created_at'>): Promise<Invoice> {
     const list = LocalDB.getInvoices();
     const issueDateStr = payload.issue_date || new Date().toISOString().slice(0, 10);
-    const currentYearShort = issueDateStr.split('-')[0].slice(-2);
-    
-    const matches = list.filter(q => {
-      if (!q.invoice_no) return false;
-      const parts = q.invoice_no.split('-');
-      return (parts.length === 3 && parts[0] === 'INV' && parts[2] === currentYearShort) || q.invoice_no.startsWith(`INV-${currentYearShort}`);
+    const dateParts = issueDateStr.split('-');
+    const yr = dateParts[0].slice(-2);
+    const mo = dateParts[1] ? dateParts[1].padStart(2, '0') : '08';
+    const targetMonthPrefix = `${yr}-${mo}`;
+
+    let maxSeq = 0;
+    list.forEach(inv => {
+      if (inv.invoice_no) {
+        const match = inv.invoice_no.match(/(\d{2}-\d{2})-(\d+)/);
+        if (match && match[1] === targetMonthPrefix) {
+          const seq = parseInt(match[2], 10);
+          if (!isNaN(seq) && seq > maxSeq) {
+            maxSeq = seq;
+          }
+        }
+      }
     });
 
-    let nextSeq = 1;
-    if (matches.length > 0) {
-      const seqs = matches.map(item => {
-        const parts = item.invoice_no.split('-');
-        if (parts.length === 3) {
-          const num = parseInt(parts[1], 10);
-          return isNaN(num) ? 0 : num;
-        } else {
-          const seqPart = item.invoice_no.replace(`INV-${currentYearShort}`, '');
-          const num = parseInt(seqPart, 10);
-          return isNaN(num) ? 0 : num;
-        }
-      });
-      nextSeq = Math.max(...seqs, 0) + 1;
-    }
-    const nextCode = `INV-${String(nextSeq).padStart(4, '0')}-${currentYearShort}`;
+    const nextCode = `INV-${targetMonthPrefix}-${String(maxSeq + 1).padStart(3, '0')}`;
     const newId = crypto.randomUUID();
 
     const prepared: Invoice = {

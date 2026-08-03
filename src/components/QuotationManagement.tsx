@@ -864,19 +864,25 @@ function QuoteForm({ id, onClose, quotations, customers, onToast }: any) {
     // Auto seq if new
     let newQuoteNo = initialQuote?.quotation_no;
     if (!newQuoteNo) {
-      const yr = new Date().getFullYear().toString().slice(-2);
-      const seqs = quotations.map((q: any) => {
-        const match = q.quotation_no?.match(/^QT-(\d{4})-\d{2}/);
-        return match ? parseInt(match[1], 10) : 0;
+      const now = new Date();
+      const yr = now.getFullYear().toString().slice(-2);
+      const mo = String(now.getMonth() + 1).padStart(2, '0');
+      const targetMonthPrefix = `${yr}-${mo}`;
+
+      let maxSeq = 0;
+      quotations.forEach((q: any) => {
+        if (q.quotation_no) {
+          const match = q.quotation_no.match(/(\d{2}-\d{2})-(\d+)/);
+          if (match && match[1] === targetMonthPrefix) {
+            const seq = parseInt(match[2], 10);
+            if (!isNaN(seq) && seq > maxSeq) {
+              maxSeq = seq;
+            }
+          }
+        }
       });
-      const validSeqs = seqs.filter((s: number) => s >= 4241);
-      let seq = 4241;
-      if (validSeqs.length > 0) {
-        seq = Math.max(...validSeqs, 0) + 1;
-      } else {
-        seq = 4241;
-      }
-      newQuoteNo = `QT-${String(seq).padStart(4, "0")}-${yr}`;
+
+      newQuoteNo = `QT-${targetMonthPrefix}-${String(maxSeq + 1).padStart(3, '0')}`;
     }
 
     const payload = {

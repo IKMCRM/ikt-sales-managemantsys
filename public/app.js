@@ -206,7 +206,7 @@ function injectSharedShell() {
         <div class="sidebar-footer p-2 border-t position-absolute bottom-0 start-0 end-0 bg-dark text-center no-print" style="flex-shrink: 0; z-index: 1000; height: 70px;">
           <div class="bg-secondary bg-opacity-25 p-1 rounded border border-secondary text-center">
             <span class="text-xs text-muted block font-bold d-block" style="font-size: 9px;">CURRENT REGION - THAILAND</span>
-            <span class="badge bg-success" style="font-size:9px;">IKM Testing Partner v1.6</span>
+            <span class="badge bg-success" style="font-size:9px;">IKM Testing Partner v1.7</span>
           </div>
         </div>
       </aside>

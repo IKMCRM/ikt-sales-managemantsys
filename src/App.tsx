@@ -496,8 +496,27 @@ export default function App() {
     const vat = subtotal * 0.07;
     const grand = subtotal + vat;
 
+    const qDate = quoteForm.date || new Date().toISOString().slice(0, 10);
+    const dateParts = qDate.split('-');
+    const yr = dateParts[0].slice(-2);
+    const mo = dateParts[1] ? dateParts[1].padStart(2, '0') : '08';
+    const targetMonthPrefix = `${yr}-${mo}`;
+
+    let maxSeq = 0;
+    quotations.forEach(q => {
+      if (q.quotation_no) {
+        const match = q.quotation_no.match(/(\d{2}-\d{2})-(\d+)/);
+        if (match && match[1] === targetMonthPrefix) {
+          const seq = parseInt(match[2], 10);
+          if (!isNaN(seq) && seq > maxSeq) {
+            maxSeq = seq;
+          }
+        }
+      }
+    });
+
     const nextId = quotations.length + 1;
-    const qNo = `QT-${String(nextId).padStart(6, '0')}`;
+    const qNo = `QT-${targetMonthPrefix}-${String(maxSeq + 1).padStart(3, '0')}`;
 
     const newQuote: QuotationSim = {
       id: nextId,
@@ -556,9 +575,27 @@ export default function App() {
     const subtotal = invForm.grandTotal / 1.07;
     const tax = invForm.grandTotal - subtotal;
 
-    const currentYearShort = (invForm.date || new Date().toISOString().slice(0, 10)).split('-')[0].slice(-2);
+    const invDateStr = invForm.date || new Date().toISOString().slice(0, 10);
+    const dateParts = invDateStr.split('-');
+    const yr = dateParts[0].slice(-2);
+    const mo = dateParts[1] ? dateParts[1].padStart(2, '0') : '08';
+    const targetMonthPrefix = `${yr}-${mo}`;
+
+    let maxSeq = 0;
+    invoices.forEach(inv => {
+      if (inv.invoice_no) {
+        const match = inv.invoice_no.match(/(\d{2}-\d{2})-(\d+)/);
+        if (match && match[1] === targetMonthPrefix) {
+          const seq = parseInt(match[2], 10);
+          if (!isNaN(seq) && seq > maxSeq) {
+            maxSeq = seq;
+          }
+        }
+      }
+    });
+
     const nextId = invoices.length + 1;
-    const invNo = `INV-${String(nextId).padStart(4, '0')}-${currentYearShort}`;
+    const invNo = `INV-${targetMonthPrefix}-${String(maxSeq + 1).padStart(3, '0')}`;
 
     const newInv: InvoiceSim = {
       id: nextId,
@@ -1666,7 +1703,23 @@ export default function App() {
                                               await window.SupabaseDB.updateQuotation(q.id, { status: 'Invoiced' });
                                             } else {
                                               const sos = JSON.parse(localStorage.getItem('crm_sales_orders') || '[]');
-                                              const nextCode = 'SO-' + String(sos.length + 1).padStart(3, '0') + '-' + new Date().getFullYear().toString().slice(-2);
+                                              const now = new Date();
+                                              const yr = now.getFullYear().toString().slice(-2);
+                                              const mo = String(now.getMonth() + 1).padStart(2, '0');
+                                              const targetMonthPrefix = `${yr}-${mo}`;
+                                              let maxSeq = 0;
+                                              sos.forEach((s: any) => {
+                                                if (s.so_no) {
+                                                  const match = s.so_no.match(/(\d{2}-\d{2})-(\d+)/);
+                                                  if (match && match[1] === targetMonthPrefix) {
+                                                    const seq = parseInt(match[2], 10);
+                                                    if (!isNaN(seq) && seq > maxSeq) {
+                                                      maxSeq = seq;
+                                                    }
+                                                  }
+                                                }
+                                              });
+                                              const nextCode = `SO-${targetMonthPrefix}-${String(maxSeq + 1).padStart(3, '0')}`;
                                               const prepared = {
                                                 id: crypto.randomUUID(),
                                                 so_no: nextCode,

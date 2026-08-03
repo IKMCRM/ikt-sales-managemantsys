@@ -1312,22 +1312,25 @@ const SupabaseDB = {
     
     // Auto Generate Code based on the year of quotation_date
     const qDate = quoteData.quotation_date || new Date().toISOString().slice(0, 10);
-    const yr = qDate.split('-')[0].slice(-2); // e.g. "26"
+    const dateParts = qDate.split('-');
+    const yr = dateParts[0].slice(-2);
+    const mo = dateParts[1] ? dateParts[1].padStart(2, '0') : '08';
+    const targetMonthPrefix = `${yr}-${mo}`;
 
-    let seq = 4241;
-    if (quotes.length > 0) {
-      const seqs = quotes.map(q => {
-        const match = q.quotation_no.match(/^QT-(\d{4})-\d{2}/);
-        return match ? parseInt(match[1], 10) : 0;
-      });
-      const validSeqs = seqs.filter(s => s >= 4241);
-      if (validSeqs.length > 0) {
-        seq = Math.max(...validSeqs, 0) + 1;
-      } else {
-        seq = 4241;
+    let maxSeq = 0;
+    quotes.forEach(q => {
+      if (q.quotation_no) {
+        const match = q.quotation_no.match(/(\d{2}-\d{2})-(\d+)/);
+        if (match && match[1] === targetMonthPrefix) {
+          const seq = parseInt(match[2], 10);
+          if (!isNaN(seq) && seq > maxSeq) {
+            maxSeq = seq;
+          }
+        }
       }
-    }
-    const nextCode = `QT-${String(seq).padStart(4, '0')}-${yr}`;
+    });
+
+    const nextCode = `QT-${targetMonthPrefix}-${String(maxSeq + 1).padStart(3, '0')}`;
     const newId = crypto.randomUUID();
 
     const currentUser = this.getCurrentUser();
@@ -1522,23 +1525,25 @@ const SupabaseDB = {
 
   async generateSalesOrderNumber() {
     const sos = await this.getSalesOrders();
-    const year = new Date().getFullYear();
-    const yearShort = year.toString().slice(-2);
-    let maxNum = 0;
+    const now = new Date();
+    const yr = now.getFullYear().toString().slice(-2);
+    const mo = String(now.getMonth() + 1).padStart(2, '0');
+    const targetMonthPrefix = `${yr}-${mo}`;
+
+    let maxSeq = 0;
     sos.forEach(s => {
-      if (s.so_no && s.so_no.startsWith('SO-')) {
-        const parts = s.so_no.split('-');
-        if (parts.length === 3) {
-          const num = parseInt(parts[1], 10);
-          if (!isNaN(num) && num > maxNum) {
-            maxNum = num;
+      if (s.so_no) {
+        const match = s.so_no.match(/(\d{2}-\d{2})-(\d+)/);
+        if (match && match[1] === targetMonthPrefix) {
+          const seq = parseInt(match[2], 10);
+          if (!isNaN(seq) && seq > maxSeq) {
+            maxSeq = seq;
           }
         }
       }
     });
-    const nextNum = maxNum + 1;
-    const padded = String(nextNum).padStart(4, '0');
-    return `SO-${padded}-${yearShort}`;
+
+    return `SO-${targetMonthPrefix}-${String(maxSeq + 1).padStart(3, '0')}`;
   },
 
   async addSalesOrder(soData) {
@@ -1734,30 +1739,25 @@ const SupabaseDB = {
     
     // Auto Generate Code based on invoice_date
     const iDate = invData.invoice_date || new Date().toISOString().slice(0, 10);
-    const yr = iDate.split('-')[0].slice(-2); // e.g. "26"
+    const dateParts = iDate.split('-');
+    const yr = dateParts[0].slice(-2);
+    const mo = dateParts[1] ? dateParts[1].padStart(2, '0') : '08';
+    const targetMonthPrefix = `${yr}-${mo}`;
 
-    const thisYearInvs = invoices.filter(inv => {
-      if (!inv.invoice_no) return false;
-      const parts = inv.invoice_no.split('-');
-      return (parts.length === 3 && parts[0] === 'INV' && parts[2] === yr) || inv.invoice_no.startsWith(`INV-${yr}`);
+    let maxSeq = 0;
+    invoices.forEach(inv => {
+      if (inv.invoice_no) {
+        const match = inv.invoice_no.match(/(\d{2}-\d{2})-(\d+)/);
+        if (match && match[1] === targetMonthPrefix) {
+          const seq = parseInt(match[2], 10);
+          if (!isNaN(seq) && seq > maxSeq) {
+            maxSeq = seq;
+          }
+        }
+      }
     });
 
-    let seq = 1;
-    if (thisYearInvs.length > 0) {
-      const seqs = thisYearInvs.map(inv => {
-        const parts = inv.invoice_no.split('-');
-        if (parts.length === 3) {
-          const num = parseInt(parts[1], 10);
-          return isNaN(num) ? 0 : num;
-        } else {
-          const seqPart = inv.invoice_no.replace(`INV-${yr}`, '');
-          const num = parseInt(seqPart, 10);
-          return isNaN(num) ? 0 : num;
-        }
-      });
-      seq = Math.max(...seqs, 0) + 1;
-    }
-    const nextCode = `INV-${String(seq).padStart(4, '0')}-${yr}`;
+    const nextCode = `INV-${targetMonthPrefix}-${String(maxSeq + 1).padStart(3, '0')}`;
     const newId = crypto.randomUUID();
 
     const currentUser = this.getCurrentUser();
