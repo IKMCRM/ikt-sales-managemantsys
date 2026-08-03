@@ -744,8 +744,11 @@ function CustomerFormView({ customer, onSave, onCancel }: { customer?: any, onSa
      // @ts-ignore
      if (window.SupabaseDB) {
        // Mock save payload creation
+       const now = new Date();
+       const yr = now.getFullYear().toString().slice(-2);
+       const mo = String(now.getMonth() + 1).padStart(2, '0');
        const payload = {
-          customer_code: isEdit ? customer.code : `CUS-2600${Math.floor(Math.random()*100)}`,
+          customer_code: isEdit ? customer.code : `CUS-${yr}-${mo}-001`,
           customer_name: 'New Registered Customer Ltd.',
           tax_id: '0105555555555',
           industry_type: 'Manufacturing',

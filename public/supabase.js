@@ -852,14 +852,25 @@ const SupabaseDB = {
     const customers = JSON.parse(localStorage.getItem('crm_customers')) || [];
     
     // Auto customer code
-    const yr = '26';
-    const thisYr = customers.filter(c => c.customer_code.startsWith(`CUS-${yr}`));
-    let seq = 1;
-    if (thisYr.length > 0) {
-      const seqs = thisYr.map(c => parseInt(c.customer_code.replace(`CUS-${yr}`, ''), 10));
-      seq = Math.max(...seqs) + 1;
-    }
-    const nextCode = `CUS-${yr}${String(seq).padStart(4, '0')}`;
+    const now = new Date();
+    const yr = now.getFullYear().toString().slice(-2);
+    const mo = String(now.getMonth() + 1).padStart(2, '0');
+    const targetMonthPrefix = `${yr}-${mo}`;
+
+    let maxSeq = 0;
+    customers.forEach(c => {
+      if (c.customer_code) {
+        const match = c.customer_code.match(/(\d{2}-\d{2})-(\d+)/);
+        if (match && match[1] === targetMonthPrefix) {
+          const seq = parseInt(match[2], 10);
+          if (!isNaN(seq) && seq > maxSeq) {
+            maxSeq = seq;
+          }
+        }
+      }
+    });
+
+    const nextCode = `CUS-${targetMonthPrefix}-${String(maxSeq + 1).padStart(3, '0')}`;
     const newId = crypto.randomUUID();
 
     const newCustomer = {
@@ -1065,15 +1076,26 @@ const SupabaseDB = {
     clearSupabaseCaches();
     const opportunities = JSON.parse(localStorage.getItem('crm_opportunities')) || [];
     
-    // Auto Generate Code
-    const yr = '26';
-    const thisYr = opportunities.filter(o => o.opportunity_no.startsWith(`OPP-${yr}`));
-    let seq = 1;
-    if (thisYr.length > 0) {
-      const seqs = thisYr.map(o => parseInt(o.opportunity_no.replace(`OPP-${yr}`, ''), 10));
-      seq = Math.max(...seqs) + 1;
-    }
-    const nextCode = `OPP-${yr}${String(seq).padStart(4, '0')}`;
+    // Auto Generate Code: Format OPP-YY-MM-XXX
+    const now = new Date();
+    const yr = now.getFullYear().toString().slice(-2);
+    const mo = String(now.getMonth() + 1).padStart(2, '0');
+    const targetMonthPrefix = `${yr}-${mo}`;
+
+    let maxSeq = 0;
+    opportunities.forEach(o => {
+      if (o.opportunity_no) {
+        const match = o.opportunity_no.match(/(\d{2}-\d{2})-(\d+)/);
+        if (match && match[1] === targetMonthPrefix) {
+          const seq = parseInt(match[2], 10);
+          if (!isNaN(seq) && seq > maxSeq) {
+            maxSeq = seq;
+          }
+        }
+      }
+    });
+
+    const nextCode = `OPP-${targetMonthPrefix}-${String(maxSeq + 1).padStart(3, '0')}`;
     const newId = crypto.randomUUID();
 
     const currentUser = this.getCurrentUser();

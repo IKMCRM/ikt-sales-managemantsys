@@ -352,8 +352,26 @@ export default function App() {
     e.preventDefault();
     if (!custForm.name) return;
 
+    const now = new Date();
+    const yr = now.getFullYear().toString().slice(-2);
+    const mo = String(now.getMonth() + 1).padStart(2, '0');
+    const targetMonthPrefix = `${yr}-${mo}`;
+
+    let maxSeq = 0;
+    customers.forEach(c => {
+      if (c.customer_code) {
+        const match = c.customer_code.match(/(\d{2}-\d{2})-(\d+)/);
+        if (match && match[1] === targetMonthPrefix) {
+          const seq = parseInt(match[2], 10);
+          if (!isNaN(seq) && seq > maxSeq) {
+            maxSeq = seq;
+          }
+        }
+      }
+    });
+
     const nextId = customers.length + 1;
-    const code = `CUS-${String(nextId).padStart(6, '0')}`;
+    const code = `CUS-${targetMonthPrefix}-${String(maxSeq + 1).padStart(3, '0')}`;
     const newCust: CustomerSim = {
       id: nextId,
       customer_code: code,
@@ -395,8 +413,26 @@ export default function App() {
     if (!oppForm.projectName || !oppForm.customerId) return;
 
     const selectedCust = customers.find(c => c.id === Number(oppForm.customerId));
+    const now = new Date();
+    const yr = now.getFullYear().toString().slice(-2);
+    const mo = String(now.getMonth() + 1).padStart(2, '0');
+    const targetMonthPrefix = `${yr}-${mo}`;
+
+    let maxSeq = 0;
+    opportunities.forEach(o => {
+      if (o.opportunity_no) {
+        const match = o.opportunity_no.match(/(\d{2}-\d{2})-(\d+)/);
+        if (match && match[1] === targetMonthPrefix) {
+          const seq = parseInt(match[2], 10);
+          if (!isNaN(seq) && seq > maxSeq) {
+            maxSeq = seq;
+          }
+        }
+      }
+    });
+
     const nextId = opportunities.length + 1;
-    const oppNo = `OPP-${String(nextId).padStart(6, '0')}`;
+    const oppNo = `OPP-${targetMonthPrefix}-${String(maxSeq + 1).padStart(3, '0')}`;
 
     const newOpp: OpportunitySim = {
       id: nextId,

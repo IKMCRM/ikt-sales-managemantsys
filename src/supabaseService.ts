@@ -1768,20 +1768,27 @@ export const CRMService = {
   },
 
   async insertCustomer(customer: Omit<Customer, 'id' | 'customer_code'>): Promise<Customer> {
-    // 1. Generate visual customer_code locally matching CUS-260101 format
+    // 1. Generate visual customer_code locally matching CUS-26-08-001 format
     const currentList = LocalDB.getCustomers();
-    const currentYearShort = '26';
-    const thisYearCusts = currentList.filter(c => c.customer_code.startsWith(`CUS-${currentYearShort}`));
-    let nextSeq = 1;
-    if (thisYearCusts.length > 0) {
-      const maxSeq = thisYearCusts.reduce((max, item) => {
-        const seqPart = item.customer_code.replace(`CUS-${currentYearShort}`, '');
-        const num = parseInt(seqPart, 10);
-        return num > max ? num : max;
-      }, 0);
-      nextSeq = maxSeq + 1;
-    }
-    const nextCode = `CUS-${currentYearShort}${String(nextSeq).padStart(4, '0')}`;
+    const now = new Date();
+    const yr = now.getFullYear().toString().slice(-2);
+    const mo = String(now.getMonth() + 1).padStart(2, '0');
+    const targetMonthPrefix = `${yr}-${mo}`;
+
+    let maxSeq = 0;
+    currentList.forEach(c => {
+      if (c.customer_code) {
+        const match = c.customer_code.match(/(\d{2}-\d{2})-(\d+)/);
+        if (match && match[1] === targetMonthPrefix) {
+          const seq = parseInt(match[2], 10);
+          if (!isNaN(seq) && seq > maxSeq) {
+            maxSeq = seq;
+          }
+        }
+      }
+    });
+
+    const nextCode = `CUS-${targetMonthPrefix}-${String(maxSeq + 1).padStart(3, '0')}`;
     const newId = crypto.randomUUID();
 
     const preparedCustomer: Customer = {
@@ -2043,21 +2050,26 @@ export const CRMService = {
   async insertOpportunity(opportunity: Omit<Opportunity, 'id' | 'opportunity_no'>): Promise<Opportunity> {
     const currentList = LocalDB.getOpportunities();
     
-    // Auto Generate Opportunity No: Format OPP-YYXXXX (e.g. OPP-260001 for year 2026)
-    const currentYearShort = '26';
-    
-    // Filter to ones matching Year 2026
-    const thisYearOpps = currentList.filter(o => o.opportunity_no.startsWith(`OPP-${currentYearShort}`));
-    let nextSeq = 1;
-    if (thisYearOpps.length > 0) {
-      const maxSeq = thisYearOpps.reduce((max, item) => {
-        const seqPart = item.opportunity_no.replace(`OPP-${currentYearShort}`, '');
-        const num = parseInt(seqPart, 10);
-        return num > max ? num : max;
-      }, 0);
-      nextSeq = maxSeq + 1;
-    }
-    const nextOppNo = `OPP-${currentYearShort}${String(nextSeq).padStart(4, '0')}`;
+    // Auto Generate Opportunity No: Format OPP-YY-MM-XXX (e.g. OPP-26-08-001)
+    const now = new Date();
+    const yr = now.getFullYear().toString().slice(-2);
+    const mo = String(now.getMonth() + 1).padStart(2, '0');
+    const targetMonthPrefix = `${yr}-${mo}`;
+
+    let maxSeq = 0;
+    currentList.forEach(o => {
+      if (o.opportunity_no) {
+        const match = o.opportunity_no.match(/(\d{2}-\d{2})-(\d+)/);
+        if (match && match[1] === targetMonthPrefix) {
+          const seq = parseInt(match[2], 10);
+          if (!isNaN(seq) && seq > maxSeq) {
+            maxSeq = seq;
+          }
+        }
+      }
+    });
+
+    const nextOppNo = `OPP-${targetMonthPrefix}-${String(maxSeq + 1).padStart(3, '0')}`;
     const newId = crypto.randomUUID();
 
     const preparedOpp: Opportunity = {
