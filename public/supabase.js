@@ -1202,9 +1202,22 @@ const SupabaseDB = {
     const localOpps = await this.getOpportunities();
     const oppMap = new Map(localOpps.map(o => [o.id, o]));
 
+    const sortLatestFirst = (a, b) => {
+      if (a.created_at && b.created_at && a.created_at !== b.created_at) {
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+      const dateA = a.quotation_date || a.issue_date || a.created_at || '';
+      const dateB = b.quotation_date || b.issue_date || b.created_at || '';
+      if (dateA && dateB && dateA !== dateB) {
+        const diff = new Date(dateB).getTime() - new Date(dateA).getTime();
+        if (!isNaN(diff) && diff !== 0) return diff;
+      }
+      return (b.quotation_no || '').localeCompare(a.quotation_no || '', undefined, { numeric: true, sensitivity: 'base' });
+    };
+
     if (isCloud) {
       try {
-        const rawQuotes = await restRequest('/quotations?order=quotation_no.desc') || [];
+        const rawQuotes = await restRequest('/quotations?order=created_at.desc,quotation_no.desc') || [];
         const hydrated = rawQuotes.map(q => {
           let project_name = q.project_name || q.title || '';
           let job_no = q.job_no || '';
@@ -1256,7 +1269,7 @@ const SupabaseDB = {
             customer: custMap.get(q.customer_id),
             opportunity: oppMap.get(q.opportunity_id)
           };
-        });
+        }).sort(sortLatestFirst);
         localStorage.setItem('crm_quotations', JSON.stringify(hydrated));
         _quotationsCache = hydrated;
         _quotationsCacheTime = Date.now();
@@ -1317,7 +1330,7 @@ const SupabaseDB = {
         customer: custMap.get(q.customer_id),
         opportunity: oppMap.get(q.opportunity_id)
       };
-    }).sort((a, b) => b.quotation_no.localeCompare(a.quotation_no));
+    }).sort(sortLatestFirst);
     _quotationsCache = map;
     _quotationsCacheTime = Date.now();
     return map;

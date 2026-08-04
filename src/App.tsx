@@ -1567,7 +1567,18 @@ export default function App() {
                             </tr>
                           </thead>
                           <tbody>
-                            {quotations.map(q => (
+                            {[...quotations].sort((a, b) => {
+                              if (a.created_at && b.created_at && a.created_at !== b.created_at) {
+                                return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+                              }
+                              const dateA = a.quotation_date || a.created_at || '';
+                              const dateB = b.quotation_date || b.created_at || '';
+                              if (dateA && dateB && dateA !== dateB) {
+                                const diff = new Date(dateB).getTime() - new Date(dateA).getTime();
+                                if (!isNaN(diff) && diff !== 0) return diff;
+                              }
+                              return (b.quotation_no || '').localeCompare(a.quotation_no || '', undefined, { numeric: true, sensitivity: 'base' });
+                            }).map(q => (
                               <tr key={q.id} className="border-b border-slate-850 hover:bg-slate-850/30 transition-all text-slate-300">
                                 <td className="py-4 px-3 font-mono">
                                   <div className="text-emerald-400 font-bold">{q.quotation_no}</div>

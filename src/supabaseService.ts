@@ -2486,16 +2486,29 @@ export const CRMService = {
   // -------------------------------------------------------------
   async fetchQuotations(): Promise<Quotation[]> {
     const isCloud = await this.checkCloudConnection();
+    const sortLatestFirst = (a: any, b: any) => {
+      if (a.created_at && b.created_at && a.created_at !== b.created_at) {
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+      const dateA = a.quotation_date || a.issue_date || a.created_at || '';
+      const dateB = b.quotation_date || b.issue_date || b.created_at || '';
+      if (dateA && dateB && dateA !== dateB) {
+        const diff = new Date(dateB).getTime() - new Date(dateA).getTime();
+        if (!isNaN(diff) && diff !== 0) return diff;
+      }
+      return (b.quotation_no || '').localeCompare(a.quotation_no || '', undefined, { numeric: true, sensitivity: 'base' });
+    };
+
     if (isCloud && getConnectivityMode()) {
       try {
-        const raw = await apiFetch('/quotations?order=quotation_no.desc');
+        const raw = await apiFetch('/quotations?order=created_at.desc,quotation_no.desc');
         const custs = await this.fetchCustomers();
         const custMap = new Map<string, any>(custs.map(c => [c.id, c]));
         
         const parsed = (raw as any[]).map(q => ({
           ...q,
           customer_name: custMap.get(q.customer_id)?.customer_name || 'ไม่พบข้อมูลลูกค้า'
-        }));
+        })).sort(sortLatestFirst);
         LocalDB.saveQuotations(parsed);
         return parsed;
       } catch (err) {
@@ -2510,7 +2523,7 @@ export const CRMService = {
         ...q,
         customer_name: c ? c.customer_name : 'ไม่พบข้อมูลลูกค้า'
       };
-    }).sort((a, b) => b.quotation_no.localeCompare(a.quotation_no));
+    }).sort(sortLatestFirst);
   },
 
   async insertQuotation(quote: Omit<Quotation, 'id' | 'quotation_no' | 'created_at'>): Promise<Quotation> {

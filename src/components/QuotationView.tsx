@@ -216,6 +216,17 @@ export default function QuotationView({
         (q.customer_name && q.customer_name.toLowerCase().includes(searchTerm.toLowerCase()));
       const matchStatus = selectedStatus === 'All' || q.status === selectedStatus || (selectedStatus === 'Approved' && q.status === 'Invoiced');
       return matchSearch && matchStatus;
+    }).sort((a, b) => {
+      if (a.created_at && b.created_at && a.created_at !== b.created_at) {
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+      const dateA = a.quotation_date || a.issue_date || a.created_at || '';
+      const dateB = b.quotation_date || b.issue_date || b.created_at || '';
+      if (dateA && dateB && dateA !== dateB) {
+        const diff = new Date(dateB).getTime() - new Date(dateA).getTime();
+        if (!isNaN(diff) && diff !== 0) return diff;
+      }
+      return (b.quotation_no || '').localeCompare(a.quotation_no || '', undefined, { numeric: true, sensitivity: 'base' });
     });
   }, [quotations, searchTerm, selectedStatus]);
 
