@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { UserRole, AuditLog } from '../types';
 import { CRMService } from '../supabaseService';
 import { 
@@ -20,8 +20,22 @@ import {
   Calendar,
   Layers,
   ArrowRightLeft,
-  Edit
+  Edit,
+  HardDrive,
+  FileSpreadsheet,
+  Download,
+  Upload,
+  Clock,
+  CalendarDays,
+  FileJson
 } from 'lucide-react';
+import { 
+  performAutoSave, 
+  downloadJSONBackup, 
+  restoreJSONBackup, 
+  exportExcelBackup, 
+  DateRangeType 
+} from '../utils/backupExport';
 
 interface CRMUserSim {
   id: string;
@@ -55,7 +69,12 @@ export default function AdministrationView({
   onChangeUserSession, 
   onToast 
 }: AdministrationViewProps) {
-  const [activeSubTab, setActiveSubTab] = useState<'users' | 'roles' | 'audit'>('users');
+  const [activeSubTab, setActiveSubTab] = useState<'users' | 'roles' | 'audit' | 'backup'>('users');
+  const [adminLastSaved, setAdminLastSaved] = useState<string>(() => {
+    const raw = localStorage.getItem('crm_last_autosave_time');
+    return raw ? new Date(raw).toLocaleTimeString('th-TH') : 'ยังไม่มีบันทึกวันนี้';
+  });
+  const fileInputRefAdmin = useRef<HTMLInputElement>(null);
   
   // Simulated Users list
   const [simUsers, setSimUsers] = useState<CRMUserSim[]>(() => {
@@ -258,6 +277,13 @@ export default function AdministrationView({
         >
           <History className="w-4 h-4" />
           ประวัติการใช้งานระบบ (Audit Trail)
+        </button>
+        <button
+          onClick={() => setActiveSubTab('backup')}
+          className={`px-5 py-3 text-xs font-bold transition-all focus:outline-none flex items-center gap-2 relative border-b-2 cursor-pointer ${activeSubTab === 'backup' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+        >
+          <HardDrive className="w-4 h-4" />
+          สำรองข้อมูล & Export Excel
         </button>
       </div>
 
@@ -630,6 +656,267 @@ export default function AdministrationView({
               ENTERPRISE-GRADE CONTINUOUS LOGGING FILE SYSTEM ACTIVE • TOTAL: {filteredAuditLogs.length} EVENTS RECORDED
             </div>
           </div>
+        </div>
+      )}
+
+      {/* --- SUBTAB 4: BACKUP & EXCEL EXPORT CENTER --- */}
+      {activeSubTab === 'backup' && (
+        <div className="space-y-6 animate-fade-in font-sans">
+          
+          {/* Header Banner */}
+          <div className="p-6 bg-slate-900 text-white rounded-2xl border border-slate-800 shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-indigo-600/30 border border-indigo-500/40 rounded-2xl text-indigo-400">
+                <HardDrive className="w-8 h-8" />
+              </div>
+              <div>
+                <h3 className="text-base font-extrabold flex items-center gap-2">
+                  ศูนย์สำรองข้อมูลระบบ & ส่งออกตารางรายงาน Excel
+                  <span className="bg-emerald-500/20 text-emerald-400 text-[10px] px-2.5 py-0.5 rounded-full border border-emerald-500/30 font-mono font-bold">
+                    AUTO-SAVE SYSTEM ACTIVE
+                  </span>
+                </h3>
+                <p className="text-xs text-slate-400 mt-1">
+                  ระบบบันทึกความเคลื่อนไหวลง Local Storage อัตโนมัติตลอดเวลา พร้อมฟังก์ชันดาวน์โหลดไฟล์ Excel รายสัปดาห์ / รายเดือน / ย้อนหลัง
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => {
+                  const res = performAutoSave();
+                  if (res.success) {
+                    setAdminLastSaved(res.savedAt);
+                    onToast(`บันทึกข้อมูลลง Local Storage สำเร็จแล้ว (${res.totalRecords} รายการ)`, 'success');
+                  }
+                }}
+                className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-extrabold shadow flex items-center gap-2 transition-all cursor-pointer"
+              >
+                <RefreshCcw className="w-4 h-4" />
+                ซิงค์บันทึก Local Storage ทันที
+              </button>
+            </div>
+          </div>
+
+          {/* Section 1: Excel Export Cards Grid */}
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <FileSpreadsheet className="w-5 h-5 text-emerald-600" />
+                <div>
+                  <h4 className="text-sm font-bold text-slate-800">
+                    ส่งออกข้อมูลทั้งหมดไปยังไฟล์ Excel (.xlsx) ตามช่วงเวลา
+                  </h4>
+                  <p className="text-xs text-slate-500">
+                    ดาวน์โหลดตารางข้อมูลสมบูรณ์แบบ 8 ชีท ( Customers, Deals, Quotations, Sales Orders, Invoices, Deliveries, Receipts, Projects )
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pt-2">
+              
+              {/* All Data */}
+              <button
+                onClick={() => {
+                  performAutoSave();
+                  exportExcelBackup('all');
+                  onToast('ส่งออกตารางข้อมูลทั้งหมดเป็นไฟล์ Excel เรียบร้อย', 'success');
+                }}
+                className="p-4 bg-emerald-50 hover:bg-emerald-100/80 border border-emerald-200 rounded-2xl text-left transition-all cursor-pointer group shadow-xs hover:shadow-sm"
+              >
+                <div className="flex items-center justify-between text-emerald-700 font-extrabold text-xs">
+                  <span className="flex items-center gap-1.5">
+                    <Database className="w-4 h-4" />
+                    ส่งออกข้อมูลทั้งหมด (All Data)
+                  </span>
+                  <Download className="w-4 h-4 group-hover:translate-y-0.5 transition-transform" />
+                </div>
+                <div className="text-xs font-bold text-slate-700 mt-2">
+                  ข้อมูลประวัติย้อนหลังทั้งหมดในระบบ
+                </div>
+                <div className="text-[11px] text-slate-500 mt-0.5">
+                  ไม่จำกัดช่วงเวลา ครบทุกตาราง
+                </div>
+              </button>
+
+              {/* This Month */}
+              <button
+                onClick={() => {
+                  performAutoSave();
+                  exportExcelBackup('this_month');
+                  onToast('ส่งออกตารางข้อมูลประจำเดือนนี้เป็นไฟล์ Excel เรียบร้อย', 'success');
+                }}
+                className="p-4 bg-indigo-50 hover:bg-indigo-100/80 border border-indigo-200 rounded-2xl text-left transition-all cursor-pointer group shadow-xs hover:shadow-sm"
+              >
+                <div className="flex items-center justify-between text-indigo-700 font-extrabold text-xs">
+                  <span className="flex items-center gap-1.5">
+                    <CalendarDays className="w-4 h-4" />
+                    ประจำเดือนนี้ (This Month)
+                  </span>
+                  <Download className="w-4 h-4 group-hover:translate-y-0.5 transition-transform" />
+                </div>
+                <div className="text-xs font-bold text-slate-700 mt-2">
+                  ข้อมูลสรุปประจำเดือนปัจจุบัน
+                </div>
+                <div className="text-[11px] text-slate-500 mt-0.5">
+                  คัดเฉพาะรายการในเดือนปัจจุบัน
+                </div>
+              </button>
+
+              {/* Last Month */}
+              <button
+                onClick={() => {
+                  performAutoSave();
+                  exportExcelBackup('last_month');
+                  onToast('ส่งออกตารางข้อมูลย้อนหลังเดือนที่แล้วเป็นไฟล์ Excel เรียบร้อย', 'success');
+                }}
+                className="p-4 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-2xl text-left transition-all cursor-pointer group shadow-xs hover:shadow-sm"
+              >
+                <div className="flex items-center justify-between text-slate-700 font-extrabold text-xs">
+                  <span className="flex items-center gap-1.5">
+                    <Clock className="w-4 h-4" />
+                    เดือนที่แล้ว (Last Month)
+                  </span>
+                  <Download className="w-4 h-4 group-hover:translate-y-0.5 transition-transform" />
+                </div>
+                <div className="text-xs font-bold text-slate-700 mt-2">
+                  สรุปผลงานเดือนก่อนหน้า
+                </div>
+                <div className="text-[11px] text-slate-500 mt-0.5">
+                  เปรียบเทียบสถิติย้อนหลัง 1 เดือน
+                </div>
+              </button>
+
+              {/* This Week */}
+              <button
+                onClick={() => {
+                  performAutoSave();
+                  exportExcelBackup('this_week');
+                  onToast('ส่งออกตารางข้อมูลสัปดาห์นี้เป็นไฟล์ Excel เรียบร้อย', 'success');
+                }}
+                className="p-4 bg-amber-50 hover:bg-amber-100/80 border border-amber-200 rounded-2xl text-left transition-all cursor-pointer group shadow-xs hover:shadow-sm"
+              >
+                <div className="flex items-center justify-between text-amber-700 font-extrabold text-xs">
+                  <span className="flex items-center gap-1.5">
+                    <Calendar className="w-4 h-4" />
+                    รอบสัปดาห์นี้ (This Week)
+                  </span>
+                  <Download className="w-4 h-4 group-hover:translate-y-0.5 transition-transform" />
+                </div>
+                <div className="text-xs font-bold text-slate-700 mt-2">
+                  ความเคลื่อนไหวในรอบ 7 วันนี้
+                </div>
+                <div className="text-[11px] text-slate-500 mt-0.5">
+                  สำหรับการประชุมทีมขายประจำสัปดาห์
+                </div>
+              </button>
+
+              {/* Last Week */}
+              <button
+                onClick={() => {
+                  performAutoSave();
+                  exportExcelBackup('last_week');
+                  onToast('ส่งออกตารางข้อมูลสัปดาห์ที่แล้วเป็นไฟล์ Excel เรียบร้อย', 'success');
+                }}
+                className="p-4 bg-orange-50 hover:bg-orange-100/80 border border-orange-200 rounded-2xl text-left transition-all cursor-pointer group shadow-xs hover:shadow-sm"
+              >
+                <div className="flex items-center justify-between text-orange-700 font-extrabold text-xs">
+                  <span className="flex items-center gap-1.5">
+                    <Clock className="w-4 h-4" />
+                    สัปดาห์ที่แล้ว (Last Week)
+                  </span>
+                  <Download className="w-4 h-4 group-hover:translate-y-0.5 transition-transform" />
+                </div>
+                <div className="text-xs font-bold text-slate-700 mt-2">
+                  สรุปงานสัปดาห์ก่อนหน้า
+                </div>
+                <div className="text-[11px] text-slate-500 mt-0.5">
+                  ตรวจสอบผลการดำเนินงานย้อนหลัง
+                </div>
+              </button>
+
+            </div>
+          </div>
+
+          {/* Section 2: JSON Backup & Restore Controls */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            {/* Download Manual Backup JSON */}
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
+              <div>
+                <div className="flex items-center gap-2 text-indigo-600 font-bold text-sm">
+                  <FileJson className="w-5 h-5" />
+                  Manual Backup (ดาวน์โหลดไฟล์ JSON)
+                </div>
+                <p className="text-xs text-slate-500 mt-2 leading-relaxed">
+                  สร้างไฟล์ Snapshot สำรองความสมบูรณ์ของระบบ CRM (ลูกค้า, ดีล, ใบเสนอราคา, ใบสั่งขาย, ใบแจ้งหนี้, ประวัติการทำงาน ฯลฯ) เพื่อบันทึกเก็บไว้เป็นไฟล์นิรภัย
+                </p>
+              </div>
+
+              <button
+                onClick={() => {
+                  performAutoSave();
+                  downloadJSONBackup();
+                  onToast('ดาวน์โหลดไฟล์สำรองข้อมูล JSON สำเร็จแล้ว', 'success');
+                }}
+                className="mt-6 w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs shadow transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Download className="w-4 h-4" />
+                ดาวน์โหลดไฟล์สำรองระบบ (.json)
+              </button>
+            </div>
+
+            {/* Restore Data from JSON */}
+            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
+              <div>
+                <div className="flex items-center gap-2 text-amber-600 font-bold text-sm">
+                  <Upload className="w-5 h-5" />
+                  Restore Data (คืนค่าระบบจากไฟล์ JSON)
+                </div>
+                <p className="text-xs text-slate-500 mt-2 leading-relaxed">
+                  เลือกไฟล์ .json ที่เคยสำรองไว้เพื่อทำการ Restore คืนค่าฐานข้อมูลกลับมาบนเบราว์เซอร์นี้
+                </p>
+              </div>
+
+              <div className="mt-6">
+                <input
+                  type="file"
+                  ref={fileInputRefAdmin}
+                  accept=".json"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    if (!confirm('ยืนยันการนำเข้าข้อมูล? การดำเนินการนี้จะเขียนทับข้อมูลที่มีอยู่เดิม')) return;
+
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                      const content = event.target?.result as string;
+                      const res = restoreJSONBackup(content);
+                      if (res.success) {
+                        setAdminLastSaved(new Date().toLocaleTimeString('th-TH'));
+                        onToast(res.message, 'success');
+                      } else {
+                        onToast(res.message, 'err');
+                      }
+                    };
+                    reader.readAsText(file);
+                  }}
+                  className="hidden"
+                />
+                <button
+                  onClick={() => fileInputRefAdmin.current?.click()}
+                  className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold text-xs shadow transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Upload className="w-4 h-4 text-amber-400" />
+                  เลือกไฟล์ .json เพื่อนำเข้าคืนค่า (Restore)
+                </button>
+              </div>
+            </div>
+
+          </div>
+
         </div>
       )}
 

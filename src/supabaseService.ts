@@ -1147,7 +1147,7 @@ async function apiFetch(endpoint: string, options: RequestInit = {}): Promise<an
 /**
  * Service to manage local database backup / fallback
  */
-class LocalDB {
+export class LocalDB {
   static getCustomers(): Customer[] {
     const data = localStorage.getItem('crm_customers');
     if (!data) {

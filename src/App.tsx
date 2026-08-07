@@ -32,8 +32,11 @@ import {
   Send,
   XCircle,
   Ban,
-  Bell
+  Bell,
+  HardDrive
 } from 'lucide-react';
+import BackupExportModal from './components/BackupExportModal';
+import { performAutoSave } from './utils/backupExport';
 import { phpCodebase, PHPFile } from './data/phpCodebase';
 import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 
@@ -178,6 +181,33 @@ export default function App() {
     updateTime();
     const interval = setInterval(updateTime, 1000);
     return () => clearInterval(interval);
+  }, []);
+
+  // --- Periodic LocalStorage Auto-Save State ---
+  const [lastAutoSaveTime, setLastAutoSaveTime] = useState<string>(() => {
+    const saved = localStorage.getItem('crm_last_autosave_time');
+    return saved ? new Date(saved).toLocaleTimeString('th-TH') : 'เริ่มต้นแล้ว';
+  });
+  const [isBackupModalOpen, setIsBackupModalOpen] = useState<boolean>(false);
+
+  useEffect(() => {
+    // Initial auto-save on application load
+    const initSave = performAutoSave();
+    if (initSave.savedAt) setLastAutoSaveTime(initSave.savedAt);
+
+    const getIntervalSec = () => {
+      const saved = localStorage.getItem('crm_autosave_interval_sec');
+      return saved ? parseInt(saved, 10) : 30;
+    };
+
+    const intervalTimer = setInterval(() => {
+      const res = performAutoSave();
+      if (res.success && res.savedAt) {
+        setLastAutoSaveTime(res.savedAt);
+      }
+    }, getIntervalSec() * 1000);
+
+    return () => clearInterval(intervalTimer);
   }, []);
 
   // --- Simulated Database Tables ---
@@ -851,6 +881,25 @@ export default function App() {
                   </div>
 
                   <div className="flex items-center gap-3.5">
+                    {/* Live Auto-Save Pill */}
+                    <div className="hidden md:flex items-center gap-2 bg-slate-950/80 px-3 py-1.5 rounded-xl border border-slate-800/80 font-mono text-[11px] text-emerald-400">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                      </span>
+                      <span>Auto-Saved: {lastAutoSaveTime}</span>
+                    </div>
+
+                    {/* Backup & Excel Export Action Button */}
+                    <button
+                      onClick={() => setIsBackupModalOpen(true)}
+                      className="px-3 py-1.5 bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 border border-indigo-500/40 rounded-xl text-xs font-bold transition-all shadow cursor-pointer flex items-center gap-2 hover:scale-[1.02]"
+                      title="Auto-Save & Excel/JSON Backup"
+                    >
+                      <HardDrive className="w-3.5 h-3.5 text-indigo-400" />
+                      <span>Backup & Excel Export</span>
+                    </button>
+
                     {/* Notification Bell Dropdown */}
                     <div className="relative">
                       <button 
@@ -2691,6 +2740,13 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* Backup & Excel Export Center Modal */}
+      <BackupExportModal
+        isOpen={isBackupModalOpen}
+        onClose={() => setIsBackupModalOpen(false)}
+        onToast={(msg, type) => showSimToast(msg, type === 'err' ? 'error' : 'success')}
+      />
 
     </div>
   );
