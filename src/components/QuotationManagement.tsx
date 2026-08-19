@@ -529,11 +529,11 @@ function QuoteList({
               <th className="py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
                 Project Name
               </th>
-              <th className="py-3 px-4 text-xs font-bold text-teal-700 uppercase tracking-wider">
-                Delivery Plan
-              </th>
               <th className="py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
                 Date
+              </th>
+              <th className="py-3 px-4 text-xs font-bold text-teal-700 uppercase tracking-wider">
+                Delivery Plan
               </th>
               <th className="py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">
                 Amount (Excl. VAT)
@@ -586,6 +586,9 @@ function QuoteList({
                     )}
                   </div>
                 </td>
+                <td className="py-3 px-4 text-sm text-slate-600">
+                  {q.quotation_date}
+                </td>
                 <td className="py-3 px-4 text-xs font-medium text-teal-800 max-w-[200px]">
                   {q.delivery_plan ? (
                     <div className="bg-teal-50/80 border border-teal-200/80 text-teal-900 px-2 py-1 rounded-md text-[11px] leading-tight font-medium">
@@ -594,9 +597,6 @@ function QuoteList({
                   ) : (
                     <span className="text-slate-400 italic text-[11px]">-</span>
                   )}
-                </td>
-                <td className="py-3 px-4 text-sm text-slate-600">
-                  {q.quotation_date}
                 </td>
                 <td className="py-3 px-4 text-sm font-mono font-bold text-slate-800 text-right">
                   <div>
