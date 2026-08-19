@@ -309,6 +309,41 @@ const DEFAULT_OPPORTUNITIES = [
 
 const DEFAULT_QUOTATIONS = [
   {
+    id: "qt_4258_26",
+    quotation_no: "QT-4258-26",
+    customer_id: "c1ef4942-83b3-4f9e-bbb4-7a0df47a0001",
+    opportunity_id: "o1ef4942-83b3-4f9e-bbb4-7a0df4700001",
+    title: "High-Pressure Hydrotest System & Inspection Package (USD)",
+    quotation_date: "2026-08-01",
+    validity_days: 30,
+    payment_term: "30 Days",
+    status: "Approved",
+    sales_person: "Ekachai Wongdee (S01)",
+    currency: "USD",
+    exchange_rate: 35.00,
+    delivery_plan: "Mobilization 15 Aug 2026 - Offshore Site Rayong (7 Days Delivery Schedule)",
+    items: [
+      {
+        item_no: 1,
+        qty: 1,
+        unit: "Package",
+        description: "High-Pressure Hydrotest System Rental & Calibration (USD)",
+        duration: 10,
+        unit_rate: 1000.00,
+        total_price: 1000.00
+      }
+    ],
+    total_value: 1000.00,
+    tax_rate: 7,
+    grand_total: 1070.00,
+    total_value_thb: 35000.00,
+    grand_total_thb: 37450.00,
+    total_amount: 1000.00,
+    total_amount_thb: 35000.00,
+    terms_conditions: "1. All prices quoted in USD with exchange rate 35.00 THB/USD.\n2. Delivery within 7 days upon PO confirmation.\n3. Payment terms 30 days.",
+    created_at: "2026-08-01T09:00:00.000Z"
+  },
+  {
     id: "q1ef4942-83b3-4f9e-bbb4-7a0df47ab001",
     quotation_no: "QT-0001-26",
     customer_id: "c1ef4942-83b3-4f9e-bbb4-7a0df47a0001",
@@ -451,6 +486,34 @@ const DEFAULT_QUOTATIONS = [
 
 const DEFAULT_SALES_ORDERS = [
   {
+    id: "so_26_08_001",
+    so_no: "SO-26-08-001",
+    quotation_id: "qt_4258_26",
+    quotation_no: "QT-4258-26",
+    customer_id: "c1ef4942-83b3-4f9e-bbb4-7a0df47a0001",
+    project_name: "High-Pressure Hydrotest System & Inspection Package (USD)",
+    currency: "USD",
+    exchange_rate: 35.00,
+    total_amount: 1000.00,
+    total_amount_thb: 35000.00,
+    grand_total_thb: 37450.00,
+    status: "In Progress",
+    order_date: "2026-08-02",
+    target_delivery_date: "2026-08-25",
+    sales_person: "Ekachai Wongdee (S01)",
+    created_at: "2026-08-02T10:00:00.000Z",
+    items: [
+      {
+        item_no: 1,
+        qty: 1,
+        remaining_qty: 0,
+        unit: "Package",
+        description: "High-Pressure Hydrotest System Rental & Calibration (USD)",
+        unit_price: 1000.00
+      }
+    ]
+  },
+  {
     id: "so1ef4942-83b3-4f9e-bbb4-7a0df47ad001",
     so_no: "SO-0001-26",
     customer_id: "c1ef4942-83b3-4f9e-bbb4-7a0df47a0001",
@@ -510,6 +573,42 @@ const DEFAULT_SALES_ORDERS = [
 ];
 
 const DEFAULT_INVOICES = [
+  {
+    id: "inv_26_08_021",
+    invoice_no: "INV-26-08-021",
+    quotation_id: "qt_4258_26",
+    quotation_no: "QT-4258-26",
+    sales_order_id: "so_26_08_001",
+    sales_order_no: "SO-26-08-001",
+    customer_id: "c1ef4942-83b3-4f9e-bbb4-7a0df47a0001",
+    po_reference: "PTT-PO-USD-4258",
+    project_name: "High-Pressure Hydrotest System & Inspection Package (USD)",
+    currency: "USD",
+    exchange_rate: 35.00,
+    invoice_date: "2026-08-05",
+    due_date: "2026-09-04",
+    status: "Paid",
+    sales_person: "Ekachai Wongdee (S01)",
+    total_value: 1000.00,
+    tax_rate: 7,
+    grand_total: 1070.00,
+    total_amount: 1000.00,
+    total_amount_thb: 35000.00,
+    grand_total_thb: 37450.00,
+    remarks: "Transfer USD from Quotation QT-4258-26 → Sales Order SO-26-08-001",
+    created_at: "2026-08-05T11:00:00.000Z",
+    items: [
+      {
+        item_no: 1,
+        description: "High-Pressure Hydrotest System Rental & Calibration (USD)",
+        qty: 1,
+        unit: "Package",
+        unit_rate: 1000.00,
+        duration: 1,
+        total_price: 1000.00
+      }
+    ]
+  },
   {
     id: "i1ef4942-83b3-4f9e-bbb4-7a0df47ac001",
     invoice_no: "INV-0001-26",

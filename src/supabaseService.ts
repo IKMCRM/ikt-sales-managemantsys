@@ -666,11 +666,39 @@ const DEFAULT_AUDIT_LOGS: AuditLog[] = [
 
 const DEFAULT_QUOTATIONS: Quotation[] = [
   {
+    id: 'qt_4258_26',
+    quotation_no: 'QT-4258-26',
+    opportunity_id: 'o1',
+    customer_id: 'c1',
+    subject: 'High-Pressure Hydrotest System & Inspection Package (USD)',
+    title: 'High-Pressure Hydrotest System & Inspection Package (USD)',
+    currency: 'USD',
+    exchange_rate: 35.00,
+    total_amount: 1000,
+    vat_amount: 70,
+    grand_total: 1070,
+    grand_total_thb: 37450,
+    total_amount_thb: 35000,
+    total_value: 1000,
+    total_value_thb: 35000,
+    status: 'Approved',
+    issue_date: '2026-08-01',
+    valid_until: '2026-08-31',
+    created_at: new Date('2026-08-01T09:00:00Z').toISOString(),
+    sales_person: 'เอกชัย วงศ์ดี (S01)',
+    delivery_plan: 'Mobilization 15 Aug 2026 - Offshore Site Rayong (7 Days Delivery Schedule)',
+    remarks: 'Target currency USD with exchange rate 35.00 THB/USD',
+    items: [
+      { id: 'qti_4258_1', item_no: 1, qty: 1, unit: 'Package', description: 'High-Pressure Hydrotest System Rental & Calibration (USD)', duration_days: 10, unit_rate: 1000, total_price: 1000 }
+    ]
+  },
+  {
     id: 'qt3000',
     quotation_no: 'QT-3000',
     opportunity_id: 'o_qt3000',
     customer_id: 'c2',
     subject: 'Tank storage x 2 Unit',
+    delivery_plan: 'Delivery and site setup within 5 days at Map Ta Phut Yard',
     total_amount: 14000,
     vat_amount: 980,
     grand_total: 14980,
@@ -887,6 +915,27 @@ const DEFAULT_QUOTATIONS: Quotation[] = [
 
 const DEFAULT_SALES_ORDERS: SalesOrder[] = [
   {
+    id: 'so_26_08_001',
+    so_no: 'SO-26-08-001',
+    quotation_id: 'qt_4258_26',
+    quotation_no: 'QT-4258-26',
+    customer_id: 'c1',
+    project_name: 'High-Pressure Hydrotest System & Inspection Package (USD)',
+    currency: 'USD',
+    exchange_rate: 35.00,
+    total_amount: 1000,
+    total_amount_thb: 35000,
+    grand_total_thb: 37450,
+    status: 'In Progress',
+    order_date: '2026-08-02',
+    target_delivery_date: '2026-08-25',
+    sales_person: 'เอกชัย วงศ์ดี (S01)',
+    created_at: new Date('2026-08-02T10:00:00Z').toISOString(),
+    items: [
+      { item_no: 1, qty: 1, remaining_qty: 0, unit: 'Package', description: 'High-Pressure Hydrotest System Rental & Calibration (USD)', unit_price: 1000 }
+    ]
+  },
+  {
     id: 'so_qt3000',
     so_no: 'SO-002-25',
     customer_id: 'c2',
@@ -937,6 +986,32 @@ const DEFAULT_DELIVERY_JOBS: DeliveryJob[] = [
 ];
 
 const DEFAULT_INVOICES: Invoice[] = [
+  {
+    id: 'inv_26_08_021',
+    invoice_no: 'Inv 26-08-021',
+    quotation_id: 'qt_4258_26',
+    quotation_no: 'QT-4258-26',
+    sales_order_id: 'so_26_08_001',
+    sales_order_no: 'SO-26-08-001',
+    customer_id: 'c1',
+    project_name: 'High-Pressure Hydrotest System & Inspection Package (USD)',
+    currency: 'USD',
+    exchange_rate: 35.00,
+    total_amount: 1000,
+    vat_amount: 70,
+    grand_total: 1070,
+    grand_total_thb: 37450,
+    total_amount_thb: 35000,
+    status: 'Paid',
+    issue_date: '2026-08-05',
+    due_date: '2026-09-04',
+    sales_person: 'เอกชัย วงศ์ดี (S01)',
+    remarks: 'Transfer USD from Quotation QT-4258-26 → Sales Order SO-26-08-001',
+    created_at: new Date('2026-08-05T11:00:00Z').toISOString(),
+    items: [
+      { id: 'invi_26_08_021_1', item_no: 1, quantity: 1, unit_price: 1000, tax_rate: 7, amount: 1000, description: 'High-Pressure Hydrotest System Rental & Calibration (USD)' }
+    ]
+  },
   {
     id: 'inv_demo',
     invoice_no: 'IKMTTH-26/256',
@@ -1412,7 +1487,14 @@ export class LocalDB {
         localStorage.setItem('crm_quotations', JSON.stringify(mapped));
         return mapped;
       }
-      return parsed.map((q: any) => ({
+      // Merge missing default quotations like qt_4258_26 if not in localStorage
+      let list = parsed;
+      DEFAULT_QUOTATIONS.forEach(dq => {
+        if (!list.some((item: any) => item.id === dq.id || item.quotation_no === dq.quotation_no)) {
+          list = [dq, ...list];
+        }
+      });
+      return list.map((q: any) => ({
         ...q,
         id: ensureUUID(q.id),
         opportunity_id: ensureUUID(q.opportunity_id),
@@ -1461,7 +1543,13 @@ export class LocalDB {
         localStorage.setItem('crm_sales_orders', JSON.stringify(mapped));
         return mapped;
       }
-      return parsed.map((s: any) => ({
+      let list = parsed;
+      DEFAULT_SALES_ORDERS.forEach(dso => {
+        if (!list.some((item: any) => item.id === dso.id || item.so_no === dso.so_no)) {
+          list = [dso, ...list];
+        }
+      });
+      return list.map((s: any) => ({
         ...s,
         id: ensureUUID(s.id),
         customer_id: ensureUUID(s.customer_id)
@@ -1555,7 +1643,13 @@ export class LocalDB {
         localStorage.setItem('crm_invoices', JSON.stringify(mapped));
         return mapped;
       }
-      return parsed.map((i: any) => ({
+      let list = parsed;
+      DEFAULT_INVOICES.forEach(dinv => {
+        if (!list.some((item: any) => item.id === dinv.id || item.invoice_no === dinv.invoice_no)) {
+          list = [dinv, ...list];
+        }
+      });
+      return list.map((i: any) => ({
         ...i,
         id: ensureUUID(i.id),
         customer_id: ensureUUID(i.customer_id),
@@ -2700,10 +2794,38 @@ export const CRMService = {
     const nextCode = await this.generateSalesOrderNumber();
     const newId = crypto.randomUUID();
 
+    // Multi-currency auto-inheritance from linked quotation if not explicitly provided
+    let currency = soPayload.currency;
+    let exchangeRate = soPayload.exchange_rate;
+    let quotationNo = soPayload.quotation_no;
+
+    if (!currency || !exchangeRate || !quotationNo) {
+      if (soPayload.quotation_id) {
+        const quotes = LocalDB.getQuotations();
+        const linkedQuote = quotes.find(q => q.id === soPayload.quotation_id || q.quotation_no === soPayload.quotation_id);
+        if (linkedQuote) {
+          currency = currency || linkedQuote.currency || 'THB';
+          exchangeRate = exchangeRate || linkedQuote.exchange_rate || (currency === 'USD' ? 35.0 : 1.0);
+          quotationNo = quotationNo || linkedQuote.quotation_no;
+        }
+      }
+    }
+
+    currency = currency || 'THB';
+    exchangeRate = exchangeRate || (currency === 'USD' ? 35.0 : 1.0);
+    const totalAmount = Number(soPayload.total_amount) || 0;
+    const totalAmountThb = soPayload.total_amount_thb || (totalAmount * (currency === 'THB' ? 1.0 : exchangeRate));
+    const grandTotalThb = soPayload.grand_total_thb || totalAmountThb;
+
     const prepared: SalesOrder = {
       ...soPayload,
       id: newId,
       so_no: nextCode,
+      currency,
+      exchange_rate: exchangeRate,
+      quotation_no: quotationNo,
+      total_amount_thb: totalAmountThb,
+      grand_total_thb: grandTotalThb,
       items: soPayload.items || [],
       created_at: new Date().toISOString()
     };
@@ -2883,10 +3005,53 @@ export const CRMService = {
     const nextCode = `INV-${targetMonthPrefix}-${String(maxSeq + 1).padStart(3, '0')}`;
     const newId = crypto.randomUUID();
 
+    // Multi-currency auto-inheritance from linked sales order or quotation
+    let currency = payload.currency;
+    let exchangeRate = payload.exchange_rate;
+    let salesOrderNo = payload.sales_order_no;
+    let quotationId = payload.quotation_id;
+    let quotationNo = payload.quotation_no;
+
+    if (payload.sales_order_id) {
+      const sos = LocalDB.getSalesOrders();
+      const linkedSo = sos.find(s => s.id === payload.sales_order_id || s.so_no === payload.sales_order_id);
+      if (linkedSo) {
+        currency = currency || linkedSo.currency || 'THB';
+        exchangeRate = exchangeRate || linkedSo.exchange_rate || (currency === 'USD' ? 35.0 : 1.0);
+        salesOrderNo = salesOrderNo || linkedSo.so_no;
+        quotationId = quotationId || linkedSo.quotation_id;
+        quotationNo = quotationNo || linkedSo.quotation_no;
+      }
+    }
+
+    if (quotationId && (!currency || !exchangeRate || !quotationNo)) {
+      const quotes = LocalDB.getQuotations();
+      const linkedQuote = quotes.find(q => q.id === quotationId || q.quotation_no === quotationId);
+      if (linkedQuote) {
+        currency = currency || linkedQuote.currency || 'THB';
+        exchangeRate = exchangeRate || linkedQuote.exchange_rate || (currency === 'USD' ? 35.0 : 1.0);
+        quotationNo = quotationNo || linkedQuote.quotation_no;
+      }
+    }
+
+    currency = currency || 'THB';
+    exchangeRate = exchangeRate || (currency === 'USD' ? 35.0 : 1.0);
+    const totalAmount = Number(payload.total_amount) || 0;
+    const grandTotal = Number(payload.grand_total) || (totalAmount * 1.07);
+    const totalAmountThb = payload.total_amount_thb || (totalAmount * (currency === 'THB' ? 1.0 : exchangeRate));
+    const grandTotalThb = payload.grand_total_thb || (grandTotal * (currency === 'THB' ? 1.0 : exchangeRate));
+
     const prepared: Invoice = {
       ...payload,
       id: newId,
       invoice_no: nextCode,
+      currency,
+      exchange_rate: exchangeRate,
+      sales_order_no: salesOrderNo,
+      quotation_id: quotationId,
+      quotation_no: quotationNo,
+      total_amount_thb: totalAmountThb,
+      grand_total_thb: grandTotalThb,
       created_at: new Date().toISOString()
     };
 

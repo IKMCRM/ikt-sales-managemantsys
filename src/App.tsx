@@ -81,6 +81,9 @@ interface QuotationSim {
   quotation_date: string;
   validity_days: number;
   payment_term: string;
+  currency?: string;
+  exchange_rate?: number;
+  delivery_plan?: string;
   total_value: number;
   tax_rate: number;
   grand_total: number;
@@ -224,6 +227,25 @@ export default function App() {
   ]);
 
   const [quotations, setQuotations] = useState<QuotationSim[]>([
+    { 
+      id: 4258, 
+      quotation_no: 'QT-4258-26', 
+      customer_id: 1, 
+      customer_name: 'บริษัท ปตท. สำรวจและผลิตปิโตรเลียม จำกัด (มหาชน)', 
+      project_name: 'High-Pressure Hydrotest System & Inspection Package (USD)', 
+      title: 'High-Pressure Hydrotest System & Inspection Package (USD)', 
+      quotation_date: '2026-08-01', 
+      validity_days: 30, 
+      payment_term: 'เครดิต 30 วัน', 
+      currency: 'USD',
+      exchange_rate: 35.00,
+      delivery_plan: 'Mobilization 15 Aug 2026 - Offshore Site Rayong (7 Days Delivery Schedule)',
+      total_value: 1000.00, 
+      tax_rate: 7, 
+      grand_total: 1070.00, 
+      status: 'Approved',
+      items: [{ name: 'High-Pressure Hydrotest System Rental & Calibration (USD)', qty: 1, unit: 'Package', price: 1000.00 }]
+    },
     { 
       id: 1, 
       quotation_no: 'QT-000001', 
@@ -2596,6 +2618,45 @@ export default function App() {
             </div>
 
             <div className="p-6 overflow-y-auto bg-slate-100 text-slate-850 font-sans text-xs flex-1">
+              {/* Quotation Information Overview Card */}
+              <div className="max-w-3xl mx-auto mb-4 bg-white p-4 rounded-xl border border-teal-200 shadow-sm print:hidden">
+                <div className="flex items-center justify-between border-b border-teal-100 pb-2 mb-3">
+                  <h3 className="font-black text-xs text-teal-950 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-teal-500"></span>
+                    Quotation Information
+                  </h3>
+                  <span className="font-mono font-bold text-[11px] text-teal-700 bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
+                    {selectedViewQuotation.quotation_no}
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 text-xs">
+                  <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200/80">
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Customer</span>
+                    <span className="font-extrabold text-slate-900 line-clamp-1">{selectedViewQuotation.customer_name}</span>
+                  </div>
+                  <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200/80 font-mono">
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Quotation No.</span>
+                    <span className="font-bold text-blue-600">{selectedViewQuotation.quotation_no}</span>
+                  </div>
+                  <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200/80 font-mono">
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Currency</span>
+                    <span className="font-bold text-emerald-600">{selectedViewQuotation.currency || "THB"}</span>
+                  </div>
+                  <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200/80 font-mono">
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Amount</span>
+                    <span className="font-extrabold text-slate-900 block">
+                      {selectedViewQuotation.currency || "THB"} {selectedViewQuotation.grand_total.toLocaleString('th-TH', { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                  <div className="p-2.5 bg-teal-50 rounded-lg border border-teal-200 text-teal-950">
+                    <span className="text-[9px] font-bold text-teal-700 uppercase tracking-wider block mb-0.5">Delivery Plan</span>
+                    <span className="font-semibold text-teal-900 block text-[11px] leading-tight">
+                      {selectedViewQuotation.delivery_plan || "ตามที่ระบุในสัญญา / ข้อตกลงงานบริการ"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
               {/* Actual printable paper layout */}
               <div className="border border-slate-200 p-8 rounded-xl shadow-lg space-y-6 bg-white max-w-3xl mx-auto printable-area">
                 {/* Header */}
@@ -2640,6 +2701,8 @@ export default function App() {
                     <strong className="text-xs text-slate-900 block mb-1">เงื่อนไขข้อเสนอ / Conditions:</strong>
                     <div><strong>ชื่องานโครงการ:</strong> <span className="font-bold text-slate-800">{selectedViewQuotation.project_name || 'ดีลงานบริการทั่วไป'}</span></div>
                     <div><strong>หัวข้อข้อเสนอ:</strong> {selectedViewQuotation.title}</div>
+                    <div><strong>สกุลเงิน (Currency):</strong> <span className="font-bold text-emerald-600">{selectedViewQuotation.currency || 'THB'}</span> {selectedViewQuotation.exchange_rate ? `(อัตราแลกเปลี่ยน: ${selectedViewQuotation.exchange_rate} THB/USD)` : ''}</div>
+                    <div><strong>แผนส่งมอบงาน (Delivery Plan):</strong> <span className="font-semibold text-teal-700">{selectedViewQuotation.delivery_plan || 'ตามที่ระบุในข้อตกลงงานบริการ'}</span></div>
                     <div><strong>เงื่อนไขการชำระเงิน:</strong> {selectedViewQuotation.payment_term}</div>
                     <div><strong>ระยะเวลากำหนดยืนราคา:</strong> {selectedViewQuotation.validity_days} วันนับจากวันที่ออกเอกสาร</div>
                   </div>

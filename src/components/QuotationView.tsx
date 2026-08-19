@@ -678,6 +678,53 @@ export default function QuotationView({
                 </div>
               </div>
 
+              {/* Quotation Information Summary Card (CRM IKM Standard) */}
+              <div className="max-w-[210mm] mx-auto mb-4 bg-white p-5 rounded-2xl border border-teal-200/90 shadow-sm print:hidden">
+                <div className="flex items-center justify-between border-b border-teal-100 pb-3 mb-4">
+                  <h3 className="font-extrabold text-sm text-teal-950 flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-teal-500"></span>
+                    Quotation Information (ข้อมูลใบเสนอราคา)
+                  </h3>
+                  <span className="font-mono font-bold text-xs text-teal-700 bg-teal-50 px-2.5 py-1 rounded-md border border-teal-200/60">
+                    {viewingQuote.quotation_no}
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 text-xs">
+                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/60">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Customer</span>
+                    <span className="font-extrabold text-slate-900 line-clamp-2">{clientObj?.customer_name || viewingQuote.customer_name || "STP&I Company Limited"}</span>
+                  </div>
+                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/60 font-mono">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Quotation No.</span>
+                    <span className="font-bold text-blue-600">{viewingQuote.quotation_no}</span>
+                  </div>
+                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/60 font-mono">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Currency</span>
+                    <span className="font-bold text-emerald-600">{viewingQuote.currency || "THB"}</span>
+                    {viewingQuote.currency && viewingQuote.currency !== "THB" && (
+                      <span className="text-[10px] text-slate-500 block">Rate: {viewingQuote.exchange_rate || 35.0}</span>
+                    )}
+                  </div>
+                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/60 font-mono">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Amount</span>
+                    <span className="font-extrabold text-slate-900 block">
+                      {viewingQuote.currency || "THB"} {(viewingQuote.total_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    </span>
+                    {viewingQuote.currency && viewingQuote.currency !== "THB" && (
+                      <span className="text-[10px] text-slate-500 block">
+                        ≈ THB {((viewingQuote.total_amount_thb !== undefined ? viewingQuote.total_amount_thb : (viewingQuote.total_amount || 0) * (viewingQuote.exchange_rate || 1.0))).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      </span>
+                    )}
+                  </div>
+                  <div className="p-3 bg-teal-50/70 rounded-xl border border-teal-200 text-teal-950">
+                    <span className="text-[10px] font-bold text-teal-700 uppercase tracking-wider block mb-1">Delivery Plan</span>
+                    <span className="font-semibold text-teal-900 block leading-tight">
+                      {viewingQuote.delivery_plan || "ตามที่ระบุในสัญญา / ข้อตกลงงานบริการ"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
               {/* Print canvas sheets */}
               <div 
                 className="print-area bg-white mx-auto print:shadow-none print:border-none print:p-0 text-slate-800"
@@ -832,6 +879,12 @@ export default function QuotationView({
                     <div className="font-semibold text-slate-800">Subject</div>
                     <div className="text-slate-600">:</div>
                     <div className="text-black font-bold break-words">{viewingQuote.subject}</div>
+
+                    <div className="font-semibold text-slate-800">Delivery Plan</div>
+                    <div className="text-slate-600">:</div>
+                    <div className="text-black font-semibold text-teal-900 break-words">
+                      {viewingQuote.delivery_plan || "Mobilization & Delivery according to agreed project schedule"}
+                    </div>
                   </div>
 
                   {/* Right side Grid */}

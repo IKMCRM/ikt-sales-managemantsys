@@ -529,6 +529,9 @@ function QuoteList({
               <th className="py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
                 Project Name
               </th>
+              <th className="py-3 px-4 text-xs font-bold text-teal-700 uppercase tracking-wider">
+                Delivery Plan
+              </th>
               <th className="py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
                 Date
               </th>
@@ -582,6 +585,15 @@ function QuoteList({
                       </span>
                     )}
                   </div>
+                </td>
+                <td className="py-3 px-4 text-xs font-medium text-teal-800 max-w-[200px]">
+                  {q.delivery_plan ? (
+                    <div className="bg-teal-50/80 border border-teal-200/80 text-teal-900 px-2 py-1 rounded-md text-[11px] leading-tight font-medium">
+                      {q.delivery_plan}
+                    </div>
+                  ) : (
+                    <span className="text-slate-400 italic text-[11px]">-</span>
+                  )}
                 </td>
                 <td className="py-3 px-4 text-sm text-slate-600">
                   {q.quotation_date}
@@ -1604,6 +1616,53 @@ function PrintPreview({ id, onClose, onEdit, quotations, customers }: any) {
         </div>
       </div>
 
+      {/* Quotation Information Summary Card (CRM IKM Standard) */}
+      <div className="max-w-[210mm] mx-auto mb-6 bg-white p-5 rounded-2xl border border-teal-200/90 shadow-sm print:hidden animate-fade-in">
+        <div className="flex items-center justify-between border-b border-teal-100 pb-3 mb-4">
+          <h3 className="font-extrabold text-sm text-teal-950 flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-teal-500"></span>
+            Quotation Information (ข้อมูลใบเสนอราคา)
+          </h3>
+          <span className="font-mono font-bold text-xs text-teal-700 bg-teal-50 px-2.5 py-1 rounded-md border border-teal-200/60">
+            {quote.quotation_no}
+          </span>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 text-xs">
+          <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/60">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Customer</span>
+            <span className="font-extrabold text-slate-900 line-clamp-2">{customer?.customer_name || quote.customer_name || "STP&I Company Limited"}</span>
+          </div>
+          <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/60 font-mono">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Quotation No.</span>
+            <span className="font-bold text-blue-600">{quote.quotation_no}</span>
+          </div>
+          <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/60 font-mono">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Currency</span>
+            <span className="font-bold text-emerald-600">{quote.currency || "THB"}</span>
+            {quote.currency && quote.currency !== "THB" && (
+              <span className="text-[10px] text-slate-500 block">Rate: {quote.exchange_rate || 35.0}</span>
+            )}
+          </div>
+          <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/60 font-mono">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Amount</span>
+            <span className="font-extrabold text-slate-900 block">
+              {quote.currency || "THB"} {(quote.total_value !== undefined ? quote.total_value : (quote.grand_total ? quote.grand_total / 1.07 : 0)).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            </span>
+            {quote.currency && quote.currency !== "THB" && (
+              <span className="text-[10px] text-slate-500 block">
+                ≈ THB {(quote.total_value_thb !== undefined ? quote.total_value_thb : (quote.grand_total_thb ? quote.grand_total_thb / 1.07 : (quote.total_value || 0) * (quote.exchange_rate || 1.0))).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+              </span>
+            )}
+          </div>
+          <div className="p-3 bg-teal-50/70 rounded-xl border border-teal-200 text-teal-950">
+            <span className="text-[10px] font-bold text-teal-700 uppercase tracking-wider block mb-1">Delivery Plan</span>
+            <span className="font-semibold text-teal-900 block leading-tight">
+              {quote.delivery_plan || "ตามที่ระบุในสัญญา / ข้อตกลงงานบริการ"}
+            </span>
+          </div>
+        </div>
+      </div>
+
       {/* A4 PRINT SHEET */}
       <div
         className="print-area bg-white mx-auto shadow-[0_12px_40px_rgba(0,0,0,0.06)] print:shadow-none border border-slate-100 print:border-none"
@@ -1725,6 +1784,12 @@ function PrintPreview({ id, onClose, onEdit, quotations, customers }: any) {
           <div className="font-semibold text-slate-800">Subject</div>
           <div className="text-slate-600">:</div>
           <div className="text-black font-bold break-words">{quote.title}</div>
+
+          <div className="font-semibold text-slate-800">Delivery Plan</div>
+          <div className="text-slate-600">:</div>
+          <div className="text-black font-semibold text-teal-900 break-words">
+            {quote.delivery_plan || "Mobilization & Delivery according to agreed project schedule"}
+          </div>
         </div>
 
         {/* Rigid Table with solid black borders */}

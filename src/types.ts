@@ -167,11 +167,19 @@ export interface Quotation {
   cc?: string;
   customer_phone?: string;
   customer_email?: string;
+  currency?: string;
+  exchange_rate?: number;
+  grand_total_thb?: number;
+  total_amount_thb?: number;
+  total_value_thb?: number;
+  delivery_plan?: string;
 }
 
 export interface SalesOrder {
   id: string;
   so_no: string;
+  quotation_id?: string;
+  quotation_no?: string;
   customer_id: string;
   project_name: string;
   total_amount: number;
@@ -183,6 +191,10 @@ export interface SalesOrder {
   job_no?: string;
   po_no?: string;
   sales_person?: string;
+  currency?: string;
+  exchange_rate?: number;
+  grand_total_thb?: number;
+  total_amount_thb?: number;
   items?: {
     item_no: number;
     description: string;
@@ -296,16 +308,31 @@ export interface InvoiceItem {
 export interface Invoice {
   id: string;
   invoice_no: string;
-  sales_order_id: string;
+  sales_order_id?: string;
+  sales_order_no?: string;
+  quotation_id?: string;
+  quotation_no?: string;
   customer_id: string;
+  project_name?: string;
   total_amount: number;
   vat_amount: number;
   grand_total: number;
+  total_value?: number;
+  tax_rate?: number;
   status: 'Unpaid' | 'Overdue' | 'Paid' | 'Partially Paid';
   issue_date: string;
   due_date: string;
   created_at: string;
   customer_name?: string;
+  currency?: string;
+  exchange_rate?: number;
+  grand_total_thb?: number;
+  total_amount_thb?: number;
+  sales_person?: string;
+  po_reference?: string;
+  ikm_inv?: string;
+  job_no?: string;
+  remarks?: string;
   items?: InvoiceItem[];
 }
 
