@@ -513,35 +513,46 @@ function QuoteList({
           </div>
         </div>
       </div>
-      <div className="overflow-x-auto">
-        <table id="quotations-main-table" className="w-full text-left border-collapse">
+      <div className="overflow-x-auto max-w-full">
+        <table id="quotations-main-table" className="w-full text-left border-collapse table-fixed text-xs">
+          <colgroup>
+            <col className="w-[105px]" />
+            <col className="w-[105px]" />
+            <col className="w-[125px]" />
+            <col />
+            <col className="w-[85px]" />
+            <col className="w-[125px]" />
+            <col className="w-[115px]" />
+            <col className="w-[80px]" />
+            <col className="w-[115px]" />
+          </colgroup>
           <thead>
             <tr className="bg-slate-50 border-b border-slate-200">
-              <th className="py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+              <th className="py-2.5 px-2 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                 Quote No
               </th>
-              <th className="py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+              <th className="py-2.5 px-2 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                 Sale Rep
               </th>
-              <th className="py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+              <th className="py-2.5 px-2 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                 Customer
               </th>
-              <th className="py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+              <th className="py-2.5 px-2 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                 Project Name
               </th>
-              <th className="py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">
+              <th className="py-2.5 px-2 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                 Date
               </th>
-              <th className="py-3 px-4 text-xs font-bold text-teal-700 uppercase tracking-wider">
+              <th className="py-2.5 px-2 text-[11px] font-bold text-teal-700 uppercase tracking-wider">
                 Delivery Plan
               </th>
-              <th className="py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">
+              <th className="py-2.5 px-2 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-right">
                 Amount (Excl. VAT)
               </th>
-              <th className="py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">
+              <th className="py-2.5 px-2 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center">
                 Status
               </th>
-              <th className="py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">
+              <th className="py-2.5 px-2 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center">
                 Actions
               </th>
             </tr>
@@ -549,110 +560,122 @@ function QuoteList({
           <tbody className="divide-y divide-slate-100">
             {filtered.map((q) => (
               <tr key={q.id} className="hover:bg-slate-50/80 transition-colors">
-                <td className="py-3 px-4">
-                  <span className="font-mono text-sm font-bold text-blue-600">
+                <td className="py-2.5 px-2 align-middle">
+                  <div className="font-mono text-xs font-bold text-blue-600 truncate" title={q.quotation_no}>
                     {q.quotation_no}
-                  </span>
+                  </div>
                   {q.revision_number && q.revision_number > 0 ? (
-                    <span className="ml-2 text-xs font-bold px-1.5 py-0.5 bg-yellow-100 text-yellow-800 rounded">
+                    <span className="inline-block mt-0.5 text-[9px] font-bold px-1.5 py-0.2 bg-yellow-100 text-yellow-800 rounded">
                       Rev.{q.revision_number}
                     </span>
                   ) : null}
                 </td>
-                <td className="py-3 px-4 text-sm font-medium text-slate-700">
-                  {getUsername(q.sales_person || "ธนพล คำดี (S03)")}
+                <td className="py-2.5 px-2 align-middle">
+                  <span className="text-xs font-medium text-slate-700 truncate block" title={getUsername(q.sales_person || "ธนพล คำดี (S03)")}>
+                    {getUsername(q.sales_person || "ธนพล คำดี (S03)")}
+                  </span>
                 </td>
-                <td className="py-3 px-4 text-sm font-semibold text-slate-800">
-                  {(() => {
+                <td className="py-2.5 px-2 align-middle">
+                  <span className="text-xs font-semibold text-slate-800 line-clamp-2 leading-tight break-words" title={(() => {
                     const custObj = customers?.find((c: any) => c.id === q.customer_id) || q.customer;
                     return custObj?.customer_name || q.customer_name || "N/A";
-                  })()}
+                  })()}>
+                    {(() => {
+                      const custObj = customers?.find((c: any) => c.id === q.customer_id) || q.customer;
+                      return custObj?.customer_name || q.customer_name || "N/A";
+                    })()}
+                  </span>
                 </td>
-                <td className="py-3 px-4">
-                  <div className="text-sm font-medium text-slate-700">
+                <td className="py-2.5 px-2 align-middle">
+                  <div className="text-xs font-medium text-slate-800 line-clamp-1 leading-tight" title={q.title}>
                     {q.title}
                   </div>
-                  <div className="text-[10px] text-slate-400 font-mono mt-1 flex flex-wrap gap-1.5">
-                    <span className="bg-slate-100 text-slate-600 px-1 rounded">
+                  <div className="text-[9px] text-slate-400 font-mono mt-0.5 flex flex-wrap gap-1">
+                    <span className="bg-slate-100 text-slate-600 px-1 rounded truncate max-w-[120px]">
                       Owner: {getUsername(q.sales_person || "ธนพล คำดี (S03)")}
                     </span>
-                    <span className="bg-blue-50 text-blue-600 px-1 rounded">
-                      Created: {getUsername(q.created_by || "apiyut")}
+                    <span className="bg-blue-50 text-blue-600 px-1 rounded truncate max-w-[100px]">
+                      By: {getUsername(q.created_by || "apiyut")}
                     </span>
                     {q.status === "Approved" && (
                       <span className="bg-emerald-50 text-emerald-600 px-1 rounded">
-                        Approved: @apiyut
+                        Apprv
                       </span>
                     )}
                   </div>
                 </td>
-                <td className="py-3 px-4 text-sm text-slate-600">
+                <td className="py-2.5 px-2 align-middle text-xs text-slate-600 font-mono whitespace-nowrap">
                   {q.quotation_date}
                 </td>
-                <td className="py-3 px-4 text-xs font-medium text-teal-800 max-w-[200px]">
+                <td className="py-2.5 px-2 align-middle">
                   {q.delivery_plan ? (
-                    <div className="bg-teal-50/80 border border-teal-200/80 text-teal-900 px-2 py-1 rounded-md text-[11px] leading-tight font-medium">
+                    <div 
+                      className="bg-teal-50/80 border border-teal-200/80 text-teal-900 px-1.5 py-1 rounded text-[10.5px] leading-tight font-medium line-clamp-2"
+                      title={q.delivery_plan}
+                    >
                       {q.delivery_plan}
                     </div>
                   ) : (
                     <span className="text-slate-400 italic text-[11px]">-</span>
                   )}
                 </td>
-                <td className="py-3 px-4 text-sm font-mono font-bold text-slate-800 text-right">
+                <td className="py-2.5 px-2 align-middle text-xs font-mono font-bold text-slate-800 text-right whitespace-nowrap">
                   <div>
                     {q.currency || "THB"} {(q.total_value !== undefined ? q.total_value : (q.grand_total ? q.grand_total / 1.07 : 0)).toLocaleString(undefined, {
                       minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
                     })}
                   </div>
                   {q.currency && q.currency !== "THB" && (
-                    <div className="text-[10px] text-slate-400 font-normal">
-                      (THB {(q.total_value_thb !== undefined ? q.total_value_thb : (q.grand_total_thb ? q.grand_total_thb / 1.07 : (q.total_value || 0) * (q.exchange_rate || 1.0))).toLocaleString(undefined, {
+                    <div className="text-[9px] text-slate-400 font-normal">
+                      ≈ THB {(q.total_value_thb !== undefined ? q.total_value_thb : (q.grand_total_thb ? q.grand_total_thb / 1.07 : (q.total_value || 0) * (q.exchange_rate || 1.0))).toLocaleString(undefined, {
                         minimumFractionDigits: 2,
-                      })})
+                        maximumFractionDigits: 2,
+                      })}
                     </div>
                   )}
                 </td>
-                <td className="py-3 px-4 text-center">
+                <td className="py-2.5 px-2 align-middle text-center">
                   <StatusBadge status={q.status} />
                 </td>
-                <td className="py-3 px-4 text-center">
-                  <div className="flex items-center justify-center gap-2">
+                <td className="py-2.5 px-2 align-middle text-center">
+                  <div className="flex items-center justify-center gap-1">
                     <button
                       onClick={() => onPrint(q.id)}
-                      className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-slate-100 rounded"
+                      className="p-1 text-slate-400 hover:text-indigo-600 hover:bg-slate-100 rounded cursor-pointer"
                       title="Print/Export PDF"
                     >
-                      <Printer className="w-4 h-4" />
+                      <Printer className="w-3.5 h-3.5" />
                     </button>
                     <button
                       onClick={() => onEdit(q.id)}
-                      className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-slate-100 rounded"
+                      className="p-1 text-slate-400 hover:text-blue-600 hover:bg-slate-100 rounded cursor-pointer"
                       title="Edit/Revise"
                     >
-                      <Edit className="w-4 h-4" />
+                      <Edit className="w-3.5 h-3.5" />
                     </button>
                     <button
                       onClick={() => onDuplicate(q.id)}
-                      className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-slate-100 rounded"
+                      className="p-1 text-slate-400 hover:text-emerald-600 hover:bg-slate-100 rounded cursor-pointer"
                       title="Duplicate Quotation"
                     >
-                      <Copy className="w-4 h-4" />
+                      <Copy className="w-3.5 h-3.5" />
                     </button>
                     {isApiyut ? (
                       <button
                         onClick={() => onDelete(q.id)}
-                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded cursor-pointer"
+                        className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded cursor-pointer"
                         title="ลบใบเสนอราคา (Delete)"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     ) : (
                       <button
-                        className="p-1.5 text-slate-200 cursor-not-allowed"
+                        className="p-1 text-slate-200 cursor-not-allowed"
                         title="เฉพาะผู้ดูแลระบบ (Admin) เท่านั้นที่สามารถลบได้"
                         disabled
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     )}
                     {q.status === "Approved" || q.status === "Accepted" ? (
@@ -1358,8 +1381,8 @@ function QuoteForm({ id, onClose, quotations, customers, onToast }: any) {
               <Plus className="w-3 h-3" /> Add Row
             </button>
           </div>
-          <div className="border border-slate-200 rounded-lg overflow-hidden">
-            <table className="w-full text-left">
+          <div className="border border-slate-200 rounded-lg overflow-x-auto w-full">
+            <table className="w-full text-left min-w-[620px]">
               <thead className="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase">
                 <tr>
                   <th className="py-2 px-3">Description</th>
@@ -1613,9 +1636,9 @@ function PrintPreview({ id, onClose, onEdit, quotations, customers }: any) {
   const themeColor = localStorage.getItem("crm_form_theme_color") || "#1e293b";
 
   return (
-    <div className="bg-slate-50 p-6 sm:p-12 min-h-screen print:p-0 print:bg-white transition-all duration-300">
+    <div className="bg-slate-50 p-4 sm:p-8 min-h-screen print:p-0 print:bg-white transition-all duration-300 overflow-x-auto w-full flex flex-col items-center">
       {/* Action panel */}
-      <div className="max-w-[210mm] mx-auto mb-6 flex flex-col sm:flex-row justify-between items-center gap-4 print:hidden bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm animate-fade-in">
+      <div className="w-full max-w-[210mm] mx-auto mb-6 flex flex-col sm:flex-row justify-between items-center gap-4 print:hidden bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm animate-fade-in">
         <div>
           <button
             onClick={onClose}
@@ -1641,7 +1664,7 @@ function PrintPreview({ id, onClose, onEdit, quotations, customers }: any) {
       </div>
 
       {/* Quotation Information Summary Card (CRM IKM Standard) */}
-      <div className="max-w-[210mm] mx-auto mb-6 bg-white p-5 rounded-2xl border border-teal-200/90 shadow-sm print:hidden animate-fade-in">
+      <div className="w-full max-w-[210mm] mx-auto mb-6 bg-white p-5 rounded-2xl border border-teal-200/90 shadow-sm print:hidden animate-fade-in">
         <div className="flex items-center justify-between border-b border-teal-100 pb-3 mb-4">
           <h3 className="font-extrabold text-sm text-teal-950 flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-teal-500"></span>
@@ -1651,10 +1674,10 @@ function PrintPreview({ id, onClose, onEdit, quotations, customers }: any) {
             {quote.quotation_no}
           </span>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 text-xs">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 text-xs">
           <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/60">
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Customer</span>
-            <span className="font-extrabold text-slate-900 line-clamp-2">{customer?.customer_name || quote.customer_name || "STP&I Company Limited"}</span>
+            <span className="font-extrabold text-slate-900 line-clamp-2 break-words">{customer?.customer_name || quote.customer_name || "STP&I Company Limited"}</span>
           </div>
           <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/60 font-mono">
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Quotation No.</span>
@@ -1669,18 +1692,18 @@ function PrintPreview({ id, onClose, onEdit, quotations, customers }: any) {
           </div>
           <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/60 font-mono">
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Amount</span>
-            <span className="font-extrabold text-slate-900 block">
+            <span className="font-extrabold text-slate-900 block truncate">
               {quote.currency || "THB"} {(quote.total_value !== undefined ? quote.total_value : (quote.grand_total ? quote.grand_total / 1.07 : 0)).toLocaleString(undefined, { minimumFractionDigits: 2 })}
             </span>
             {quote.currency && quote.currency !== "THB" && (
-              <span className="text-[10px] text-slate-500 block">
+              <span className="text-[10px] text-slate-500 block truncate">
                 ≈ THB {(quote.total_value_thb !== undefined ? quote.total_value_thb : (quote.grand_total_thb ? quote.grand_total_thb / 1.07 : (quote.total_value || 0) * (quote.exchange_rate || 1.0))).toLocaleString(undefined, { minimumFractionDigits: 2 })}
               </span>
             )}
           </div>
           <div className="p-3 bg-teal-50/70 rounded-xl border border-teal-200 text-teal-950">
             <span className="text-[10px] font-bold text-teal-700 uppercase tracking-wider block mb-1">Delivery Plan</span>
-            <span className="font-semibold text-teal-900 block leading-tight">
+            <span className="font-semibold text-teal-900 block leading-tight break-words text-[11px]">
               {quote.delivery_plan || "ตามที่ระบุในสัญญา / ข้อตกลงงานบริการ"}
             </span>
           </div>
@@ -1689,11 +1712,12 @@ function PrintPreview({ id, onClose, onEdit, quotations, customers }: any) {
 
       {/* A4 PRINT SHEET */}
       <div
-        className="print-area bg-white mx-auto shadow-[0_12px_40px_rgba(0,0,0,0.06)] print:shadow-none border border-slate-100 print:border-none"
+        className="print-area bg-white mx-auto shadow-[0_12px_40px_rgba(0,0,0,0.06)] print:shadow-none border border-slate-100 print:border-none w-full max-w-[210mm] box-border"
         style={{
-          width: "210mm",
+          width: "100%",
+          maxWidth: "210mm",
           minHeight: "297mm",
-          padding: "18mm 18mm",
+          padding: "16mm 16mm",
           boxSizing: "border-box",
           position: "relative",
         }}
@@ -1704,7 +1728,7 @@ function PrintPreview({ id, onClose, onEdit, quotations, customers }: any) {
            @media print {
              @page { size: A4 portrait; margin: 0; }
              body { background: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-             .print-area { border: none !important; box-shadow: none !important; padding: 15mm 15mm !important; }
+             .print-area { border: none !important; box-shadow: none !important; padding: 15mm 15mm !important; width: 210mm !important; max-width: none !important; }
            }
            
            .print-area, .print-area table, .print-area td, .print-area th, .print-area div, .print-area span, .print-area p {
@@ -1818,20 +1842,20 @@ function PrintPreview({ id, onClose, onEdit, quotations, customers }: any) {
 
         {/* Rigid Table with solid black borders */}
         <table 
-          className="w-full border-collapse text-black bg-white table-fixed mb-2" 
+          className="w-full border-collapse text-black bg-white table-fixed mb-2 box-border" 
           style={{ 
             minHeight: "340px",
             border: tableBorderStyle !== "horizontal" ? "1px solid black" : "none" 
           }}
         >
           <colgroup>
-            <col className="w-[45px]" />
-            <col className="w-[45px]" />
-            <col className="w-[55px]" />
+            <col className="w-[36px]" />
+            <col className="w-[40px]" />
+            <col className="w-[48px]" />
             <col />
+            <col className="w-[60px]" />
             <col className="w-[85px]" />
-            <col className="w-[100px]" />
-            <col className="w-[110px]" />
+            <col className="w-[95px]" />
           </colgroup>
           <thead>
             <tr className="h-[20px] text-[10px] font-bold">
@@ -1985,7 +2009,7 @@ function PrintPreview({ id, onClose, onEdit, quotations, customers }: any) {
         </div>
 
         {/* Page Numbering Footer */}
-        <div className="absolute bottom-[10px] left-0 w-full px-8 flex justify-between text-[9px] text-slate-500 font-medium">
+        <div className="absolute bottom-[10px] left-0 right-0 w-full px-6 flex justify-between text-[9px] text-slate-500 font-medium box-border">
           <div>Location: BDS Folder</div>
           <div>Page 1 of 1</div>
           <div className="text-right leading-tight">

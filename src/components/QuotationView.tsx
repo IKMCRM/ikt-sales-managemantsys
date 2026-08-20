@@ -298,32 +298,43 @@ export default function QuotationView({
 
       {/* Main Table Grid in Google Sheet style */}
       <div className="bg-white rounded-b-2xl border border-[#DADCE0] shadow-xs overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[950px]">
+        <div className="overflow-x-auto max-w-full">
+          <table className="w-full text-left border-collapse table-fixed text-xs">
+            <colgroup>
+              <col className="w-8" />
+              <col className="w-[110px]" />
+              <col className="w-[110px]" />
+              <col />
+              <col className="w-[105px]" />
+              <col className="w-[110px]" />
+              <col className="w-[105px]" />
+              <col className="w-[85px]" />
+              <col className="w-[85px]" />
+            </colgroup>
             <thead>
               {/* Excel Column Headers A, B, C... */}
               <tr className="bg-[#F8F9FA] border-b border-slate-250 text-[10px] font-mono text-slate-400 select-none">
-                <th className="border border-slate-200 bg-[#E8EAED] text-center w-10 py-1"></th>
-                <th className="border border-slate-200 text-center w-36">A</th>
-                <th className="border border-slate-200 text-center w-40">B1</th>
+                <th className="border border-slate-200 bg-[#E8EAED] text-center w-8 py-1"></th>
+                <th className="border border-slate-200 text-center">A</th>
+                <th className="border border-slate-200 text-center">B1</th>
                 <th className="border border-slate-200 text-center">B2</th>
-                <th className="border border-slate-200 text-center w-40">C</th>
-                <th className="border border-slate-200 text-center w-40">D</th>
-                <th className="border border-slate-200 text-center w-44">E</th>
-                <th className="border border-slate-200 text-center w-32">F</th>
-                <th className="border border-slate-200 text-center w-36">G</th>
+                <th className="border border-slate-200 text-center">C</th>
+                <th className="border border-slate-200 text-center">D</th>
+                <th className="border border-slate-200 text-center">E</th>
+                <th className="border border-slate-200 text-center">F</th>
+                <th className="border border-slate-200 text-center">G</th>
               </tr>
               {/* Header Columns inside the spreadsheet */}
               <tr className="bg-[#F8F9FA] border-b-2 border-slate-300 text-xs font-semibold text-slate-600">
-                <th className="border border-slate-200 bg-[#E8EAED] text-center w-10 font-mono select-none"></th>
-                <th className="border border-slate-200 px-3 py-2 text-slate-700">เอกสาร</th>
-                <th className="border border-slate-200 px-3 py-2 text-slate-700">ตัวแทนขาย (Sale Rep)</th>
-                <th className="border border-slate-200 px-3 py-2 text-slate-700">องค์กรลูกค้า / โครงการ</th>
-                <th className="border border-slate-200 px-3 py-2 text-right text-slate-700">ยอดรวม (ก่อน VAT)</th>
-                <th className="border border-slate-200 px-3 py-2 text-right text-slate-900 font-extrabold">ยอดสุทธิ (รวม VAT)</th>
-                <th className="border border-slate-200 px-3 py-2 text-slate-700">วันที่ออก / สิ้นสุด</th>
-                <th className="border border-slate-200 px-3 py-2 text-center text-slate-700">สถานะ</th>
-                <th className="border border-slate-200 px-3 py-2 text-right text-slate-700">เครื่องมือ</th>
+                <th className="border border-slate-200 bg-[#E8EAED] text-center w-8 font-mono select-none"></th>
+                <th className="border border-slate-200 px-2.5 py-2 text-slate-700">เอกสาร</th>
+                <th className="border border-slate-200 px-2.5 py-2 text-slate-700">ตัวแทนขาย</th>
+                <th className="border border-slate-200 px-2.5 py-2 text-slate-700">ลูกค้า / โครงการ</th>
+                <th className="border border-slate-200 px-2.5 py-2 text-right text-slate-700">ยอดก่อน VAT</th>
+                <th className="border border-slate-200 px-2.5 py-2 text-right text-slate-900 font-extrabold">ยอดรวมสุทธิ</th>
+                <th className="border border-slate-200 px-2.5 py-2 text-slate-700">วันที่ / สิ้นสุด</th>
+                <th className="border border-slate-200 px-2 py-2 text-center text-slate-700">สถานะ</th>
+                <th className="border border-slate-200 px-2 py-2 text-right text-slate-700">เครื่องมือ</th>
               </tr>
             </thead>
             <tbody className="text-xs text-slate-700">
@@ -655,31 +666,31 @@ export default function QuotationView({
             }];
 
         return (
-          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-3xs flex items-center justify-center z-50 p-4 overflow-y-auto animate-fade-in print-modal-overlay print:bg-white print:p-0 print:absolute print:inset-0">
-            <div className="bg-white rounded-2xl shadow-3xl w-full max-w-[210mm] overflow-hidden my-8 animate-scale-up print-modal-content print:shadow-none print:my-0 print:rounded-none print:w-[210mm] print:min-h-[297mm]">
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-3xs flex items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto animate-fade-in print-modal-overlay print:bg-white print:p-0 print:absolute print:inset-0">
+            <div className="bg-white rounded-2xl shadow-3xl w-full max-w-[210mm] overflow-hidden my-4 sm:my-8 animate-scale-up print-modal-content print:shadow-none print:my-0 print:rounded-none print:w-[210mm] print:min-h-[297mm]">
               
               {/* Header control toolbar (Hidden in print) */}
-              <div className="bg-slate-50 px-6 py-4 border-b border-slate-150 flex items-center justify-between print:hidden">
-                <span className="text-sm font-extrabold text-slate-800 flex items-center gap-1.5">
-                  <Printer className="w-4.5 h-4.5 text-blue-600" />
+              <div className="bg-slate-50 px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-150 flex items-center justify-between print:hidden">
+                <span className="text-xs sm:text-sm font-extrabold text-slate-800 flex items-center gap-1.5 truncate">
+                  <Printer className="w-4 h-4 text-blue-600 shrink-0" />
                   ใบเสนอราคาต้นฉบับดราฟต์ / Print Preview ({viewingQuote.quotation_no})
                 </span>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                   <button
                     onClick={handlePrint}
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-4 rounded-lg text-xs transition-all cursor-pointer flex items-center gap-1"
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-3 sm:px-4 rounded-lg text-xs transition-all cursor-pointer flex items-center gap-1"
                   >
                     <Printer className="w-3.5 h-3.5" />
                     สั่งพิมพ์แบบฟอร์ม / Print PDF
                   </button>
-                  <button onClick={() => setViewingQuote(null)} className="p-1 bg-white border border-slate-200 text-slate-400 hover:text-slate-600 rounded">
+                  <button onClick={() => setViewingQuote(null)} className="p-1 bg-white border border-slate-200 text-slate-400 hover:text-slate-600 rounded cursor-pointer">
                     <X className="w-4 h-4" />
                   </button>
                 </div>
               </div>
 
               {/* Quotation Information Summary Card (CRM IKM Standard) */}
-              <div className="max-w-[210mm] mx-auto mb-4 bg-white p-5 rounded-2xl border border-teal-200/90 shadow-sm print:hidden">
+              <div className="w-full max-w-[210mm] mx-auto p-4 sm:p-5 bg-white border-b border-teal-100 print:hidden">
                 <div className="flex items-center justify-between border-b border-teal-100 pb-3 mb-4">
                   <h3 className="font-extrabold text-sm text-teal-950 flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-teal-500"></span>
@@ -689,10 +700,10 @@ export default function QuotationView({
                     {viewingQuote.quotation_no}
                   </span>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 text-xs">
                   <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/60">
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Customer</span>
-                    <span className="font-extrabold text-slate-900 line-clamp-2">{clientObj?.customer_name || viewingQuote.customer_name || "STP&I Company Limited"}</span>
+                    <span className="font-extrabold text-slate-900 line-clamp-2 break-words">{clientObj?.customer_name || viewingQuote.customer_name || "STP&I Company Limited"}</span>
                   </div>
                   <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/60 font-mono">
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Quotation No.</span>
@@ -707,18 +718,18 @@ export default function QuotationView({
                   </div>
                   <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/60 font-mono">
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Amount</span>
-                    <span className="font-extrabold text-slate-900 block">
+                    <span className="font-extrabold text-slate-900 block truncate">
                       {viewingQuote.currency || "THB"} {(viewingQuote.total_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </span>
                     {viewingQuote.currency && viewingQuote.currency !== "THB" && (
-                      <span className="text-[10px] text-slate-500 block">
+                      <span className="text-[10px] text-slate-500 block truncate">
                         ≈ THB {((viewingQuote.total_amount_thb !== undefined ? viewingQuote.total_amount_thb : (viewingQuote.total_amount || 0) * (viewingQuote.exchange_rate || 1.0))).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                       </span>
                     )}
                   </div>
                   <div className="p-3 bg-teal-50/70 rounded-xl border border-teal-200 text-teal-950">
                     <span className="text-[10px] font-bold text-teal-700 uppercase tracking-wider block mb-1">Delivery Plan</span>
-                    <span className="font-semibold text-teal-900 block leading-tight">
+                    <span className="font-semibold text-teal-900 block leading-tight break-words text-[11px]">
                       {viewingQuote.delivery_plan || "ตามที่ระบุในสัญญา / ข้อตกลงงานบริการ"}
                     </span>
                   </div>
@@ -727,11 +738,12 @@ export default function QuotationView({
 
               {/* Print canvas sheets */}
               <div 
-                className="print-area bg-white mx-auto print:shadow-none print:border-none print:p-0 text-slate-800"
+                className="print-area bg-white mx-auto print:shadow-none print:border-none print:p-0 text-slate-800 w-full max-w-[210mm] box-border overflow-hidden"
                 style={{
-                  width: "210mm",
+                  width: "100%",
+                  maxWidth: "210mm",
                   minHeight: "297mm",
-                  padding: "18mm 18mm",
+                  padding: "16mm 16mm",
                   boxSizing: "border-box",
                   position: "relative",
                 }}
@@ -758,6 +770,21 @@ export default function QuotationView({
                     }
                     /* Expand parent blocks to be clean */
                     html, body, #react-quotations, #quotation-module {
+                      margin: 0 !important;
+                      padding: 0 !important;
+                      background: white !important;
+                      width: 100% !important;
+                    }
+                    .print-area {
+                      border: none !important;
+                      box-shadow: none !important;
+                      padding: 15mm 15mm !important;
+                      width: 210mm !important;
+                      max-width: none !important;
+                      min-height: 297mm !important;
+                      margin: 0 !important;
+                    }
+                  }
                       margin: 0 !important;
                       padding: 0 !important;
                       background: white !important;
@@ -911,20 +938,20 @@ export default function QuotationView({
 
                 {/* Rigid Table with solid black borders */}
                 <table 
-                  className="w-full border-collapse text-black bg-white table-fixed mb-2" 
+                  className="w-full border-collapse text-black bg-white table-fixed mb-2 box-border" 
                   style={{ 
                     minHeight: "340px",
                     border: tableBorderStyle !== "horizontal" ? "1px solid black" : "none"
                   }}
                 >
                   <colgroup>
-                    <col className="w-[45px]" />
-                    <col className="w-[45px]" />
-                    <col className="w-[55px]" />
+                    <col className="w-[36px]" />
+                    <col className="w-[40px]" />
+                    <col className="w-[48px]" />
                     <col />
+                    <col className="w-[60px]" />
                     <col className="w-[85px]" />
-                    <col className="w-[100px]" />
-                    <col className="w-[110px]" />
+                    <col className="w-[95px]" />
                   </colgroup>
                   <thead>
                     <tr className="h-[20px] text-[10px] font-bold">
@@ -938,14 +965,14 @@ export default function QuotationView({
                       </th>
                       <th rowSpan={2} className={`${tableBorderStyle !== "horizontal" ? "border-l border-r" : ""} border-b-2 border-black font-bold p-1 text-center align-middle`}>
                         <div className="leading-tight">TOTAL PRICE</div>
-                        <div className="text-[8.5px] font-bold text-black mt-0.5">THB</div>
+                        <div className="text-[8.5px] font-bold text-black mt-0.5">{viewingQuote.currency || "THB"}</div>
                       </th>
                     </tr>
                     <tr className="h-[16px] text-[8px] font-semibold">
                       <th className={`${tableBorderStyle !== "horizontal" ? "border-l border-r" : ""} border-b-2 border-black text-center align-middle text-slate-500`}>Days</th>
                       <th className={`${tableBorderStyle !== "horizontal" ? "border-l border-r" : ""} border-b-2 border-black text-center align-middle text-slate-500`}>
                         <div className="leading-none text-[8px]">Per Day</div>
-                        <div className="text-[8.5px] font-bold text-black mt-0.5">THB</div>
+                        <div className="text-[8.5px] font-bold text-black mt-0.5">{viewingQuote.currency || "THB"}</div>
                       </th>
                     </tr>
                   </thead>
@@ -998,9 +1025,9 @@ export default function QuotationView({
 
                 {/* Total Value aligned right */}
                 <div className="flex justify-end items-center mb-3">
-                  <span className="text-[11px] font-bold text-black mr-6">Total Value</span>
-                  <div className="w-[110px] py-1 px-2 text-right font-mono font-bold text-[11px] bg-white" style={{ borderTop: '1px solid black', borderBottom: '3px double black', borderLeft: 'none', borderRight: 'none', margin: 0 }}>
-                    {viewingQuote.total_amount.toLocaleString(undefined, {
+                  <span className="text-[11px] font-bold text-black mr-6">Total Value ({viewingQuote.currency || "THB"})</span>
+                  <div className="py-1 px-2 text-right font-mono font-bold text-[11px] bg-white" style={{ borderTop: '1px solid black', borderBottom: '3px double black', borderLeft: 'none', borderRight: 'none', margin: 0, minWidth: '110px' }}>
+                    {viewingQuote.currency || "THB"} {viewingQuote.total_amount.toLocaleString(undefined, {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2
                     })}
@@ -1078,7 +1105,7 @@ export default function QuotationView({
                 </div>
 
                 {/* Page Numbering Footer */}
-                <div className="absolute bottom-[10px] left-0 w-full px-8 flex justify-between text-[9px] text-slate-500 font-medium">
+                <div className="absolute bottom-[10px] left-0 right-0 w-full px-6 flex justify-between text-[9px] text-slate-500 font-medium box-border">
                   <div>Location: BDS Folder</div>
                   <div>Page 1 of 1</div>
                   <div className="text-right leading-tight">

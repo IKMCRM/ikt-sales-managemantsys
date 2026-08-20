@@ -2608,16 +2608,16 @@ export default function App() {
                       <div className="col-span-2">
                         <input type="number" required value={item.qty} onChange={e => { handleQuoteItemChange(idx, 'qty', Number(e.target.value)); }} className="w-full bg-slate-950 border border-slate-800 rounded-lg p-1.5 text-white" />
                       </div>
-                      <div className="col-span-1.5">
-                        <input type="text" value={item.unit} onChange={e => handleQuoteItemChange(idx, 'unit', e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-lg p-1.5 text-white" />
+                      <div className="col-span-1">
+                        <input type="text" value={item.unit} onChange={e => handleQuoteItemChange(idx, 'unit', e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-lg p-1.5 text-white text-center" />
                       </div>
                       <div className="col-span-2">
-                        <input type="number" required value={item.price} onChange={e => { handleQuoteItemChange(idx, 'price', Number(e.target.value)); }} className="w-full bg-slate-950 border border-slate-800 rounded-lg p-1.5 text-white" />
+                        <input type="number" required value={item.price} onChange={e => { handleQuoteItemChange(idx, 'price', Number(e.target.value)); }} className="w-full bg-slate-950 border border-slate-800 rounded-lg p-1.5 text-white text-right" />
                       </div>
-                      <div className="col-span-1 text-right font-mono text-emerald-400 font-bold">
-                        ฿{(item.qty * item.price).toLocaleString()}
+                      <div className="col-span-1 text-right font-mono text-emerald-400 font-bold text-[11px] truncate">
+                        {(item.qty * item.price).toLocaleString()}
                       </div>
-                      <div className="col-span-0.5 text-center">
+                      <div className="col-span-1 text-center">
                         <button type="button" onClick={() => removeQuoteItemRow(idx)} className="text-rose-500 hover:text-rose-400 focus:outline-none cursor-pointer"><Trash2 className="w-4 h-4" /></button>
                       </div>
                     </div>
@@ -2741,9 +2741,9 @@ export default function App() {
               </div>
             </div>
 
-            <div className="p-6 overflow-y-auto bg-slate-100 text-slate-850 font-sans text-xs flex-1">
+            <div className="p-4 sm:p-6 overflow-y-auto bg-slate-100 text-slate-850 font-sans text-xs flex-1 w-full">
               {/* Quotation Information Overview Card */}
-              <div className="max-w-3xl mx-auto mb-4 bg-white p-4 rounded-xl border border-teal-200 shadow-sm print:hidden">
+              <div className="w-full max-w-3xl mx-auto mb-4 bg-white p-4 rounded-xl border border-teal-200 shadow-sm print:hidden">
                 <div className="flex items-center justify-between border-b border-teal-100 pb-2 mb-3">
                   <h3 className="font-black text-xs text-teal-950 flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-teal-500"></span>
@@ -2753,10 +2753,10 @@ export default function App() {
                     {selectedViewQuotation.quotation_no}
                   </span>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 text-xs">
                   <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200/80">
                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Customer</span>
-                    <span className="font-extrabold text-slate-900 line-clamp-1">{selectedViewQuotation.customer_name}</span>
+                    <span className="font-extrabold text-slate-900 line-clamp-1 break-words">{selectedViewQuotation.customer_name}</span>
                   </div>
                   <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200/80 font-mono">
                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Quotation No.</span>
@@ -2768,13 +2768,13 @@ export default function App() {
                   </div>
                   <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200/80 font-mono">
                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Amount</span>
-                    <span className="font-extrabold text-slate-900 block">
+                    <span className="font-extrabold text-slate-900 block truncate">
                       {selectedViewQuotation.currency || "THB"} {selectedViewQuotation.grand_total.toLocaleString('th-TH', { minimumFractionDigits: 2 })}
                     </span>
                   </div>
                   <div className="p-2.5 bg-teal-50 rounded-lg border border-teal-200 text-teal-950">
                     <span className="text-[9px] font-bold text-teal-700 uppercase tracking-wider block mb-0.5">Delivery Plan</span>
-                    <span className="font-semibold text-teal-900 block text-[11px] leading-tight">
+                    <span className="font-semibold text-teal-900 block text-[11px] leading-tight break-words">
                       {selectedViewQuotation.delivery_plan || "ตามที่ระบุในสัญญา / ข้อตกลงงานบริการ"}
                     </span>
                   </div>
@@ -2782,7 +2782,7 @@ export default function App() {
               </div>
 
               {/* Actual printable paper layout */}
-              <div className="border border-slate-200 p-8 rounded-xl shadow-lg space-y-6 bg-white max-w-3xl mx-auto printable-area">
+              <div className="border border-slate-200 p-4 sm:p-8 rounded-xl shadow-lg space-y-6 bg-white w-full max-w-3xl mx-auto printable-area box-border overflow-hidden">
                 {/* Header */}
                 <div className="flex justify-between items-start border-b border-slate-200 pb-4">
                   <div>
@@ -2803,7 +2803,7 @@ export default function App() {
                 </div>
 
                 {/* Info Blocks */}
-                <div className="grid grid-cols-2 gap-6 text-[10px]">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 text-[10px]">
                   <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 space-y-1">
                     <strong className="text-xs text-slate-900 block mb-1">ข้อมูลลูกค้า / Customer Info:</strong>
                     <div><span className="font-bold text-slate-800">{selectedViewQuotation.customer_name}</span></div>
@@ -2833,8 +2833,8 @@ export default function App() {
                 </div>
 
                 {/* Items Table */}
-                <div>
-                  <table className="w-full text-left border-collapse text-[10px]">
+                <div className="w-full overflow-x-auto">
+                  <table className="w-full text-left border-collapse text-[10px] min-w-[500px]">
                     <thead>
                       <tr className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
                         <th className="py-2 px-2 text-center w-12">ลำดับ</th>
@@ -2842,7 +2842,7 @@ export default function App() {
                         <th className="py-2 px-2 text-center w-16">จำนวน</th>
                         <th className="py-2 px-2 text-center w-16">หน่วย</th>
                         <th className="py-2 px-2 text-right w-24">ราคาต่อหน่วย</th>
-                        <th className="py-2 px-2 text-right w-28">จำนวนเงิน (บาท)</th>
+                        <th className="py-2 px-2 text-right w-28">จำนวนเงิน ({selectedViewQuotation.currency || "THB"})</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -2850,11 +2850,11 @@ export default function App() {
                         selectedViewQuotation.items.map((item, index) => (
                           <tr key={index} className="border-b border-slate-100 hover:bg-slate-50 text-slate-800">
                             <td className="py-2.5 px-2 text-center text-slate-400 font-mono">{index + 1}</td>
-                            <td className="py-2.5 px-2 font-bold text-slate-950">{item.name}</td>
+                            <td className="py-2.5 px-2 font-bold text-slate-950 break-words">{item.name}</td>
                             <td className="py-2.5 px-2 text-center font-mono">{item.qty}</td>
                             <td className="py-2.5 px-2 text-center text-slate-500">{item.unit}</td>
-                            <td className="py-2.5 px-2 text-right font-mono">฿{item.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                            <td className="py-2.5 px-2 text-right font-mono font-bold text-slate-950">฿{(item.qty * item.price).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                            <td className="py-2.5 px-2 text-right font-mono">{selectedViewQuotation.currency || "THB"} {item.price.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                            <td className="py-2.5 px-2 text-right font-mono font-bold text-slate-950">{selectedViewQuotation.currency || "THB"} {(item.qty * item.price).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                           </tr>
                         ))
                       ) : (
@@ -2863,8 +2863,8 @@ export default function App() {
                           <td className="py-2.5 px-2 font-bold text-slate-950">{selectedViewQuotation.title}</td>
                           <td className="py-2.5 px-2 text-center font-mono">1</td>
                           <td className="py-2.5 px-2 text-center text-slate-500">Job</td>
-                          <td className="py-2.5 px-2 text-right font-mono">฿{selectedViewQuotation.total_value.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                          <td className="py-2.5 px-2 text-right font-mono font-bold text-slate-950">฿{selectedViewQuotation.total_value.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                          <td className="py-2.5 px-2 text-right font-mono">{selectedViewQuotation.currency || "THB"} {selectedViewQuotation.total_value.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                          <td className="py-2.5 px-2 text-right font-mono font-bold text-slate-950">{selectedViewQuotation.currency || "THB"} {selectedViewQuotation.total_value.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                         </tr>
                       )}
                     </tbody>
@@ -2876,15 +2876,15 @@ export default function App() {
                   <div className="w-80 space-y-1.5 font-mono text-[10px]">
                     <div className="flex justify-between text-slate-600">
                       <span>มูลค่ารวมสินค้า / Services Subtotal:</span>
-                      <span className="font-bold text-slate-900">฿{selectedViewQuotation.total_value.toLocaleString('th-TH', { minimumFractionDigits: 2 })}</span>
+                      <span className="font-bold text-slate-900">{selectedViewQuotation.currency || "THB"} {selectedViewQuotation.total_value.toLocaleString('th-TH', { minimumFractionDigits: 2 })}</span>
                     </div>
                     <div className="flex justify-between text-slate-600">
                       <span>ภาษีมูลค่าเพิ่ม / VAT ({selectedViewQuotation.tax_rate}%):</span>
-                      <span className="font-bold text-slate-900">฿{(selectedViewQuotation.total_value * (selectedViewQuotation.tax_rate / 100)).toLocaleString('th-TH', { minimumFractionDigits: 2 })}</span>
+                      <span className="font-bold text-slate-900">{selectedViewQuotation.currency || "THB"} {(selectedViewQuotation.total_value * (selectedViewQuotation.tax_rate / 100)).toLocaleString('th-TH', { minimumFractionDigits: 2 })}</span>
                     </div>
                     <div className="flex justify-between border-t border-slate-200 pt-2 text-xs">
                       <span className="font-bold text-slate-900">ยอดเงินรวมสุทธิ / Grand Total:</span>
-                      <span className="font-extrabold text-indigo-600 text-[13px]">฿{selectedViewQuotation.grand_total.toLocaleString('th-TH', { minimumFractionDigits: 2 })}</span>
+                      <span className="font-extrabold text-indigo-600 text-[13px]">{selectedViewQuotation.currency || "THB"} {selectedViewQuotation.grand_total.toLocaleString('th-TH', { minimumFractionDigits: 2 })}</span>
                     </div>
                   </div>
                 </div>
