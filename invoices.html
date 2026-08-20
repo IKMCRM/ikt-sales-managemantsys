@@ -922,7 +922,10 @@
             </td>
             <td>
               <div class="fw-bold small text-truncate" style="max-width: 200px;" title="${i.project_name}">${i.project_name}</div>
-              <div class="text-xs text-muted font-monospace">QT Ref: ${i.quotation_no || 'Direct'}</div>
+              <div class="text-xs text-muted font-monospace mt-0.5">
+                ${i.quotation_no ? `<span class="badge bg-indigo-subtle text-indigo me-1">QT: ${i.quotation_no}</span>` : '<span class="badge bg-light text-muted me-1">Direct</span>'}
+                ${i.sales_order_no ? `<span class="badge bg-success-subtle text-success">SO: ${i.sales_order_no}</span>` : ''}
+              </div>
               <div class="text-muted font-monospace mt-0.5" style="font-size: 10px; line-height: 1.2;">
                 <span class="d-inline-block me-2" title="Created by"><i class="fa fa-plus-circle text-secondary" style="font-size: 9px;"></i> ${i.created_by ? window.SupabaseDB.getUsernameOrDisplayName(i.created_by) : 'System'}</span>
                 <span class="d-inline-block me-2" title="Updated by"><i class="fa fa-pen text-secondary" style="font-size: 9px;"></i> ${i.updated_by ? window.SupabaseDB.getUsernameOrDisplayName(i.updated_by) : 'System'}</span>
@@ -933,9 +936,16 @@
               <div><strong>Issue:</strong> ${i.invoice_date}</div>
               <div class="text-xs text-danger"><strong>Due:</strong> ${i.due_date}</div>
             </td>
-            <td class="text-end font-monospace font-bold text-success" style="font-size: 1rem;">
-              <div>${grand}</div>
-              <div class="text-muted" style="font-size:10px;">VAT: ${sub}</div>
+            <td class="text-end font-monospace font-bold text-success" style="font-size: 0.95rem;">
+              <div>${i.currency && i.currency !== 'THB' ? `${i.currency} ` : '฿'}${grand}</div>
+              ${i.currency && i.currency !== 'THB' ? `
+                <div class="text-muted small font-sans" style="font-size:10px;">
+                  ≈ ฿${(i.total_amount_thb || ((i.grand_total || i.total_value || 0) * (i.exchange_rate || 35.0))).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  <span class="badge bg-light text-dark ms-1">Rate ${i.exchange_rate || 35.0}</span>
+                </div>
+              ` : `
+                <div class="text-muted" style="font-size:10px;">VAT: ฿${sub}</div>
+              `}
             </td>
             <td class="text-center">${statusBadge}</td>
             <td class="text-center">

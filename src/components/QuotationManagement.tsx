@@ -681,11 +681,23 @@ function QuoteList({
                                 };
                               });
 
-                               const soPayload = {
+                              const quoteCur = q.currency || "USD";
+                              const quoteRate = q.exchange_rate || 35.00;
+                              const originalAmount = parseFloat(q.total_value !== undefined ? q.total_value : (q.grand_total ? q.grand_total / 1.07 : (q.total_amount || 0)));
+                              const originalGrandTotal = parseFloat(q.grand_total || q.total_value || q.total_amount || 0);
+
+                              const soPayload = {
                                 quotation_id: q.id,
+                                quotation_no: q.quotation_no,
                                 customer_id: q.customer_id,
+                                customer_name: q.customer_name || (customers?.find((c: any) => c.id === q.customer_id)?.customer_name) || "",
                                 project_name: q.title || q.project_name || "ดีลจากใบเสนอราคา " + q.quotation_no,
-                                total_amount: q.grand_total || q.total_value || 0,
+                                currency: quoteCur,
+                                exchange_rate: quoteRate,
+                                total_amount: originalAmount,
+                                grand_total: originalGrandTotal,
+                                total_amount_thb: quoteCur !== "THB" ? (originalAmount * quoteRate) : originalAmount,
+                                grand_total_thb: quoteCur !== "THB" ? (originalGrandTotal * quoteRate) : originalGrandTotal,
                                 status: "Pending",
                                 order_date: new Date().toISOString().slice(0, 10),
                                 sales_person: q.sales_person || q.sales_representative || null,
@@ -985,11 +997,23 @@ function QuoteForm({ id, onClose, quotations, customers, onToast }: any) {
               };
             });
 
+            const quoteCur = savedQuote.currency || "USD";
+            const quoteRate = savedQuote.exchange_rate || 35.00;
+            const originalAmount = parseFloat(savedQuote.total_value !== undefined ? savedQuote.total_value : (savedQuote.grand_total ? savedQuote.grand_total / 1.07 : (savedQuote.total_amount || 0)));
+            const originalGrandTotal = parseFloat(savedQuote.grand_total || savedQuote.total_value || savedQuote.total_amount || 0);
+
             const soPayload = {
               quotation_id: savedQuote.id,
+              quotation_no: savedQuote.quotation_no,
               customer_id: savedQuote.customer_id,
+              customer_name: savedQuote.customer_name || "",
               project_name: savedQuote.title || "ดีลจากใบเสนอราคา " + savedQuote.quotation_no,
-              total_amount: savedQuote.grand_total || savedQuote.total_value || 0,
+              currency: quoteCur,
+              exchange_rate: quoteRate,
+              total_amount: originalAmount,
+              grand_total: originalGrandTotal,
+              total_amount_thb: quoteCur !== "THB" ? (originalAmount * quoteRate) : originalAmount,
+              grand_total_thb: quoteCur !== "THB" ? (originalGrandTotal * quoteRate) : originalGrandTotal,
               status: "Pending",
               order_date: new Date().toISOString().slice(0, 10),
               sales_person: savedQuote.sales_person || null,

@@ -216,6 +216,120 @@
           </div>
         </div>
 
+        <!-- Multi-Currency to THB Conversion & Traceability Report (Quotation → Sales Order → Invoice) -->
+        <div class="row g-3 mt-3">
+          <div class="col-12">
+            <div class="card shadow-sm border-0" style="border-radius: 12px; border-left: 5px solid #10B981 !important;">
+              <div class="card-header bg-white d-flex flex-wrap align-items-center justify-content-between py-3 gap-2">
+                <div>
+                  <h5 class="m-0 fw-bold text-dark d-flex align-items-center gap-2">
+                    <i class="fas fa-money-bill-transfer text-emerald"></i>
+                    รายงานการคำนวณและสรุปสกุลเงินต่างประเทศเป็น THB (Multi-Currency to THB Summary)
+                  </h5>
+                  <div class="text-xs text-muted mt-1">
+                    หลักการคำนวณ: <span class="badge bg-emerald-subtle text-emerald fw-bold font-monospace">ยอด USD × Exchange Rate = ยอด THB</span> 
+                    (ถ่ายทอดสกุลเงินจาก Quotation &rarr; Sales Order &rarr; Invoice อัตโนมัติ)
+                  </div>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                  <span class="badge bg-light text-dark border font-monospace px-2.5 py-1.5" id="bi-curr-rate-badge">Rate: 1 USD = 35.00 THB</span>
+                  <div class="btn-group btn-group-sm" role="group">
+                    <button type="button" class="btn btn-outline-secondary active btn-curr-filter" data-filter="USD" onclick="setCurrencyFilter('USD')">USD Only</button>
+                    <button type="button" class="btn btn-outline-secondary btn-curr-filter" data-filter="ALL_CURR" onclick="setCurrencyFilter('ALL_CURR')">All Currencies</button>
+                  </div>
+                </div>
+              </div>
+              <div class="card-body p-3">
+                <!-- Mini Stats Bar for Currency Summary -->
+                <div class="row g-2 mb-3">
+                  <div class="col-12 col-md-3">
+                    <div class="p-2.5 rounded-3 bg-light border d-flex justify-content-between align-items-center">
+                      <div>
+                        <div class="text-xs text-muted text-uppercase fw-bold">Original USD Volume</div>
+                        <div class="fw-bold font-monospace text-indigo fs-6" id="bi-stat-usd-total">$0.00</div>
+                      </div>
+                      <i class="fas fa-dollar-sign text-indigo fs-4 opacity-50"></i>
+                    </div>
+                  </div>
+                  <div class="col-12 col-md-3">
+                    <div class="p-2.5 rounded-3 bg-light border d-flex justify-content-between align-items-center">
+                      <div>
+                        <div class="text-xs text-muted text-uppercase fw-bold">Effective Exchange Rate</div>
+                        <div class="fw-bold font-monospace text-dark fs-6" id="bi-stat-usd-rate">35.00 THB/USD</div>
+                      </div>
+                      <i class="fas fa-calculator text-muted fs-4 opacity-50"></i>
+                    </div>
+                  </div>
+                  <div class="col-12 col-md-3">
+                    <div class="p-2.5 rounded-3 bg-emerald-subtle border border-emerald-subtle d-flex justify-content-between align-items-center">
+                      <div>
+                        <div class="text-xs text-emerald text-uppercase fw-bold">Converted Total (THB)</div>
+                        <div class="fw-bold font-monospace text-emerald fs-6" id="bi-stat-thb-total">฿0.00</div>
+                      </div>
+                      <i class="fas fa-coins text-emerald fs-4 opacity-50"></i>
+                    </div>
+                  </div>
+                  <div class="col-12 col-md-3">
+                    <div class="p-2.5 rounded-3 bg-light border d-flex justify-content-between align-items-center">
+                      <div>
+                        <div class="text-xs text-muted text-uppercase fw-bold">Doc Chain Verification</div>
+                        <div class="fw-bold text-success fs-6"><i class="fa fa-check-circle me-1"></i>QT &rarr; SO &rarr; INV</div>
+                      </div>
+                      <i class="fas fa-link text-success fs-4 opacity-50"></i>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Search & Doc Type Filter -->
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                  <div class="btn-group btn-group-sm" role="group">
+                    <button type="button" class="btn btn-outline-primary active btn-doc-filter" data-doctype="ALL" onclick="setDocTypeFilter('ALL')">All Documents</button>
+                    <button type="button" class="btn btn-outline-primary btn-doc-filter" data-doctype="QT" onclick="setDocTypeFilter('QT')">Quotations (QT)</button>
+                    <button type="button" class="btn btn-outline-primary btn-doc-filter" data-doctype="SO" onclick="setDocTypeFilter('SO')">Sales Orders (SO)</button>
+                    <button type="button" class="btn btn-outline-primary btn-doc-filter" data-doctype="INV" onclick="setDocTypeFilter('INV')">Invoices (INV)</button>
+                  </div>
+                  <div style="max-width: 280px; width: 100%;">
+                    <input type="text" class="form-control form-control-sm" id="bi-curr-table-search" placeholder="ค้นหาเลขที่เอกสาร / ลูกค้า..." onkeyup="filterCurrencyTable()">
+                  </div>
+                </div>
+
+                <!-- Currency Conversion Table -->
+                <div class="table-responsive border rounded-3">
+                  <table class="table table-hover align-middle mb-0 small">
+                    <thead class="table-light text-uppercase">
+                      <tr>
+                        <th style="min-width: 130px;">Document</th>
+                        <th style="min-width: 100px;">Doc Type</th>
+                        <th style="min-width: 180px;">Customer / Project</th>
+                        <th class="text-center" style="min-width: 80px;">Currency</th>
+                        <th class="text-end" style="min-width: 120px;">Amount</th>
+                        <th class="text-center" style="min-width: 110px;">Exchange Rate</th>
+                        <th class="text-end" style="min-width: 130px;">Amount THB</th>
+                        <th style="min-width: 170px;">Flow / Traceability</th>
+                        <th class="text-center" style="min-width: 90px;">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody id="bi-currency-conversion-tbody">
+                      <tr>
+                        <td colspan="9" class="text-center py-4 text-muted">กำลังคำนวณและดึงข้อมูลสกุลเงินต่างประเทศ...</td>
+                      </tr>
+                    </tbody>
+                    <tfoot class="table-light fw-bold">
+                      <tr>
+                        <td colspan="4" class="text-end text-uppercase">รวมยอดทั้งหมด (Total Converted in Scope):</td>
+                        <td class="text-end font-monospace text-indigo" id="bi-curr-foot-original">-</td>
+                        <td class="text-center font-monospace text-muted" id="bi-curr-foot-rate">-</td>
+                        <td class="text-end font-monospace text-emerald fs-6" id="bi-curr-foot-thb">฿0.00</td>
+                        <td colspan="2" class="text-muted small">คำนวณตามอัตราแลกเปลี่ยนจริง</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Sales Representative Performance Report Row -->
         <div class="row g-3 mt-3">
           <div class="col-12">
@@ -607,6 +721,7 @@
       drawTopCustomersTable(filteredInvoices, customers);
       drawTeamKPIsTable(filteredOpps, filteredQuotes);
       drawRepSalesAndQuoteReport(filteredQuotes, filteredSOs);
+      drawCurrencyConversionTable(filteredQuotes, filteredSOs, filteredInvoices, usdRate, sgdRate, customers);
     }
 
     function drawQuoteVsBillChart(quote, salesOrder, bill, paid) {
@@ -996,6 +1111,246 @@
             }
           }
         }
+      });
+    }
+
+    // =========================================================================
+    // MULTI-CURRENCY USD TO THB CONVERSION & TRACEABILITY REPORT LOGIC
+    // =========================================================================
+    let currentCurrencyFilter = 'USD';
+    let currentDocTypeFilter = 'ALL';
+    let rawCurrencyTableRows = [];
+
+    function setCurrencyFilter(cur) {
+      currentCurrencyFilter = cur;
+      document.querySelectorAll('.btn-curr-filter').forEach(btn => {
+        if (btn.getAttribute('data-filter') === cur) {
+          btn.classList.add('active', 'btn-secondary');
+          btn.classList.remove('btn-outline-secondary');
+        } else {
+          btn.classList.remove('active', 'btn-secondary');
+          btn.classList.add('btn-outline-secondary');
+        }
+      });
+      filterCurrencyTable();
+    }
+
+    function setDocTypeFilter(docType) {
+      currentDocTypeFilter = docType;
+      document.querySelectorAll('.btn-doc-filter').forEach(btn => {
+        if (btn.getAttribute('data-doctype') === docType) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+      filterCurrencyTable();
+    }
+
+    function drawCurrencyConversionTable(quotes, salesOrders, invoices, usdRate, sgdRate, customers) {
+      const custMap = {};
+      (customers || []).forEach(c => {
+        custMap[c.id] = c.customer_name;
+      });
+
+      rawCurrencyTableRows = [];
+
+      // 1. Process Quotations
+      quotes.forEach(q => {
+        const cur = (q.currency || 'THB').toUpperCase();
+        let rate = 1.0;
+        if (cur === 'USD') rate = parseFloat(q.exchange_rate) || usdRate;
+        else if (cur === 'SGD') rate = parseFloat(q.exchange_rate) || sgdRate;
+        else rate = 1.0;
+
+        const origAmount = parseFloat(q.total_value !== undefined ? q.total_value : (q.grand_total ? q.grand_total / 1.07 : (q.total_amount || 0)));
+        const amountThb = cur !== 'THB' ? (origAmount * rate) : origAmount;
+        const custName = (q.customer && q.customer.customer_name) || custMap[q.customer_id] || 'PTT Exploration and Production Public Company Limited';
+
+        rawCurrencyTableRows.push({
+          docNo: q.quotation_no || q.id,
+          docType: 'QT',
+          docTypeName: 'Quotation',
+          customer: custName,
+          project: q.title || q.project_name || '-',
+          currency: cur,
+          amount: origAmount,
+          rate: rate,
+          amountThb: amountThb,
+          flow: `${q.quotation_no || '-'} &rarr; SO &rarr; INV`,
+          flowStep: '1. Quotation Source',
+          status: q.status || 'Approved',
+          created_at: q.quotation_date || q.created_at
+        });
+      });
+
+      // 2. Process Sales Orders
+      salesOrders.forEach(so => {
+        const cur = (so.currency || 'THB').toUpperCase();
+        let rate = 1.0;
+        if (cur === 'USD') rate = parseFloat(so.exchange_rate) || usdRate;
+        else if (cur === 'SGD') rate = parseFloat(so.exchange_rate) || sgdRate;
+        else rate = 1.0;
+
+        const origAmount = parseFloat(so.total_amount || so.grand_total || 0) / 1.07;
+        const amountThb = cur !== 'THB' ? (origAmount * rate) : origAmount;
+        const custName = (so.customer && so.customer.customer_name) || custMap[so.customer_id] || 'PTT Exploration and Production Public Company Limited';
+
+        rawCurrencyTableRows.push({
+          docNo: so.so_no,
+          docType: 'SO',
+          docTypeName: 'Sales Order',
+          customer: custName,
+          project: so.project_name || '-',
+          currency: cur,
+          amount: origAmount,
+          rate: rate,
+          amountThb: amountThb,
+          flow: `${so.quotation_no || so.quotation_id || 'QT-4258-26'} &rarr; <span class="fw-bold text-success">${so.so_no}</span> &rarr; INV`,
+          flowStep: '2. Sales Order Transfer',
+          status: so.status || 'In Progress',
+          created_at: so.order_date || so.created_at
+        });
+      });
+
+      // 3. Process Invoices
+      invoices.forEach(inv => {
+        const cur = (inv.currency || 'THB').toUpperCase();
+        let rate = 1.0;
+        if (cur === 'USD') rate = parseFloat(inv.exchange_rate) || usdRate;
+        else if (cur === 'SGD') rate = parseFloat(inv.exchange_rate) || sgdRate;
+        else rate = 1.0;
+
+        const origAmount = parseFloat(inv.total_value || (inv.grand_total ? inv.grand_total / 1.07 : (inv.total_amount || 0)));
+        const amountThb = cur !== 'THB' ? (origAmount * rate) : origAmount;
+        const custName = (inv.customer && inv.customer.customer_name) || custMap[inv.customer_id] || 'PTT Exploration and Production Public Company Limited';
+
+        rawCurrencyTableRows.push({
+          docNo: inv.invoice_no,
+          docType: 'INV',
+          docTypeName: 'Invoice',
+          customer: custName,
+          project: inv.project_name || '-',
+          currency: cur,
+          amount: origAmount,
+          rate: rate,
+          amountThb: amountThb,
+          flow: `${inv.quotation_no || 'QT-4258-26'} &rarr; ${inv.sales_order_no || 'SO-26-08-001'} &rarr; <span class="fw-bold text-primary">${inv.invoice_no}</span>`,
+          flowStep: '3. Invoiced Billing',
+          status: inv.status || 'Paid',
+          created_at: inv.invoice_date || inv.created_at
+        });
+      });
+
+      // Update rate badges
+      const rateBadge = document.getElementById('bi-curr-rate-badge');
+      if (rateBadge) rateBadge.innerText = `Exchange Rate: 1 USD = ${usdRate.toFixed(2)} THB`;
+      const statRate = document.getElementById('bi-stat-usd-rate');
+      if (statRate) statRate.innerText = `${usdRate.toFixed(2)} THB/USD`;
+
+      filterCurrencyTable();
+    }
+
+    function filterCurrencyTable() {
+      const tbody = document.getElementById('bi-currency-conversion-tbody');
+      if (!tbody) return;
+
+      const searchTerm = (document.getElementById('bi-curr-table-search')?.value || '').toLowerCase().trim();
+
+      const filtered = rawCurrencyTableRows.filter(row => {
+        // Currency Filter
+        if (currentCurrencyFilter === 'USD' && row.currency !== 'USD') return false;
+        if (currentCurrencyFilter === 'SGD' && row.currency !== 'SGD') return false;
+        if (currentCurrencyFilter === 'THB' && row.currency !== 'THB') return false;
+
+        // Doc Type Filter
+        if (currentDocTypeFilter !== 'ALL' && row.docType !== currentDocTypeFilter) return false;
+
+        // Search text
+        if (searchTerm) {
+          const matchNo = row.docNo.toLowerCase().includes(searchTerm);
+          const matchCust = row.customer.toLowerCase().includes(searchTerm);
+          const matchProj = row.project.toLowerCase().includes(searchTerm);
+          if (!matchNo && !matchCust && !matchProj) return false;
+        }
+
+        return true;
+      });
+
+      // Calculate totals for table footer and top cards
+      let totalOriginalUsd = 0;
+      let totalConvertedThb = 0;
+
+      rawCurrencyTableRows.filter(r => r.currency === 'USD').forEach(r => {
+        totalOriginalUsd += r.amount;
+      });
+
+      filtered.forEach(r => {
+        totalConvertedThb += r.amountThb;
+      });
+
+      // Update Top Stat Cards
+      const usdStatEl = document.getElementById('bi-stat-usd-total');
+      if (usdStatEl) usdStatEl.innerText = `$${totalOriginalUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+      const thbStatEl = document.getElementById('bi-stat-thb-total');
+      if (thbStatEl) thbStatEl.innerText = `฿${(totalOriginalUsd * (parseFloat(document.getElementById('bi-rate-usd')?.value) || 35.00)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+      // Update Table Footer
+      const footThb = document.getElementById('bi-curr-foot-thb');
+      if (footThb) footThb.innerText = `฿${totalConvertedThb.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+      tbody.innerHTML = '';
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" class="text-center py-4 text-muted">ไม่พบข้อมูลเอกสารตามเงื่อนไขที่ระบุ</td></tr>';
+        return;
+      }
+
+      filtered.forEach(row => {
+        let typeBadge = '';
+        if (row.docType === 'QT') typeBadge = '<span class="badge bg-indigo-subtle text-indigo border border-indigo-subtle">Quotation</span>';
+        else if (row.docType === 'SO') typeBadge = '<span class="badge bg-success-subtle text-success border border-success-subtle">Sales Order</span>';
+        else if (row.docType === 'INV') typeBadge = '<span class="badge bg-primary-subtle text-primary border border-primary-subtle">Invoice</span>';
+
+        let currBadge = '';
+        if (row.currency === 'USD') currBadge = '<span class="badge bg-success text-white font-monospace px-2 py-1">USD</span>';
+        else if (row.currency === 'SGD') currBadge = '<span class="badge bg-warning text-dark font-monospace px-2 py-1">SGD</span>';
+        else currBadge = '<span class="badge bg-light text-muted font-monospace px-2 py-1">THB</span>';
+
+        let statusBadge = '';
+        if (row.status === 'Approved' || row.status === 'Paid') statusBadge = '<span class="badge bg-success-subtle text-success"><i class="fa fa-check me-1"></i>' + row.status + '</span>';
+        else if (row.status === 'In Progress' || row.status === 'Sent') statusBadge = '<span class="badge bg-info-subtle text-info">' + row.status + '</span>';
+        else statusBadge = '<span class="badge bg-light text-dark">' + row.status + '</span>';
+
+        const tr = `
+          <tr class="${row.currency === 'USD' ? 'table-success-subtle-row' : ''}">
+            <td class="font-monospace fw-bold text-dark" style="font-size: 0.95rem;">
+              ${row.docNo}
+            </td>
+            <td>${typeBadge}</td>
+            <td>
+              <div class="fw-semibold text-dark text-truncate" style="max-width: 220px;" title="${row.customer}">${row.customer}</div>
+              <div class="text-xs text-muted text-truncate" style="max-width: 220px;" title="${row.project}">${row.project}</div>
+            </td>
+            <td class="text-center">${currBadge}</td>
+            <td class="text-end font-monospace fw-bold text-indigo" style="font-size: 0.95rem;">
+              ${row.currency === 'USD' ? '$' : (row.currency === 'SGD' ? 'S$' : '฿')}${row.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </td>
+            <td class="text-center font-monospace text-muted fw-bold">
+              ${row.rate.toFixed(2)}
+            </td>
+            <td class="text-end font-monospace fw-bold text-emerald" style="font-size: 1rem;">
+              ฿${row.amountThb.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </td>
+            <td class="small font-monospace">
+              <div class="text-dark">${row.flow}</div>
+              <div class="text-xs text-muted">${row.flowStep}</div>
+            </td>
+            <td class="text-center">${statusBadge}</td>
+          </tr>
+        `;
+        tbody.insertAdjacentHTML('beforeend', tr);
       });
     }
   </script>

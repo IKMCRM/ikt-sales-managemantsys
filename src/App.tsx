@@ -97,6 +97,9 @@ interface InvoiceSim {
   customer_id: number;
   customer_name: string;
   quotation_no: string;
+  sales_order_no?: string;
+  currency?: string;
+  exchange_rate?: number;
   invoice_date: string;
   due_date: string;
   subtotal: number;
@@ -281,6 +284,22 @@ export default function App() {
   ]);
 
   const [invoices, setInvoices] = useState<InvoiceSim[]>([
+    { 
+      id: 2608, 
+      invoice_no: 'INV-26-08-021', 
+      customer_id: 1, 
+      customer_name: 'บริษัท ปตท. สำรวจและผลิตปิโตรเลียม จำกัด (มหาชน)', 
+      quotation_no: 'QT-4258-26', 
+      sales_order_no: 'SO-26-08-001',
+      currency: 'USD',
+      exchange_rate: 35.00,
+      invoice_date: '2026-08-05', 
+      due_date: '2026-09-04', 
+      subtotal: 1000.00, 
+      tax_amount: 70.00, 
+      grand_total: 1070.00, 
+      status: 'Paid' 
+    },
     { id: 1, invoice_no: 'INV-000001', customer_id: 2, customer_name: 'บริษัท ไทยออยล์ จำกัด (มหาชน)', quotation_no: 'QT-000001', invoice_date: '2026-06-20', due_date: '2026-08-04', subtotal: 850000.00, tax_amount: 59500.00, grand_total: 909500.00, status: 'Unpaid' }
   ]);
 
@@ -2102,6 +2121,111 @@ export default function App() {
                               );
                             })}
                           </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    {/* Multi-Currency USD to THB Conversion & Traceability Report (Quotation → Sales Order → Invoice) */}
+                    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 border-l-4 border-l-emerald-500">
+                      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <i className="fas fa-money-bill-transfer text-emerald-400 text-base"></i>
+                            <h3 className="text-sm font-black text-white">รายงานการคำนวณและสรุปสกุลเงินต่างประเทศ (USD &rarr; THB Conversion Report)</h3>
+                          </div>
+                          <div className="text-[11px] text-slate-400 mt-1">
+                            สูตรการคำนวณ: <span className="bg-emerald-950/80 text-emerald-300 border border-emerald-800/80 font-mono px-1.5 py-0.5 rounded font-bold">ยอด USD × Exchange Rate = ยอด THB</span> 
+                            (ส่งต่อสกุลเงินและคำนวณมูลค่า THB จาก Quotation &rarr; Sales Order &rarr; Invoice)
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-slate-400 font-mono bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-700">Exchange Rate: 1 USD = 35.00 THB</span>
+                        </div>
+                      </div>
+
+                      {/* Currency Traceability Table */}
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse text-xs">
+                          <thead>
+                            <tr className="border-b border-slate-800 text-slate-400 uppercase font-bold text-[10px] tracking-wider bg-slate-950/40">
+                              <th className="py-2.5 px-3">Document</th>
+                              <th>Doc Type</th>
+                              <th>Customer / Project</th>
+                              <th className="text-center">Currency</th>
+                              <th className="text-right">Original Amount</th>
+                              <th className="text-center">Exchange Rate</th>
+                              <th className="text-right">Converted Amount (THB)</th>
+                              <th>Traceability Flow</th>
+                              <th className="text-center">Status</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {/* Quotation Example: QT-4258-26 */}
+                            <tr className="border-b border-slate-850 hover:bg-slate-850/40 transition-all text-slate-300">
+                              <td className="py-3 px-3 font-mono font-bold text-indigo-400">QT-4258-26</td>
+                              <td><span className="bg-indigo-950 text-indigo-400 border border-indigo-800 px-2 py-0.5 rounded text-[10px] font-bold">Quotation</span></td>
+                              <td>
+                                <div className="font-bold text-white">บริษัท ปตท. สำรวจและผลิตปิโตรเลียม จำกัด (มหาชน)</div>
+                                <div className="text-[10px] text-slate-400">High-Pressure Hydrotest System & Inspection Package (USD)</div>
+                              </td>
+                              <td className="text-center"><span className="bg-emerald-950 text-emerald-400 border border-emerald-800 px-2 py-0.5 rounded font-mono font-bold text-[10px]">USD</span></td>
+                              <td className="text-right font-mono font-bold text-indigo-300">$1,000.00</td>
+                              <td className="text-center font-mono text-slate-400 font-bold">35.00</td>
+                              <td className="text-right font-mono font-extrabold text-emerald-400 text-sm">฿35,000.00</td>
+                              <td>
+                                <div className="font-mono text-[11px] text-slate-300 font-bold">QT-4258-26 &rarr; SO &rarr; INV</div>
+                                <div className="text-[10px] text-slate-500">1. Quotation Source</div>
+                              </td>
+                              <td className="text-center"><span className="bg-emerald-950 text-emerald-400 border border-emerald-800 px-2 py-0.5 rounded text-[10px] font-bold">Approved</span></td>
+                            </tr>
+
+                            {/* Sales Order Example: SO-26-08-001 */}
+                            <tr className="border-b border-slate-850 hover:bg-slate-850/40 transition-all text-slate-300 bg-emerald-950/10">
+                              <td className="py-3 px-3 font-mono font-bold text-emerald-400">SO-26-08-001</td>
+                              <td><span className="bg-emerald-950 text-emerald-400 border border-emerald-800 px-2 py-0.5 rounded text-[10px] font-bold">Sales Order</span></td>
+                              <td>
+                                <div className="font-bold text-white">บริษัท ปตท. สำรวจและผลิตปิโตรเลียม จำกัด (มหาชน)</div>
+                                <div className="text-[10px] text-slate-400">High-Pressure Hydrotest System & Inspection Package (USD)</div>
+                              </td>
+                              <td className="text-center"><span className="bg-emerald-950 text-emerald-400 border border-emerald-800 px-2 py-0.5 rounded font-mono font-bold text-[10px]">USD</span></td>
+                              <td className="text-right font-mono font-bold text-indigo-300">$1,000.00</td>
+                              <td className="text-center font-mono text-slate-400 font-bold">35.00</td>
+                              <td className="text-right font-mono font-extrabold text-emerald-400 text-sm">฿35,000.00</td>
+                              <td>
+                                <div className="font-mono text-[11px] text-slate-300 font-bold">QT-4258-26 &rarr; <span className="text-emerald-400 font-bold">SO-26-08-001</span> &rarr; INV</div>
+                                <div className="text-[10px] text-emerald-400/80">2. Sales Order Transferred</div>
+                              </td>
+                              <td className="text-center"><span className="bg-emerald-950 text-emerald-400 border border-emerald-800 px-2 py-0.5 rounded text-[10px] font-bold">Confirmed</span></td>
+                            </tr>
+
+                            {/* Invoice Example: Inv 26-08-021 */}
+                            <tr className="border-b border-slate-850 hover:bg-slate-850/40 transition-all text-slate-300">
+                              <td className="py-3 px-3 font-mono font-bold text-blue-400">INV-26-08-021</td>
+                              <td><span className="bg-blue-950 text-blue-400 border border-blue-800 px-2 py-0.5 rounded text-[10px] font-bold">Invoice</span></td>
+                              <td>
+                                <div className="font-bold text-white">บริษัท ปตท. สำรวจและผลิตปิโตรเลียม จำกัด (มหาชน)</div>
+                                <div className="text-[10px] text-slate-400">High-Pressure Hydrotest System & Inspection Package (USD)</div>
+                              </td>
+                              <td className="text-center"><span className="bg-emerald-950 text-emerald-400 border border-emerald-800 px-2 py-0.5 rounded font-mono font-bold text-[10px]">USD</span></td>
+                              <td className="text-right font-mono font-bold text-indigo-300">$1,000.00</td>
+                              <td className="text-center font-mono text-slate-400 font-bold">35.00</td>
+                              <td className="text-right font-mono font-extrabold text-emerald-400 text-sm">฿35,000.00</td>
+                              <td>
+                                <div className="font-mono text-[11px] text-slate-300 font-bold">QT-4258-26 &rarr; SO-26-08-001 &rarr; <span className="text-blue-400 font-bold">INV-26-08-021</span></div>
+                                <div className="text-[10px] text-blue-400/80">3. Invoiced Billing</div>
+                              </td>
+                              <td className="text-center"><span className="bg-emerald-950 text-emerald-400 border border-emerald-800 px-2 py-0.5 rounded text-[10px] font-bold">Paid</span></td>
+                            </tr>
+                          </tbody>
+                          <tfoot>
+                            <tr className="bg-slate-950/60 font-bold border-t border-slate-800">
+                              <td colSpan={4} className="py-3 px-3 text-slate-400 text-right uppercase text-[10px]">สรุปมูลค่ายอดแปลงค่าในสายงาน (Total Converted THB):</td>
+                              <td className="text-right font-mono text-indigo-300 font-extrabold">$1,000.00</td>
+                              <td className="text-center font-mono text-slate-400">35.00</td>
+                              <td className="text-right font-mono text-emerald-400 font-black text-base">฿35,000.00</td>
+                              <td colSpan={2} className="text-slate-400 text-[10px]">อัตราแลกเปลี่ยนถ่ายทอดครบถ้วน 100%</td>
+                            </tr>
+                          </tfoot>
                         </table>
                       </div>
                     </div>

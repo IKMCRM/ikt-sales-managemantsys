@@ -750,11 +750,16 @@
 
         tbody.insertAdjacentHTML('beforeend', `
           <tr>
-            <td><strong class="font-monospace text-primary">${soNo}</strong></td>
+            <td>
+              <strong class="font-monospace text-primary">${soNo}</strong>
+              ${so.quotation_no || (so.quotation_id && so.quotation_id.startsWith('QT')) ? `
+                <div class="text-xs text-muted font-monospace"><span class="badge bg-indigo-subtle text-indigo" style="font-size: 0.68rem;">QT: ${so.quotation_no || so.quotation_id}</span></div>
+              ` : ''}
+            </td>
             <td><span class="badge bg-secondary font-monospace" style="font-size: 0.85rem;">${so.job_no || '-'}</span></td>
             <td><span class="font-monospace text-dark fw-bold">${so.po_no || '-'}</span></td>
             <td><span class="text-muted small">${window.SupabaseDB.getUsernameOrDisplayName(so.sales_person_id || so.sales_person, true) || so.sales_person || 'System'}</span></td>
-            <td><span class="text-primary fw-bold font-monospace">${so.target_delivery_date ? new Date(so.target_delivery_date).toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: 'numeric'}) : '-'}</span></td>
+            <td><span class="text-primary fw-bold font-monospace">${so.target_delivery_date ? (so.target_delivery_date.length === 10 ? new Date(so.target_delivery_date).toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: 'numeric'}) : so.target_delivery_date) : '-'}</span></td>
             <td>${custName}</td>
             <td>
               <div class="fw-bold text-dark d-flex align-items-center gap-2">
@@ -762,7 +767,15 @@
                 <span class="badge bg-secondary font-monospace" style="font-size: 0.72rem; padding: 0.2em 0.5em;">${so.version || 'v1.0'}</span>
               </div>
             </td>
-            <td class="font-monospace fw-bold text-dark">${val.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+            <td class="font-monospace fw-bold text-dark">
+              <div>${so.currency && so.currency !== 'THB' ? `${so.currency} ` : '฿'}${val.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+              ${so.currency && so.currency !== 'THB' ? `
+                <div class="text-muted small font-sans" style="font-size: 10px; font-weight: normal;">
+                  ≈ ฿${(val * (so.exchange_rate || 35.0)).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  <span class="badge bg-light text-dark ms-1">Rate ${so.exchange_rate || 35.0}</span>
+                </div>
+              ` : ''}
+            </td>
             <td class="text-center">
               <span class="${badgeClass}">${currentStatus === 'Invoiced' ? 'Approved' : currentStatus}</span>
             </td>
@@ -1350,7 +1363,7 @@
           toggleGlobalLoader(true);
           try {
             const allInvs = await SupabaseDB.getInvoices() || [];
-            const hasInv = allInvs.some(inv => inv.quotation_no === so.so_no);
+            const hasInv = allInvs.some(inv => (inv.sales_order_no === so.so_no || inv.sales_order_id === so.id || (inv.quotation_no && inv.quotation_no === so.so_no)));
             
             if (hasInv) {
               showToastAlert('An invoice has already been generated for this sales order!', 'warning');
@@ -1358,12 +1371,21 @@
               return;
             }
 
-            const subTotal = so.total_amount / 1.07;
+            const soCur = so.currency || 'USD';
+            const soRate = parseFloat(so.exchange_rate) || 35.00;
+            const subTotal = (so.total_amount || so.grand_total || 0) / 1.07;
+            const grandTotalVal = parseFloat(so.total_amount || so.grand_total || 0);
             
             const payload = {
-              quotation_no: so.so_no,
+              quotation_id: so.quotation_id || null,
+              quotation_no: so.quotation_no || (so.quotation_id && so.quotation_id.startsWith('QT') ? so.quotation_id : null),
+              sales_order_id: so.id,
+              sales_order_no: so.so_no,
               customer_id: so.customer_id,
+              customer_name: (so.customer && so.customer.customer_name) || so.customer_name || '',
               project_name: so.project_name,
+              currency: soCur,
+              exchange_rate: soRate,
               invoice_date: new Date().toISOString().split('T')[0],
               due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], 
               po_reference: so.po_no || 'No PO Link',
@@ -1372,10 +1394,13 @@
               sales_person: so.sales_person || so.sales_representative || 'System Broker',
               items: so.items,
               total_value: subTotal,
+              total_amount: grandTotalVal,
               tax_rate: 7,
-              grand_total: so.total_amount,
+              grand_total: grandTotalVal,
+              total_amount_thb: soCur !== 'THB' ? (grandTotalVal * soRate) : grandTotalVal,
+              grand_total_thb: soCur !== 'THB' ? (grandTotalVal * soRate) : grandTotalVal,
               status: 'Unpaid',
-              remarks: `Generated from Sales Order ${so.so_no} (Job: ${so.job_no || '-'})`
+              remarks: `Transfer USD from Quotation ${so.quotation_no || '-'} → Sales Order ${so.so_no}`
             };
 
             const createdInvoice = await SupabaseDB.addInvoice(payload);
