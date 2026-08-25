@@ -670,7 +670,7 @@
                       <th style="width: 10%; text-align: center;">Quantity</th>
                       <th style="width: 12%; text-align: right;">Unit Price</th>
                       <th style="width: 10%; text-align: center;">Tax</th>
-                      <th style="width: 12%; text-align: right;">Amount THB</th>
+                      <th style="width: 12%; text-align: right;" id="print-amount-th-label">Amount THB</th>
                     </tr>
                   </thead>
                   <tbody id="print-items-body">
@@ -700,18 +700,19 @@
                   </div>
                   <div class="total-row-divider"></div>
                   <div class="total-row-item bold-row">
-                    <span>Invoice Total THB</span>
+                    <span id="print-invoice-total-label">Invoice Total THB</span>
                     <span id="print-invoice-total">10,700.00</span>
                   </div>
                   <div class="total-row-divider"></div>
                   <div class="total-row-item">
-                    <span>Total Net Payments THB</span>
+                    <span id="print-net-payments-label">Total Net Payments THB</span>
                     <span id="print-net-payments">0.00</span>
                   </div>
                   <div class="amount-due-row">
-                    <span>Amount Due THB</span>
+                    <span id="print-grandtotal-label">Amount Due THB</span>
                     <span id="print-grandtotal">10,700.00</span>
                   </div>
+                  <div id="print-exchange-rate-box" style="display: none; font-size: 7.2pt; text-align: right; color: #555; margin-top: 4px; padding-top: 2px;"></div>
 
                   <!-- BANK INFO INSIDE TOTALS BOX -->
                   <div class="bank-details-box" style="width: 100%; margin-top: 15px; font-size: 7.2pt; line-height: 1.35; color: #000000; text-align: left;">
@@ -901,13 +902,20 @@
       }
 
       filtered.forEach(i => {
-        const sub = (i.total_value * 0.07).toLocaleString(undefined, { minimumFractionDigits: 2 });
-        const grand = (i.grand_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2 });
+        const cur = i.currency || ((i.invoice_no && i.invoice_no.startsWith('INV-26')) || i.quotation_no || i.sales_order_no ? 'USD' : 'THB');
+        const isUSD = cur === 'USD';
+        const isForeign = cur && cur !== 'THB';
+        const curSym = isUSD ? '$' : (isForeign ? `${cur} ` : '฿');
+        const rate = parseFloat(i.exchange_rate) || 35.0;
+        const grandVal = parseFloat(i.grand_total !== undefined ? i.grand_total : (i.total_value * 1.07 || 0));
+        const subVal = parseFloat(i.total_value !== undefined ? i.total_value : (grandVal / 1.07));
+        const sub = (subVal * 0.07).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const grand = grandVal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
         let statusBadge = '';
-        if (i.status === 'Unpaid') statusBadge = '<span class="badge-status badge-status-unpaid"><i class="fa fa-clock"></i> Unpaid</span>';
-        else if (i.status === 'Paid') statusBadge = '<span class="badge-status badge-status-approved"><i class="fa fa-check-double"></i> Paid</span>';
+        if (i.status === 'Paid') statusBadge = '<span class="badge-status badge-status-approved"><i class="fa fa-check-double"></i> Paid</span>';
         else if (i.status === 'Overdue') statusBadge = '<span class="badge-status badge-status-rejected"><i class="fa fa-exclamation-triangle"></i> Overdue</span>';
+        else if (i.status === 'Unpaid') statusBadge = '<span class="badge-status badge-status-unpaid"><i class="fa fa-clock"></i> Unpaid</span>';
         else statusBadge = `<span class="badge-status badge-status-draft">${i.status}</span>`;
 
         const row = `
@@ -937,11 +945,11 @@
               <div class="text-xs text-danger"><strong>Due:</strong> ${i.due_date}</div>
             </td>
             <td class="text-end font-monospace font-bold text-success" style="font-size: 0.95rem;">
-              <div>${i.currency && i.currency !== 'THB' ? `${i.currency} ` : '฿'}${grand}</div>
-              ${i.currency && i.currency !== 'THB' ? `
-                <div class="text-muted small font-sans" style="font-size:10px;">
-                  ≈ ฿${(i.total_amount_thb || ((i.grand_total || i.total_value || 0) * (i.exchange_rate || 35.0))).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                  <span class="badge bg-light text-dark ms-1">Rate ${i.exchange_rate || 35.0}</span>
+              <div>${curSym}${grand} ${isForeign ? `<span class="badge bg-indigo-subtle text-indigo" style="font-size: 0.68rem;">${cur}</span>` : ''}</div>
+              ${isForeign ? `
+                <div class="text-muted small font-sans" style="font-size:10px; font-weight: normal;">
+                  ≈ ฿${(i.total_amount_thb || i.grand_total_thb || (grandVal * rate)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  <span class="badge bg-light text-dark ms-1">Rate ${rate}</span>
                 </div>
               ` : `
                 <div class="text-muted" style="font-size:10px;">VAT: ฿${sub}</div>
@@ -1289,6 +1297,24 @@
         document.getElementById('print-job-no').innerText = i.job_no || 'None';
         document.getElementById('print-sales-person').innerText = i.sales_person || 'None';
 
+        const cur = i.currency || ((i.invoice_no && i.invoice_no.startsWith('INV-26')) || i.quotation_no || i.sales_order_no ? 'USD' : 'THB');
+        const isUSD = cur === 'USD';
+        const isForeign = cur && cur !== 'THB';
+        const curSym = isUSD ? '$' : (isForeign ? `${cur} ` : '฿');
+        const rate = parseFloat(i.exchange_rate) || 35.0;
+
+        const thLabel = document.getElementById('print-amount-th-label');
+        if (thLabel) thLabel.innerText = `Amount ${cur}`;
+
+        const invTotalLabel = document.getElementById('print-invoice-total-label');
+        if (invTotalLabel) invTotalLabel.innerText = `Invoice Total ${cur}`;
+
+        const netPayLabel = document.getElementById('print-net-payments-label');
+        if (netPayLabel) netPayLabel.innerText = `Total Net Payments ${cur}`;
+
+        const grandLabel = document.getElementById('print-grandtotal-label');
+        if (grandLabel) grandLabel.innerText = `Amount Due ${cur}`;
+
         // Line details
         const tbody = document.getElementById('print-items-body');
         tbody.innerHTML = '';
@@ -1306,23 +1332,34 @@
             <tr>
               <td style="text-align: left;">${descHtml}</td>
               <td style="text-align: center; font-family: monospace;">${parseFloat(item.qty || 1).toFixed(2)}</td>
-              <td style="text-align: right; font-family: monospace;">${parseFloat(item.unit_rate || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+              <td style="text-align: right; font-family: monospace;">${parseFloat(item.unit_rate || item.unit_price || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
               <td style="text-align: center;">7%</td>
-              <td style="text-align: right; font-family: monospace;">${parseFloat(item.total_price || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+              <td style="text-align: right; font-family: monospace;">${parseFloat(item.total_price || item.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
             </tr>
           `;
           tbody.insertAdjacentHTML('beforeend', row);
         });
 
-        const sub = i.total_value || 0;
-        const vat = sub * 0.07;
-        const grand = i.grand_total || (sub + vat);
+        const grand = parseFloat(i.grand_total !== undefined ? i.grand_total : (i.total_value * 1.07 || 0));
+        const sub = parseFloat(i.total_value !== undefined ? i.total_value : (grand / 1.07));
+        const vat = parseFloat(i.vat_amount !== undefined ? i.vat_amount : (grand - sub));
 
-        document.getElementById('print-subtotal').innerText = sub.toLocaleString(undefined, { minimumFractionDigits: 2 });
-        document.getElementById('print-vat').innerText = vat.toLocaleString(undefined, { minimumFractionDigits: 2 });
-        document.getElementById('print-invoice-total').innerText = grand.toLocaleString(undefined, { minimumFractionDigits: 2 });
-        document.getElementById('print-net-payments').innerText = (docType === 'invoice' ? '0.00' : grand.toLocaleString(undefined, { minimumFractionDigits: 2 }));
-        document.getElementById('print-grandtotal').innerText = (docType === 'invoice' ? grand.toLocaleString(undefined, { minimumFractionDigits: 2 }) : '0.00');
+        document.getElementById('print-subtotal').innerText = sub.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        document.getElementById('print-vat').innerText = vat.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        document.getElementById('print-invoice-total').innerText = grand.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        document.getElementById('print-net-payments').innerText = (docType === 'invoice' ? '0.00' : grand.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+        document.getElementById('print-grandtotal').innerText = (docType === 'invoice' ? grand.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00');
+
+        const rateBox = document.getElementById('print-exchange-rate-box');
+        if (rateBox) {
+          if (isForeign) {
+            const grandThb = (i.total_amount_thb || i.grand_total_thb || (grand * rate));
+            rateBox.style.display = 'block';
+            rateBox.innerHTML = `(Exchange Rate: <strong>${rate.toFixed(2)}</strong> THB/${cur} &bull; Equivalent ≈ <strong>฿${grandThb.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>)`;
+          } else {
+            rateBox.style.display = 'none';
+          }
+        }
 
         const modal = new bootstrap.Modal(document.getElementById('printViewModal'));
         modal.show();

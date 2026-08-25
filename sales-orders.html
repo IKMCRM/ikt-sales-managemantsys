@@ -678,7 +678,12 @@
 
       filtered.forEach(so => {
         const custName = so.customer ? so.customer.customer_name : '-';
-        const val = (so.total_amount || 0) / 1.07;
+        const currency = so.currency || (so.quotation_id || so.quotation_no ? 'USD' : 'THB');
+        const isUSD = currency === 'USD';
+        const isForeign = currency && currency !== 'THB';
+        const curSymbol = isUSD ? '$' : (isForeign ? `${currency} ` : '฿');
+        const val = parseFloat(so.total_amount !== undefined ? so.total_amount : (so.grand_total || 0));
+        const rate = parseFloat(so.exchange_rate) || 35.0;
         const soNo = so.so_no;
 
         const currentStatus = so.status || 'Pending';
@@ -768,11 +773,11 @@
               </div>
             </td>
             <td class="font-monospace fw-bold text-dark">
-              <div>${so.currency && so.currency !== 'THB' ? `${so.currency} ` : '฿'}${val.toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
-              ${so.currency && so.currency !== 'THB' ? `
+              <div>${curSymbol}${val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${isForeign ? `<span class="badge bg-indigo-subtle text-indigo" style="font-size: 0.68rem;">${currency}</span>` : ''}</div>
+              ${isForeign ? `
                 <div class="text-muted small font-sans" style="font-size: 10px; font-weight: normal;">
-                  ≈ ฿${(val * (so.exchange_rate || 35.0)).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                  <span class="badge bg-light text-dark ms-1">Rate ${so.exchange_rate || 35.0}</span>
+                  ≈ ฿${(so.total_amount_thb || (val * rate)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  <span class="badge bg-light text-dark ms-1">Rate ${rate}</span>
                 </div>
               ` : ''}
             </td>
@@ -959,6 +964,11 @@
         `;
 
       } else {
+        const cur = q.currency || (q.quotation_id || q.quotation_no ? 'USD' : 'THB');
+        const isUSD = cur === 'USD';
+        const isForeign = cur && cur !== 'THB';
+        const curSym = isUSD ? '$' : (isForeign ? `${cur} ` : '฿');
+
         let tableHtml = `
           <table class="table table-bordered border-dark table-striped align-middle small my-3" style="table-layout: fixed; width: 100%;">
             <thead class="table-dark">
@@ -967,8 +977,8 @@
                 <th>Service Work Scope / Tool Rental Description</th>
                 <th style="width: 80px;" class="text-center">Qty</th>
                 <th style="width: 80px;" class="text-center">Days</th>
-                <th style="width: 110px;" class="text-end">Daily Rate (฿)</th>
-                <th style="width: 120px;" class="text-end">Line Total (฿)</th>
+                <th style="width: 120px;" class="text-end">Daily Rate (${curSym.trim()})</th>
+                <th style="width: 130px;" class="text-end">Line Total (${curSym.trim()})</th>
               </tr>
             </thead>
             <tbody>
@@ -976,7 +986,7 @@
 
         items.forEach((it, idx) => {
           const qty = parseFloat(it.qty || 1);
-          const rate = parseFloat(it.unit_rate || 0);
+          const rate = parseFloat(it.unit_rate || it.unit_price || 0);
           const dur = parseFloat(it.duration || 1);
           const total = parseFloat(it.total_price || (qty * rate * dur));
 
@@ -986,8 +996,8 @@
               <td style="word-break: break-word; white-space: pre-wrap;"><strong>${it.description}</strong><br><span class="text-xs text-muted">Unit: ${it.unit || 'Set'}</span></td>
               <td class="text-center font-monospace fw-bold">${qty}</td>
               <td class="text-center font-monospace">${dur}</td>
-              <td class="text-end font-monospace">${rate.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-              <td class="text-end font-monospace fw-bold">${total.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+              <td class="text-end font-monospace">${curSym}${rate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+              <td class="text-end font-monospace fw-bold">${curSym}${total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
             </tr>
           `;
         });
@@ -999,23 +1009,30 @@
         tableHtml += `</tbody></table>`;
         tableContainer.innerHTML = tableHtml;
 
-        const grandTotal = q.total_amount || 0;
+        const grandTotal = parseFloat(q.total_amount !== undefined ? q.total_amount : (q.grand_total || 0));
         const subTotal = grandTotal / 1.07;
         const vat = grandTotal - subTotal;
+        const rateVal = parseFloat(q.exchange_rate) || 35.0;
 
         totalsContainer.innerHTML = `
           <div class="d-flex justify-content-between font-monospace small mb-1">
             <span>Subtotal (Before VAT):</span>
-            <span>฿${subTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+            <span>${curSym}${subTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
           </div>
           <div class="d-flex justify-content-between font-monospace small mb-1">
             <span>Value Added Tax (VAT 7%):</span>
-            <span>฿${vat.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+            <span>${curSym}${vat.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
           </div>
           <div class="d-flex justify-content-between font-monospace fw-bold h6 border-top pt-2">
             <span>Grand Total:</span>
-            <span class="text-primary">฿${grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+            <span class="text-primary">${curSym}${grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${isForeign ? `(${cur})` : ''}</span>
           </div>
+          ${isForeign ? `
+            <div class="d-flex justify-content-between font-monospace small text-muted mt-1">
+              <span>Equivalent in THB (@ Rate ${rateVal}):</span>
+              <span class="fw-bold">฿${(q.grand_total_thb || (grandTotal * rateVal)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            </div>
+          ` : ''}
         `;
       }
     }

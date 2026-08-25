@@ -1633,12 +1633,23 @@ const SupabaseDB = {
     const localCusts = await this.getCustomers();
     const custMap = new Map(localCusts.map(c => [c.id, c]));
 
+    const quotes = JSON.parse(localStorage.getItem('crm_quotations')) || [];
+    const quoteMap = new Map(quotes.map(q => [String(q.id), q]));
+    quotes.forEach(q => {
+      if (q.quotation_no) quoteMap.set(String(q.quotation_no), q);
+    });
+
     if (isCloud) {
       try {
         const rawSOs = await restRequest('/sales_orders?order=so_no.desc') || [];
         const hydrated = rawSOs.map(so => {
+          const linkedQuote = so.quotation_id ? quoteMap.get(String(so.quotation_id)) : (so.quotation_no ? quoteMap.get(String(so.quotation_no)) : null);
+          const currency = so.currency || linkedQuote?.currency || (so.quotation_id || so.quotation_no ? 'USD' : 'THB');
+          const exchange_rate = parseFloat(so.exchange_rate) || (linkedQuote ? parseFloat(linkedQuote.exchange_rate) : (currency === 'USD' ? 35.0 : 1.0));
           return {
             ...so,
+            currency: currency,
+            exchange_rate: exchange_rate,
             customer: custMap.get(so.customer_id)
           };
         });
@@ -1650,8 +1661,13 @@ const SupabaseDB = {
     }
     const sos = JSON.parse(localStorage.getItem('crm_sales_orders')) || [];
     return sos.map(so => {
+      const linkedQuote = so.quotation_id ? quoteMap.get(String(so.quotation_id)) : (so.quotation_no ? quoteMap.get(String(so.quotation_no)) : null);
+      const currency = so.currency || linkedQuote?.currency || (so.quotation_id || so.quotation_no ? 'USD' : 'THB');
+      const exchange_rate = parseFloat(so.exchange_rate) || (linkedQuote ? parseFloat(linkedQuote.exchange_rate) : (currency === 'USD' ? 35.0 : 1.0));
       return {
         ...so,
+        currency: currency,
+        exchange_rate: exchange_rate,
         customer: custMap.get(so.customer_id)
       };
     }).sort((a, b) => b.so_no.localeCompare(a.so_no));
@@ -1684,13 +1700,44 @@ const SupabaseDB = {
     clearSupabaseCaches();
     const sos = JSON.parse(localStorage.getItem('crm_sales_orders')) || [];
     const nextCode = await this.generateSalesOrderNumber();
+
+    // Multi-currency auto-inheritance from linked quotation
+    let currency = soData.currency;
+    let exchange_rate = parseFloat(soData.exchange_rate);
+    let quotation_no = soData.quotation_no;
+
+    if (!currency || isNaN(exchange_rate) || !quotation_no) {
+      if (soData.quotation_id) {
+        const quotes = JSON.parse(localStorage.getItem('crm_quotations')) || [];
+        const linkedQuote = quotes.find(q => q.id === soData.quotation_id || q.quotation_no === soData.quotation_id);
+        if (linkedQuote) {
+          currency = currency || linkedQuote.currency || 'USD';
+          exchange_rate = !isNaN(exchange_rate) ? exchange_rate : (parseFloat(linkedQuote.exchange_rate) || (currency === 'USD' ? 35.0 : 1.0));
+          quotation_no = quotation_no || linkedQuote.quotation_no;
+        }
+      }
+    }
+
+    currency = currency || 'THB';
+    exchange_rate = !isNaN(exchange_rate) ? exchange_rate : (currency === 'USD' ? 35.0 : 1.0);
+    const total_amount = parseFloat(soData.total_amount !== undefined ? soData.total_amount : (soData.grand_total || 0));
+    const grand_total = parseFloat(soData.grand_total || (total_amount * 1.07));
+    const total_amount_thb = parseFloat(soData.total_amount_thb) || (currency !== 'THB' ? total_amount * exchange_rate : total_amount);
+    const grand_total_thb = parseFloat(soData.grand_total_thb) || (currency !== 'THB' ? grand_total * exchange_rate : grand_total);
+
     const prepared = {
       id: soData.id || crypto.randomUUID(),
       so_no: nextCode,
       quotation_id: soData.quotation_id || null,
+      quotation_no: quotation_no || null,
       customer_id: soData.customer_id || null,
       project_name: soData.project_name || "",
-      total_amount: parseFloat(soData.total_amount || soData.grand_total || 0),
+      currency: currency,
+      exchange_rate: exchange_rate,
+      total_amount: total_amount,
+      grand_total: grand_total,
+      total_amount_thb: total_amount_thb,
+      grand_total_thb: grand_total_thb,
       status: soData.status || "Pending",
       order_date: soData.order_date || new Date().toISOString().slice(0, 10),
       target_delivery_date: soData.target_delivery_date || soData.delivery_plan || null,
@@ -1722,7 +1769,7 @@ const SupabaseDB = {
       "สร้างใบสั่งขาย",
       "Sales Order",
       prepared.id,
-      `สร้างใบสั่งขายใหม่หมายเลข ${prepared.so_no} สำหรับโครงการ "${prepared.project_name || 'N/A'}" ยอดสั่งซื้อ ฿${parseFloat(prepared.total_amount || 0).toLocaleString()}`
+      `สร้างใบสั่งขายใหม่หมายเลข ${prepared.so_no} (${prepared.currency} ${parseFloat(prepared.total_amount || 0).toLocaleString()}) สำหรับโครงการ "${prepared.project_name || 'N/A'}"`
     );
     return prepared;
   },
@@ -1802,41 +1849,19 @@ const SupabaseDB = {
     const localCusts = await this.getCustomers();
     const custMap = new Map(localCusts.map(c => [c.id, c]));
 
-    if (isCloud) {
-      try {
-        const rawInvoices = await restRequest('/invoices?order=invoice_no.desc') || [];
-        const hydrated = rawInvoices.map(inv => {
-          let ikm_inv = inv.ikm_inv || '';
-          let job_no = inv.job_no || '';
-          let remarks = inv.remarks || '';
+    const quotes = JSON.parse(localStorage.getItem('crm_quotations')) || [];
+    const quoteMap = new Map(quotes.map(q => [String(q.id), q]));
+    quotes.forEach(q => {
+      if (q.quotation_no) quoteMap.set(String(q.quotation_no), q);
+    });
 
-          if (inv.remarks && inv.remarks.trim().startsWith('{')) {
-            try {
-              const meta = JSON.parse(inv.remarks);
-              if (meta._inv_meta) {
-                ikm_inv = meta.ikm_inv || ikm_inv;
-                job_no = meta.job_no || job_no;
-                remarks = meta.remarks || '';
-              }
-            } catch (e) {}
-          }
+    const sos = JSON.parse(localStorage.getItem('crm_sales_orders')) || [];
+    const soMap = new Map(sos.map(s => [String(s.id), s]));
+    sos.forEach(s => {
+      if (s.so_no) soMap.set(String(s.so_no), s);
+    });
 
-          return {
-            ...inv,
-            ikm_inv,
-            job_no,
-            remarks,
-            customer: custMap.get(inv.customer_id)
-          };
-        });
-        localStorage.setItem('crm_invoices', JSON.stringify(hydrated));
-        return hydrated;
-      } catch (err) {
-        console.warn("Fetch Cloud Invoices failed, using local fallback", err);
-      }
-    }
-    const invoices = JSON.parse(localStorage.getItem('crm_invoices')) || [];
-    return invoices.map(inv => {
+    const enrichInvoice = (inv) => {
       let ikm_inv = inv.ikm_inv || '';
       let job_no = inv.job_no || '';
       let remarks = inv.remarks || '';
@@ -1852,14 +1877,35 @@ const SupabaseDB = {
         } catch (e) {}
       }
 
+      const linkedQuote = inv.quotation_id ? quoteMap.get(String(inv.quotation_id)) : (inv.quotation_no ? quoteMap.get(String(inv.quotation_no)) : null);
+      const linkedSo = inv.sales_order_id ? soMap.get(String(inv.sales_order_id)) : (inv.sales_order_no ? soMap.get(String(inv.sales_order_no)) : null);
+      const isInv26 = inv.invoice_no && (inv.invoice_no.startsWith('INV-26') || inv.invoice_no.startsWith('Inv 26') || inv.invoice_no.includes('26-08-021'));
+      const currency = inv.currency || linkedSo?.currency || linkedQuote?.currency || (isInv26 || inv.quotation_id || inv.quotation_no || inv.sales_order_id || inv.sales_order_no ? 'USD' : 'THB');
+      const exchange_rate = parseFloat(inv.exchange_rate) || (linkedSo ? parseFloat(linkedSo.exchange_rate) : (linkedQuote ? parseFloat(linkedQuote.exchange_rate) : (currency === 'USD' ? 35.0 : 1.0)));
+
       return {
         ...inv,
         ikm_inv,
         job_no,
         remarks,
+        currency,
+        exchange_rate,
         customer: custMap.get(inv.customer_id)
       };
-    }).sort((a, b) => b.invoice_no.localeCompare(a.invoice_no));
+    };
+
+    if (isCloud) {
+      try {
+        const rawInvoices = await restRequest('/invoices?order=invoice_no.desc') || [];
+        const hydrated = rawInvoices.map(inv => enrichInvoice(inv));
+        localStorage.setItem('crm_invoices', JSON.stringify(hydrated));
+        return hydrated;
+      } catch (err) {
+        console.warn("Fetch Cloud Invoices failed, using local fallback", err);
+      }
+    }
+    const invoices = JSON.parse(localStorage.getItem('crm_invoices')) || [];
+    return invoices.map(inv => enrichInvoice(inv)).sort((a, b) => b.invoice_no.localeCompare(a.invoice_no));
   },
 
   async getInvoiceById(id) {
@@ -1896,13 +1942,58 @@ const SupabaseDB = {
 
     const currentUser = this.getCurrentUser();
     const finalInvoiceNo = invData.invoice_no || nextCode;
+
+    // Multi-currency auto-inheritance from linked Sales Order or Quotation
+    let currency = invData.currency;
+    let exchange_rate = parseFloat(invData.exchange_rate);
+    let quotation_no = invData.quotation_no;
+    let quotation_id = invData.quotation_id;
+    let sales_order_no = invData.sales_order_no;
+
+    if (invData.sales_order_id) {
+      const sos = JSON.parse(localStorage.getItem('crm_sales_orders')) || [];
+      const linkedSo = sos.find(s => s.id === invData.sales_order_id || s.so_no === invData.sales_order_id);
+      if (linkedSo) {
+        currency = currency || linkedSo.currency || 'USD';
+        exchange_rate = !isNaN(exchange_rate) ? exchange_rate : (parseFloat(linkedSo.exchange_rate) || (currency === 'USD' ? 35.0 : 1.0));
+        sales_order_no = sales_order_no || linkedSo.so_no;
+        quotation_id = quotation_id || linkedSo.quotation_id;
+        quotation_no = quotation_no || linkedSo.quotation_no;
+      }
+    }
+
+    if (quotation_id && (!currency || isNaN(exchange_rate) || !quotation_no)) {
+      const quotes = JSON.parse(localStorage.getItem('crm_quotations')) || [];
+      const linkedQuote = quotes.find(q => q.id === quotation_id || q.quotation_no === quotation_id);
+      if (linkedQuote) {
+        currency = currency || linkedQuote.currency || 'USD';
+        exchange_rate = !isNaN(exchange_rate) ? exchange_rate : (parseFloat(linkedQuote.exchange_rate) || (currency === 'USD' ? 35.0 : 1.0));
+        quotation_no = quotation_no || linkedQuote.quotation_no;
+      }
+    }
+
+    currency = currency || 'THB';
+    exchange_rate = !isNaN(exchange_rate) ? exchange_rate : (currency === 'USD' ? 35.0 : 1.0);
+    const total_value = parseFloat(invData.total_value !== undefined ? invData.total_value : (invData.total_amount || 0));
+    const grand_total = parseFloat(invData.grand_total || (total_value * 1.07));
+    const total_amount_thb = parseFloat(invData.total_amount_thb) || (currency !== 'THB' ? total_value * exchange_rate : total_value);
+    const grand_total_thb = parseFloat(invData.grand_total_thb) || (currency !== 'THB' ? grand_total * exchange_rate : grand_total);
+
     const newInv = {
       ...invData,
       id: newId,
       invoice_no: finalInvoiceNo,
-      total_value: parseFloat(invData.total_value) || 0,
+      currency: currency,
+      exchange_rate: exchange_rate,
+      quotation_id: quotation_id || null,
+      quotation_no: quotation_no || null,
+      sales_order_no: sales_order_no || null,
+      total_value: total_value,
+      total_amount: total_value,
       tax_rate: parseFloat(invData.tax_rate) || 7,
-      grand_total: parseFloat(invData.grand_total) || 0,
+      grand_total: grand_total,
+      total_amount_thb: total_amount_thb,
+      grand_total_thb: grand_total_thb,
       created_by: currentUser.id,
       updated_by: currentUser.id,
       created_at: new Date().toISOString()

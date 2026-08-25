@@ -88,13 +88,17 @@ export default function InvoiceView({
     let totalOverdue = 0;
 
     invoices.forEach(inv => {
-      totalInvoiced += inv.grand_total || inv.total_amount;
+      const isForeign = inv.currency && inv.currency !== 'THB';
+      const rate = parseFloat(String(inv.exchange_rate)) || 35.0;
+      const thbVal = isForeign ? (inv.grand_total_thb || ((inv.grand_total || inv.total_amount || 0) * rate)) : (inv.grand_total || inv.total_amount || 0);
+
+      totalInvoiced += thbVal;
       if (inv.status === 'Paid') {
-        totalPaid += inv.grand_total || inv.total_amount;
+        totalPaid += thbVal;
       } else if (inv.status === 'Unpaid' || inv.status === 'Partially Paid') {
-        totalUnpaid += inv.grand_total || inv.total_amount;
+        totalUnpaid += thbVal;
       } else if (inv.status === 'Overdue') {
-        totalOverdue += inv.grand_total || inv.total_amount;
+        totalOverdue += thbVal;
       }
     });
 
@@ -288,12 +292,21 @@ export default function InvoiceView({
       id: `invi_${Date.now()}_${idx}`
     }));
 
+    const linkedSO = salesOrders.find(item => item.id === soId || item.so_no === soId);
+    const invCurrency = linkedSO?.currency || (editingInvoice ? editingInvoice.currency : 'USD');
+    const invRate = linkedSO?.exchange_rate || (editingInvoice ? editingInvoice.exchange_rate : 35.00);
+
     const payload = {
       sales_order_id: soId,
+      sales_order_no: linkedSO ? linkedSO.so_no : (editingInvoice ? editingInvoice.sales_order_no : undefined),
       customer_id: custId,
+      currency: invCurrency,
+      exchange_rate: invRate,
       total_amount,
       vat_amount,
       grand_total,
+      total_amount_thb: invCurrency !== 'THB' ? (total_amount * invRate) : total_amount,
+      grand_total_thb: invCurrency !== 'THB' ? (grand_total * invRate) : grand_total,
       status,
       issue_date: issueDate,
       due_date: dueDate,
@@ -510,13 +523,25 @@ export default function InvoiceView({
                       <span className="text-[10px] text-slate-400 font-medium block">Job SO Ref: {inv.sales_order_id}</span>
                     </td>
                     <td className="border border-slate-200 px-3 py-1.5 text-right font-mono text-slate-600 font-bold">
-                      ฿{inv.total_amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      {inv.currency === 'USD' ? '$' : (inv.currency && inv.currency !== 'THB' ? `${inv.currency} ` : '฿')}{inv.total_amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td className="border border-slate-200 px-3 py-1.5 text-right font-mono text-slate-500">
-                      ฿{inv.vat_amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      {inv.currency === 'USD' ? '$' : (inv.currency && inv.currency !== 'THB' ? `${inv.currency} ` : '฿')}{inv.vat_amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td className="border border-slate-200 px-3 py-1.5 text-right font-mono font-bold text-rose-600">
-                      ฿{inv.grand_total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      <div className="flex items-center justify-end gap-1">
+                        <span>{inv.currency === 'USD' ? '$' : (inv.currency && inv.currency !== 'THB' ? `${inv.currency} ` : '฿')}{inv.grand_total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        {inv.currency && inv.currency !== 'THB' && (
+                          <span className="text-[10px] bg-indigo-50 text-indigo-700 px-1 py-0.2 rounded font-sans font-bold border border-indigo-100">
+                            {inv.currency}
+                          </span>
+                        )}
+                      </div>
+                      {inv.currency && inv.currency !== 'THB' && (
+                        <div className="text-[10px] text-slate-400 font-normal">
+                          ≈ ฿{(inv.grand_total_thb || (inv.grand_total * (inv.exchange_rate || 35.00))).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </div>
+                      )}
                     </td>
                     <td className="border border-slate-200 px-3 py-1.5">
                       <div className="text-slate-700 font-bold">Issued: {inv.issue_date}</div>
@@ -1048,7 +1073,7 @@ export default function InvoiceView({
                             <th className="py-2.5 text-right font-bold w-[12%] pr-2">Quantity</th>
                             <th className="py-2.5 text-right font-bold w-[15%] pr-4">Unit Price</th>
                             <th className="py-2.5 text-center font-bold w-[10%]">Tax</th>
-                            <th className="py-2.5 text-right font-bold w-[17%] pr-1">Amount THB</th>
+                            <th className="py-2.5 text-right font-bold w-[17%] pr-1">Amount {viewingInvoice.currency || 'THB'}</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -1105,22 +1130,27 @@ export default function InvoiceView({
                         </div>
                         {/* Line above Invoice Total */}
                         <div className="flex border-t border-black pt-1.5 pb-1">
-                          <div className="w-[60%] text-right pr-9 text-[12.5px] text-black">Invoice Total THB</div>
-                          <div className="w-[40%] text-right text-[12.5px] text-black">
+                          <div className="w-[60%] text-right pr-9 text-[12.5px] text-black">Invoice Total {viewingInvoice.currency || 'THB'}</div>
+                          <div className="w-[40%] text-right text-[12.5px] text-black font-bold">
                             {viewingInvoice.grand_total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </div>
                         </div>
                         <div className="flex pt-1 pb-1.5">
-                          <div className="w-[60%] text-right pr-9 text-[12.5px] text-black">Total Net Payments THB</div>
+                          <div className="w-[60%] text-right pr-9 text-[12.5px] text-black">Total Net Payments {viewingInvoice.currency || 'THB'}</div>
                           <div className="w-[40%] text-right text-[12.5px] text-black">0.00</div>
                         </div>
                         {/* Line above and double line below Amount Due */}
                         <div className="flex border-t border-black pt-2 pb-1.5 border-b-[2px] border-b-black">
-                          <div className="w-[60%] text-right pr-9 text-[12.5px] font-bold text-black">Amount Due THB</div>
+                          <div className="w-[60%] text-right pr-9 text-[12.5px] font-bold text-black">Amount Due {viewingInvoice.currency || 'THB'}</div>
                           <div className="w-[40%] text-right text-[12.5px] font-bold text-black">
                             {viewingInvoice.grand_total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </div>
                         </div>
+                        {viewingInvoice.currency && viewingInvoice.currency !== 'THB' && (
+                          <div className="text-[11px] text-gray-600 text-right mt-1.5">
+                            (Exchange Rate: {viewingInvoice.exchange_rate || 35.00} THB/{viewingInvoice.currency} &bull; ≈ ฿{(viewingInvoice.grand_total_thb || (viewingInvoice.grand_total * (viewingInvoice.exchange_rate || 35.00))).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })})
+                          </div>
+                        )}
                       </div>
                     </div>
 

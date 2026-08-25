@@ -389,7 +389,20 @@ export default function SalesOrderView({
                       )}
                     </td>
                     <td className="border border-slate-200 px-3 py-1.5 text-right font-mono font-bold text-slate-900">
-                      ฿{so.total_amount.toLocaleString()}
+                      <div>
+                        {so.currency === 'USD' ? '$' : (so.currency && so.currency !== 'THB' ? `${so.currency} ` : '฿')}
+                        {(so.total_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        {so.currency && so.currency !== 'THB' && (
+                          <span className="ml-1 text-[10px] text-indigo-600 font-bold bg-indigo-50 px-1 py-0.5 rounded border border-indigo-100">
+                            {so.currency}
+                          </span>
+                        )}
+                      </div>
+                      {so.currency && so.currency !== 'THB' && (
+                        <div className="text-[10px] text-slate-400 font-normal mt-0.5">
+                          ≈ ฿{(so.total_amount_thb || ((so.total_amount || 0) * (so.exchange_rate || 35.00))).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </div>
+                      )}
                     </td>
                     <td className="border border-slate-200 px-3 py-1.5">
                       <span className="text-xs block text-slate-600 font-bold">เริ่ม: {so.order_date}</span>
@@ -729,34 +742,37 @@ export default function SalesOrderView({
                       <>
                         <th className="px-3 py-2.5 text-center w-28">จำนวนจ้าง</th>
                         <th className="px-3 py-2.5 text-center w-32">คงเหลือยังไม่แจ้งหนี้</th>
-                        <th className="px-3 py-2.5 text-right w-28">ราคาต่อหน่วย</th>
-                        <th className="px-3 py-2.5 text-right w-36">รวมมูลค่างาน</th>
+                        <th className="px-3 py-2.5 text-right w-28">ราคาต่อหน่วย ({viewingSO.currency === 'USD' ? '$' : (viewingSO.currency || 'THB')})</th>
+                        <th className="px-3 py-2.5 text-right w-36">รวมมูลค่างาน ({viewingSO.currency === 'USD' ? '$' : (viewingSO.currency || 'THB')})</th>
                       </>
                     ) : (
                       <>
                         <th className="px-3 py-2.5 text-right w-56">กำหนดแล้วเสร็จเป้าหมาย / Duration</th>
-                        <th className="px-3 py-2.5 text-right w-44">ยอดเงินงบประมาณ (฿)</th>
+                        <th className="px-3 py-2.5 text-right w-44">ยอดเงินงบประมาณ ({viewingSO.currency === 'USD' ? '$' : (viewingSO.currency || 'THB')})</th>
                       </>
                     )}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-slate-700">
                   {viewingSO.items && viewingSO.items.length > 0 ? (
-                    viewingSO.items.map((it, idx) => (
-                      <tr key={idx} className="hover:bg-slate-50">
-                        <td className="px-3 py-3">
-                          <span className="font-bold text-slate-800 block">{it.item_no}. {it.description}</span>
-                        </td>
-                         <td className="px-3 py-3 text-center font-mono">{it.qty} {it.unit}</td>
-                         <td className="px-3 py-3 text-center font-mono">
-                           <span className={`px-1.5 py-0.5 rounded text-[11px] font-extrabold ${it.remaining_qty === 0 ? 'text-green-700 bg-green-50' : 'text-amber-700 bg-amber-50'}`}>
-                             {it.remaining_qty} {it.unit}
-                           </span>
-                         </td>
-                         <td className="px-3 py-3 text-right font-mono">฿{it.unit_price.toLocaleString()}</td>
-                         <td className="px-3 py-3 text-right font-mono font-bold text-slate-900">฿{(it.qty * it.unit_price).toLocaleString()}</td>
-                      </tr>
-                    ))
+                    viewingSO.items.map((it, idx) => {
+                      const curSym = viewingSO.currency === 'USD' ? '$' : (viewingSO.currency && viewingSO.currency !== 'THB' ? `${viewingSO.currency} ` : '฿');
+                      return (
+                        <tr key={idx} className="hover:bg-slate-50">
+                          <td className="px-3 py-3">
+                            <span className="font-bold text-slate-800 block">{it.item_no}. {it.description}</span>
+                          </td>
+                           <td className="px-3 py-3 text-center font-mono">{it.qty} {it.unit}</td>
+                           <td className="px-3 py-3 text-center font-mono">
+                             <span className={`px-1.5 py-0.5 rounded text-[11px] font-extrabold ${it.remaining_qty === 0 ? 'text-green-700 bg-green-50' : 'text-amber-700 bg-amber-50'}`}>
+                               {it.remaining_qty} {it.unit}
+                             </span>
+                           </td>
+                           <td className="px-3 py-3 text-right font-mono">{curSym}{it.unit_price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                           <td className="px-3 py-3 text-right font-mono font-bold text-slate-900">{curSym}{(it.qty * it.unit_price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        </tr>
+                      );
+                    })
                   ) : (
                     <tr>
                       <td className="px-4 py-4">
@@ -764,7 +780,15 @@ export default function SalesOrderView({
                         <span className="text-[10px] text-slate-400 block mt-1">อิงตามข้อตกลงและเงื่อนไขเทคนิคหลักตามใบสั่งขาย</span>
                       </td>
                       <td className="px-4 py-4 text-right">ภายใน {viewingSO.target_delivery_date}</td>
-                      <td className="px-4 py-4 text-right font-mono font-extrabold text-teal-700">฿{viewingSO.total_amount.toLocaleString()}</td>
+                      <td className="px-4 py-4 text-right font-mono font-extrabold text-teal-700">
+                        {viewingSO.currency === 'USD' ? '$' : (viewingSO.currency && viewingSO.currency !== 'THB' ? `${viewingSO.currency} ` : '฿')}
+                        {viewingSO.total_amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        {viewingSO.currency && viewingSO.currency !== 'THB' && (
+                          <span className="text-xs block text-slate-400 font-normal mt-0.5">
+                            ≈ ฿{((viewingSO.total_amount_thb || (viewingSO.total_amount * (viewingSO.exchange_rate || 35.00)))).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </span>
+                        )}
+                      </td>
                     </tr>
                   )}
                 </tbody>
@@ -778,32 +802,35 @@ export default function SalesOrderView({
                     <span className="text-xs font-extrabold text-slate-700 uppercase tracking-wider">ประวัติการแจ้งหนี้และสัดส่วนที่ออก (Invoiced History Log for {viewingSO.so_no})</span>
                   </div>
                   <div className="space-y-2">
-                    {relatedInvoices.map((inv, idx) => (
-                      <div key={inv.id} className="bg-white p-3 rounded-lg border border-slate-150 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs shadow-xxs">
-                        <div className="space-y-1">
-                          <div className="flex flex-wrap items-center gap-1.5">
-                            <span className="font-extrabold text-slate-800">ครั้งที่ {idx + 1}</span>
-                            <span className="font-mono font-extrabold text-teal-700 bg-teal-50 border border-teal-100 px-1.5 py-0.2 rounded text-[11px]">{inv.invoice_no}</span>
-                            <span className={`inline-flex px-1.5 py-0.2 text-[10px] font-bold rounded ${inv.status === 'Paid' ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-amber-50 text-amber-700 border border-amber-100'}`}>
-                              {inv.status === 'Paid' ? 'ชำระแล้ว / Paid' : 'ค้างชำระ / Unpaid'}
-                            </span>
-                          </div>
-                          <div className="text-slate-500 font-medium">
-                            ออกบิลวันที่: {inv.invoice_date} | ครบดิวชำระ: {inv.due_date}
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="font-mono font-bold text-slate-900">
-                            มูลค่าสุทธิ: ฿{inv.grand_total.toLocaleString()}
-                          </div>
-                          {inv.items && inv.items.length > 0 && (
-                            <div className="text-[10px] text-slate-500 font-medium mt-1">
-                              รายการเบิก: {inv.items.map(it => `${it.quantity} x "${it.description.split('\n')[0]}"`).join(', ')}
+                    {relatedInvoices.map((inv, idx) => {
+                      const invCurSym = inv.currency === 'USD' ? '$' : (inv.currency && inv.currency !== 'THB' ? `${inv.currency} ` : '฿');
+                      return (
+                        <div key={inv.id} className="bg-white p-3 rounded-lg border border-slate-150 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs shadow-xxs">
+                          <div className="space-y-1">
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <span className="font-extrabold text-slate-800">ครั้งที่ {idx + 1}</span>
+                              <span className="font-mono font-extrabold text-teal-700 bg-teal-50 border border-teal-100 px-1.5 py-0.2 rounded text-[11px]">{inv.invoice_no}</span>
+                              <span className={`inline-flex px-1.5 py-0.2 text-[10px] font-bold rounded ${inv.status === 'Paid' ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-amber-50 text-amber-700 border border-amber-100'}`}>
+                                {inv.status === 'Paid' ? 'ชำระแล้ว / Paid' : 'ค้างชำระ / Unpaid'}
+                              </span>
                             </div>
-                          )}
+                            <div className="text-slate-500 font-medium">
+                              ออกบิลวันที่: {inv.invoice_date} | ครบดิวชำระ: {inv.due_date}
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-mono font-bold text-slate-900">
+                              มูลค่าสุทธิ: {invCurSym}{inv.grand_total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {inv.currency && inv.currency !== 'THB' ? `(${inv.currency})` : ''}
+                            </div>
+                            {inv.items && inv.items.length > 0 && (
+                              <div className="text-[10px] text-slate-500 font-medium mt-1">
+                                รายการเบิก: {inv.items.map(it => `${it.quantity} x "${it.description.split('\n')[0]}"`).join(', ')}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}

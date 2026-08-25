@@ -1820,11 +1820,23 @@ export default function App() {
                                             console.error(e);
                                           }
 
+                                          const quoteCur = (q as any).currency || 'USD';
+                                          const quoteRate = (q as any).exchange_rate || 35.00;
+                                          const originalAmount = parseFloat((q as any).total_value !== undefined ? (q as any).total_value : (q.grand_total ? q.grand_total / 1.07 : (q.total_amount || 0)));
+                                          const originalGrandTotal = parseFloat(q.grand_total || (q as any).total_value || q.total_amount || 0);
+
                                           const soPayload = {
                                             quotation_id: String(q.id),
+                                            quotation_no: q.quotation_no,
                                             customer_id: targetCustomerId,
+                                            customer_name: q.customer_name || '',
                                             project_name: q.title || q.project_name || 'โครงการจากใบเสนอราคา ' + q.quotation_no,
-                                            total_amount: q.grand_total,
+                                            currency: quoteCur,
+                                            exchange_rate: quoteRate,
+                                            total_amount: originalAmount,
+                                            grand_total: originalGrandTotal,
+                                            total_amount_thb: quoteCur !== 'THB' ? (originalAmount * quoteRate) : originalAmount,
+                                            grand_total_thb: quoteCur !== 'THB' ? (originalGrandTotal * quoteRate) : originalGrandTotal,
                                             status: 'Pending' as const,
                                             order_date: new Date().toISOString().slice(0, 10),
                                             sales_person: q.sales_person || q.sales_representative || null,
@@ -1861,12 +1873,19 @@ export default function App() {
                                                 id: crypto.randomUUID(),
                                                 so_no: nextCode,
                                                 quotation_id: String(q.id),
+                                                quotation_no: q.quotation_no,
                                                 customer_id: targetCustomerId,
+                                                customer_name: soPayload.customer_name,
                                                 project_name: soPayload.project_name,
+                                                currency: quoteCur,
+                                                exchange_rate: quoteRate,
                                                 total_amount: soPayload.total_amount,
+                                                grand_total: soPayload.grand_total,
+                                                total_amount_thb: soPayload.total_amount_thb,
+                                                grand_total_thb: soPayload.grand_total_thb,
                                                 status: 'Pending' as const,
                                                 order_date: soPayload.order_date,
-                                                 sales_person: soPayload.sales_person,
+                                                sales_person: soPayload.sales_person,
                                                 items: soPayload.items,
                                                 created_at: new Date().toISOString()
                                               };
@@ -2005,8 +2024,24 @@ export default function App() {
                                     {inv.due_date}
                                   </span>
                                 </td>
-                                <td className="font-mono">฿{inv.subtotal.toLocaleString('th-TH', { minimumFractionDigits: 2 })}</td>
-                                <td className="font-mono text-rose-400 font-extrabold text-[13px]">฿{inv.grand_total.toLocaleString('th-TH', { minimumFractionDigits: 2 })}</td>
+                                <td className="font-mono">
+                                  {inv.currency === 'USD' ? '$' : (inv.currency && inv.currency !== 'THB' ? `${inv.currency} ` : '฿')}{inv.subtotal.toLocaleString('th-TH', { minimumFractionDigits: 2 })}
+                                </td>
+                                <td className="font-mono text-rose-400 font-extrabold text-[13px]">
+                                  <div className="flex items-center gap-1.5">
+                                    <span>{inv.currency === 'USD' ? '$' : (inv.currency && inv.currency !== 'THB' ? `${inv.currency} ` : '฿')}{inv.grand_total.toLocaleString('th-TH', { minimumFractionDigits: 2 })}</span>
+                                    {inv.currency && inv.currency !== 'THB' && (
+                                      <span className="bg-indigo-950/80 text-indigo-300 border border-indigo-800 text-[9px] font-mono py-0.5 px-1.5 rounded">
+                                        {inv.currency}
+                                      </span>
+                                    )}
+                                  </div>
+                                  {inv.currency && inv.currency !== 'THB' && (
+                                    <div className="text-[10px] text-slate-500 font-normal mt-0.5">
+                                      ≈ ฿{((inv.grand_total) * (inv.exchange_rate || 35.00)).toLocaleString('th-TH', { minimumFractionDigits: 2 })}
+                                    </div>
+                                  )}
+                                </td>
                                 <td className="text-center">
                                   <span className={`inline-block py-1 px-2.5 rounded-full text-[9px] font-bold ${
                                     inv.status === 'Paid' ? 'bg-emerald-950/50 text-emerald-400 border border-emerald-900' : 'bg-amber-950/50 text-amber-400 border border-amber-900'

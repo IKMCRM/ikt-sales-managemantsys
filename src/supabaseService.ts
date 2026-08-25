@@ -1522,6 +1522,22 @@ export class LocalDB {
   }
 
   static getSalesOrders(): SalesOrder[] {
+    const rawQuotes = localStorage.getItem('crm_quotations');
+    let quoteMap: Record<string, any> = {};
+    if (rawQuotes) {
+      try {
+        const parsedQuotes = JSON.parse(rawQuotes);
+        if (Array.isArray(parsedQuotes)) {
+          parsedQuotes.forEach((q: any) => {
+            if (q.id) quoteMap[String(q.id)] = q;
+            if (q.quotation_no) quoteMap[String(q.quotation_no)] = q;
+          });
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
     const data = localStorage.getItem('crm_sales_orders');
     if (!data) {
       const mapped = DEFAULT_SALES_ORDERS.map(s => ({
@@ -1549,11 +1565,18 @@ export class LocalDB {
           list = [dso, ...list];
         }
       });
-      return list.map((s: any) => ({
-        ...s,
-        id: ensureUUID(s.id),
-        customer_id: ensureUUID(s.customer_id)
-      }));
+      return list.map((s: any) => {
+        const lq = s.quotation_id ? quoteMap[String(s.quotation_id)] : (s.quotation_no ? quoteMap[String(s.quotation_no)] : null);
+        const cur = s.currency || lq?.currency || (s.quotation_id || s.quotation_no ? 'USD' : 'THB');
+        const rate = parseFloat(s.exchange_rate) || (lq ? parseFloat(lq.exchange_rate) : (cur === 'USD' ? 35.0 : 1.0));
+        return {
+          ...s,
+          currency: cur,
+          exchange_rate: rate,
+          id: ensureUUID(s.id),
+          customer_id: ensureUUID(s.customer_id)
+        };
+      });
     } catch {
       const mapped = DEFAULT_SALES_ORDERS.map(s => ({
         ...s,
@@ -1620,26 +1643,71 @@ export class LocalDB {
   }
 
   static getInvoices(): Invoice[] {
+    const rawQuotes = localStorage.getItem('crm_quotations');
+    let quoteMap: Record<string, any> = {};
+    if (rawQuotes) {
+      try {
+        const parsedQuotes = JSON.parse(rawQuotes);
+        if (Array.isArray(parsedQuotes)) {
+          parsedQuotes.forEach((q: any) => {
+            if (q.id) quoteMap[String(q.id)] = q;
+            if (q.quotation_no) quoteMap[String(q.quotation_no)] = q;
+          });
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    const rawSos = localStorage.getItem('crm_sales_orders');
+    let soMap: Record<string, any> = {};
+    if (rawSos) {
+      try {
+        const parsedSos = JSON.parse(rawSos);
+        if (Array.isArray(parsedSos)) {
+          parsedSos.forEach((s: any) => {
+            if (s.id) soMap[String(s.id)] = s;
+            if (s.so_no) soMap[String(s.so_no)] = s;
+          });
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    const mapInvoiceCurrency = (inv: any): Invoice => {
+      const lq = inv.quotation_id ? quoteMap[String(inv.quotation_id)] : (inv.quotation_no ? quoteMap[String(inv.quotation_no)] : null);
+      const lso = inv.sales_order_id ? soMap[String(inv.sales_order_id)] : (inv.sales_order_no ? soMap[String(inv.sales_order_no)] : null);
+      const isInv26 = inv.invoice_no && (inv.invoice_no.startsWith('INV-26') || inv.invoice_no.startsWith('Inv 26') || inv.invoice_no.includes('26-08-021'));
+      const cur = inv.currency || lso?.currency || lq?.currency || (isInv26 || inv.quotation_id || inv.quotation_no || inv.sales_order_id || inv.sales_order_no ? 'USD' : 'THB');
+      const rate = parseFloat(inv.exchange_rate) || (lso ? parseFloat(lso.exchange_rate) : (lq ? parseFloat(lq.exchange_rate) : (cur === 'USD' ? 35.0 : 1.0)));
+      const grand = parseFloat(inv.grand_total !== undefined ? inv.grand_total : (inv.total_amount * 1.07 || 0));
+      const tot = parseFloat(inv.total_amount !== undefined ? inv.total_amount : (grand / 1.07));
+
+      return {
+        ...inv,
+        currency: cur,
+        exchange_rate: rate,
+        total_amount: tot,
+        grand_total: grand,
+        total_amount_thb: inv.total_amount_thb || (cur !== 'THB' ? tot * rate : tot),
+        grand_total_thb: inv.grand_total_thb || (cur !== 'THB' ? grand * rate : grand),
+        id: ensureUUID(inv.id),
+        customer_id: ensureUUID(inv.customer_id),
+        sales_order_id: ensureUUID(inv.sales_order_id)
+      };
+    };
+
     const data = localStorage.getItem('crm_invoices');
     if (!data) {
-      const mapped = DEFAULT_INVOICES.map(i => ({
-        ...i,
-        id: ensureUUID(i.id),
-        customer_id: ensureUUID(i.customer_id),
-        sales_order_id: ensureUUID(i.sales_order_id)
-      }));
+      const mapped = DEFAULT_INVOICES.map(i => mapInvoiceCurrency(i));
       localStorage.setItem('crm_invoices', JSON.stringify(mapped));
       return mapped;
     }
     try {
       const parsed = JSON.parse(data);
       if (!Array.isArray(parsed) || !parsed.some(i => i.id === ensureUUID('inv_demo'))) {
-        const mapped = DEFAULT_INVOICES.map(i => ({
-          ...i,
-          id: ensureUUID(i.id),
-          customer_id: ensureUUID(i.customer_id),
-          sales_order_id: ensureUUID(i.sales_order_id)
-        }));
+        const mapped = DEFAULT_INVOICES.map(i => mapInvoiceCurrency(i));
         localStorage.setItem('crm_invoices', JSON.stringify(mapped));
         return mapped;
       }
@@ -1649,19 +1717,9 @@ export class LocalDB {
           list = [dinv, ...list];
         }
       });
-      return list.map((i: any) => ({
-        ...i,
-        id: ensureUUID(i.id),
-        customer_id: ensureUUID(i.customer_id),
-        sales_order_id: ensureUUID(i.sales_order_id)
-      }));
+      return list.map((i: any) => mapInvoiceCurrency(i));
     } catch {
-      const mapped = DEFAULT_INVOICES.map(i => ({
-        ...i,
-        id: ensureUUID(i.id),
-        customer_id: ensureUUID(i.customer_id),
-        sales_order_id: ensureUUID(i.sales_order_id)
-      }));
+      const mapped = DEFAULT_INVOICES.map(i => mapInvoiceCurrency(i));
       return mapped;
     }
   }
