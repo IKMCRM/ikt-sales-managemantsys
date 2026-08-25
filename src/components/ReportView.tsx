@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Customer, Opportunity, OpportunityStatus } from '../types';
-import { SAMPLE_SALES_PERSONS } from '../supabaseService';
+import { SAMPLE_SALES_PERSONS, LocalDB } from '../supabaseService';
 import { 
   FileSpreadsheet, 
   Printer, 
@@ -41,18 +41,19 @@ export default function ReportView({ customers, opportunities, onToast }: Report
     const loadCurrencyDocs = async () => {
       try {
         const db = (window as any).SupabaseDB;
-        if (db) {
-          const [qs, sos, invs] = await Promise.all([
-            db.getQuotations ? db.getQuotations() : [],
-            db.getSalesOrders ? db.getSalesOrders() : [],
-            db.getInvoices ? db.getInvoices() : []
-          ]);
-          setQuotations(qs || []);
-          setSalesOrders(sos || []);
-          setInvoices(invs || []);
-        }
+        const [qs, sos, invs] = await Promise.all([
+          db?.getQuotations ? db.getQuotations() : Promise.resolve(LocalDB.getQuotations()),
+          db?.getSalesOrders ? db.getSalesOrders() : Promise.resolve(LocalDB.getSalesOrders()),
+          db?.getInvoices ? db.getInvoices() : Promise.resolve(LocalDB.getInvoices())
+        ]);
+        setQuotations(qs && qs.length > 0 ? qs : LocalDB.getQuotations());
+        setSalesOrders(sos && sos.length > 0 ? sos : LocalDB.getSalesOrders());
+        setInvoices(invs && invs.length > 0 ? invs : LocalDB.getInvoices());
       } catch (err) {
         console.error("Failed to load currency docs in ReportView", err);
+        setQuotations(LocalDB.getQuotations());
+        setSalesOrders(LocalDB.getSalesOrders());
+        setInvoices(LocalDB.getInvoices());
       }
     };
     loadCurrencyDocs();
@@ -123,7 +124,7 @@ export default function ReportView({ customers, opportunities, onToast }: Report
       if (cur === 'USD') rate = parseFloat(q.exchange_rate) || currencyExchangeRate;
       else if (cur === 'SGD') rate = parseFloat(q.exchange_rate) || 26.50;
       
-      const origAmount = parseFloat(q.total_value !== undefined ? q.total_value : (q.grand_total ? q.grand_total / 1.07 : (q.total_amount || 0)));
+      const origAmount = parseFloat(q.total_amount !== undefined ? q.total_amount : (q.total_value !== undefined ? q.total_value : (q.grand_total ? q.grand_total / 1.07 : 0)));
       const amountThb = cur !== 'THB' ? (origAmount * rate) : origAmount;
       const custName = (q.customer && q.customer.customer_name) || custMap.get(q.customer_id) || q.customer_name || 'บริษัท ปตท. สำรวจและผลิตปิโตรเลียม จำกัด (มหาชน)';
 
@@ -152,7 +153,7 @@ export default function ReportView({ customers, opportunities, onToast }: Report
       if (cur === 'USD') rate = parseFloat(so.exchange_rate) || currencyExchangeRate;
       else if (cur === 'SGD') rate = parseFloat(so.exchange_rate) || 26.50;
 
-      const origAmount = parseFloat(so.total_amount || so.grand_total || 0) / 1.07;
+      const origAmount = parseFloat(so.total_amount !== undefined ? so.total_amount : (so.grand_total ? so.grand_total / 1.07 : 0));
       const amountThb = cur !== 'THB' ? (origAmount * rate) : origAmount;
       const custName = (so.customer && so.customer.customer_name) || custMap.get(so.customer_id) || so.customer_name || 'บริษัท ปตท. สำรวจและผลิตปิโตรเลียม จำกัด (มหาชน)';
 
@@ -181,7 +182,7 @@ export default function ReportView({ customers, opportunities, onToast }: Report
       if (cur === 'USD') rate = parseFloat(inv.exchange_rate) || currencyExchangeRate;
       else if (cur === 'SGD') rate = parseFloat(inv.exchange_rate) || 26.50;
 
-      const origAmount = parseFloat(inv.total_value || (inv.grand_total ? inv.grand_total / 1.07 : (inv.total_amount || 0)));
+      const origAmount = parseFloat(inv.total_amount !== undefined ? inv.total_amount : (inv.total_value !== undefined ? inv.total_value : (inv.subtotal !== undefined ? inv.subtotal : (inv.grand_total ? inv.grand_total / 1.07 : 0))));
       const amountThb = cur !== 'THB' ? (origAmount * rate) : origAmount;
       const custName = (inv.customer && inv.customer.customer_name) || custMap.get(inv.customer_id) || inv.customer_name || 'บริษัท ปตท. สำรวจและผลิตปิโตรเลียม จำกัด (มหาชน)';
 

@@ -365,10 +365,10 @@ export default function QuotationView({
                       <span className="text-[10px] text-slate-400 font-normal block max-w-xs truncate mt-0.5" title={q.subject}>{q.subject}</span>
                     </td>
                     <td className="border border-slate-200 px-3 py-1.5 text-right font-mono font-medium text-slate-600">
-                      ฿{q.total_amount.toLocaleString()}
+                      ฿{q.total_amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td className="border border-slate-200 px-3 py-1.5 text-right font-mono font-bold text-indigo-600">
-                      ฿{q.grand_total.toLocaleString()}
+                      ฿{q.grand_total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td className="border border-slate-200 px-3 py-1.5">
                       <span className="text-[11px] block font-bold text-slate-600">{q.issue_date}</span>

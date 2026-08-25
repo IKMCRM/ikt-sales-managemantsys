@@ -14,6 +14,11 @@ interface ReceiptViewProps {
   currentUserId: string;
 }
 
+const formatNumber = (num: number | undefined | null): string => {
+  const val = typeof num === 'number' ? num : Number(num || 0);
+  return val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
+
 export default function ReceiptView({
   receipts,
   invoices,
@@ -224,8 +229,8 @@ export default function ReceiptView({
                       <span className="font-extrabold text-slate-800 block">{rec.customer_name}</span>
                       <span className="text-xs text-slate-400 font-normal">อ้างอิงใบแจ้งหนี้: {rec.invoice_id}</span>
                     </td>
-                    <td className="border border-slate-200 px-3 py-1.5 text-right font-extrabold text-purple-600">
-                      ฿{rec.received_amount.toLocaleString()}
+                    <td className="border border-slate-200 px-3 py-1.5 text-right font-extrabold text-purple-600 font-mono">
+                      ฿{formatNumber(rec.received_amount)}
                     </td>
                     <td className="border border-slate-200 px-3 py-1.5">
                       <span className={`inline-block px-2.5 py-0.5 rounded text-[10px] border font-bold ${
@@ -318,7 +323,7 @@ export default function ReceiptView({
                 >
                   <option value="">-- เลือกใบแจ้งหนี้เพื่อหักชำระ --</option>
                   {invoices.map(inv => (
-                    <option key={inv.id} value={inv.id}>{inv.invoice_no} - (ยอดสะสม: ฿{inv.grand_total.toLocaleString()})</option>
+                    <option key={inv.id} value={inv.id}>{inv.invoice_no} - (ยอดสะสม: ฿{formatNumber(inv.grand_total)})</option>
                   ))}
                 </select>
               </div>
@@ -483,7 +488,7 @@ export default function ReceiptView({
                       <span className="font-extrabold text-slate-800 block">ปิดงบชำระอ้างอิงรหัสใบวางตรวจรับบิลหักหนี้ {viewingReceipt.invoice_id}</span>
                       <span className="text-[10px] text-slate-400 block mt-1 font-normal">สิทธิยืนยันการรับเงินค่าปฏิบัติงานซ่อมติดตั้งระบบโครงสร้างวิศวกรโรงงานแบบครบวงจร</span>
                     </td>
-                    <td className="px-4 py-4 text-right font-mono text-purple-700 font-bold">฿{viewingReceipt.received_amount.toLocaleString()}</td>
+                    <td className="px-4 py-4 text-right font-mono text-purple-700 font-bold">฿{formatNumber(viewingReceipt.received_amount)}</td>
                   </tr>
                 </tbody>
               </table>
@@ -497,15 +502,15 @@ export default function ReceiptView({
                 <div className="w-64 space-y-1.5 border-t border-slate-200 pt-3 font-semibold">
                   <div className="flex justify-between text-slate-500">
                     <span>ยอดรับชำระสุทธิก่อนอากร:</span>
-                    <span>฿{Math.round(viewingReceipt.received_amount / 1.07).toLocaleString()}</span>
+                    <span className="font-mono">฿{formatNumber(viewingReceipt.received_amount / 1.07)}</span>
                   </div>
                   <div className="flex justify-between text-slate-500">
                     <span>ยอดหักภาษีรับฝากสะสม (7%):</span>
-                    <span>฿{Math.round((viewingReceipt.received_amount / 1.07) * 0.07).toLocaleString()}</span>
+                    <span className="font-mono">฿{formatNumber((viewingReceipt.received_amount / 1.07) * 0.07)}</span>
                   </div>
                   <div className="flex justify-between border-t border-slate-200 pt-2 text-purple-600 font-extrabold text-sm">
                     <span>ยอดสุทธิที่ปิดบิลสำเร็จ / Received Total:</span>
-                    <span className="font-mono text-base">฿{viewingReceipt.received_amount.toLocaleString()}</span>
+                    <span className="font-mono text-base">฿{formatNumber(viewingReceipt.received_amount)}</span>
                   </div>
                 </div>
               </div>
