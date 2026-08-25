@@ -74,7 +74,7 @@
     <!-- Navbar & Sidebar Injected via app.js -->
 
     <!-- Main Content Stage Area -->
-    <main class="app-main p-3" style="min-height: 100vh; margin-left: 250px;">
+    <main class="app-main p-3" style="min-height: 100vh;">
       <!-- Content Header -->
       <div class="container-fluid mb-3 pt-2">
         <div class="row align-items-center">
@@ -147,7 +147,7 @@
         </div>
 
          <!-- Invoices List Card -->
-        <div class="card shadow-sm border-0">
+        <div class="card shadow-sm border-0 overflow-hidden">
           <div class="card-header bg-white border-bottom py-3">
             <h5 class="m-0 fw-bold text-success"><i class="fas fa-receipt"></i> Billing Control Ledger</h5>
           </div>
@@ -156,17 +156,17 @@
               <table class="google-sheet-table table-hover align-middle mb-0" id="invoice-table">
                 <thead class="table-light text-uppercase small font-bold">
                   <tr>
-                    <th>Invoice Number</th>
-                    <th>IKM INV</th>
-                    <th>Job Number</th>
-                    <th>PO Reference</th>
-                    <th>Customer Account</th>
-                    <th>Project / Billing Description</th>
-                    <th>Sale Rep</th>
-                    <th>Issue & Due Date</th>
-                    <th class="text-end">Total Amount (฿)</th>
-                    <th class="text-center">Status</th>
-                    <th class="text-center" style="width: 200px;">Financial Actions</th>
+                    <th style="min-width: 120px;">Invoice No</th>
+                    <th style="min-width: 110px;">IKM INV</th>
+                    <th style="min-width: 100px;">Job Number</th>
+                    <th style="min-width: 110px;">PO Ref</th>
+                    <th style="min-width: 160px;">Customer Account</th>
+                    <th style="min-width: 180px;">Project / Description</th>
+                    <th style="min-width: 120px;">Sale Rep</th>
+                    <th style="min-width: 115px;">Issue & Due Date</th>
+                    <th style="min-width: 140px;" class="text-end">Total (฿)</th>
+                    <th class="text-center" style="min-width: 100px;">Status</th>
+                    <th class="text-center" style="min-width: 150px; width: 150px;">Actions</th>
                   </tr>
                 </thead>
                 <tbody id="invoice-table-body">
@@ -185,7 +185,7 @@
     </main>
 
     <!-- FOOTER -->
-    <footer class="app-footer text-center bg-white border-top py-3 text-muted small no-print mt-auto" style="margin-left: 250px;">
+    <footer class="app-footer text-center bg-white border-top py-3 text-muted small no-print mt-auto">
       <div class="float-end d-none d-sm-inline ms-3">IKM Testing ERP System</div>
     </footer>
   </div>
@@ -925,11 +925,11 @@
             <td class="small font-monospace text-secondary">${i.job_no || '-'}</td>
             <td class="small font-monospace">${i.po_reference || '-'}</td>
             <td>
-              <div class="small fw-semibold text-dark">${i.customer ? i.customer.customer_name : 'Customer Account Not Found'}</div>
+              <div class="small fw-semibold text-dark text-break-word" style="max-width: 180px;">${i.customer ? i.customer.customer_name : 'Customer Account Not Found'}</div>
               <div class="text-xs text-muted font-monospace">${i.customer ? i.customer.customer_code : '-'}</div>
             </td>
             <td>
-              <div class="fw-bold small text-truncate" style="max-width: 200px;" title="${i.project_name}">${i.project_name}</div>
+              <div class="fw-bold small text-break-word" style="max-width: 200px;">${i.project_name}</div>
               <div class="text-xs text-muted font-monospace mt-0.5">
                 ${i.quotation_no ? `<span class="badge bg-indigo-subtle text-indigo me-1">QT: ${i.quotation_no}</span>` : '<span class="badge bg-light text-muted me-1">Direct</span>'}
                 ${i.sales_order_no ? `<span class="badge bg-success-subtle text-success">SO: ${i.sales_order_no}</span>` : ''}
@@ -939,8 +939,8 @@
                 <span class="d-inline-block me-2" title="Updated by"><i class="fa fa-pen text-secondary" style="font-size: 9px;"></i> ${i.updated_by ? window.SupabaseDB.getUsernameOrDisplayName(i.updated_by) : 'System'}</span>
               </div>
             </td>
-            <td class="small text-secondary">${window.SupabaseDB.getUsernameOrDisplayName(i.sales_person_id || i.sales_person, true) || i.sales_person || '-'}</td>
-            <td class="small">
+            <td class="small text-secondary text-break-word">${window.SupabaseDB.getUsernameOrDisplayName(i.sales_person_id || i.sales_person, true) || i.sales_person || '-'}</td>
+            <td class="small text-nowrap">
               <div><strong>Issue:</strong> ${i.invoice_date}</div>
               <div class="text-xs text-danger"><strong>Due:</strong> ${i.due_date}</div>
             </td>
@@ -955,24 +955,24 @@
                 <div class="text-muted" style="font-size:10px;">VAT: ฿${sub}</div>
               `}
             </td>
-            <td class="text-center">${statusBadge}</td>
+            <td class="text-center text-nowrap">${statusBadge}</td>
             <td class="text-center">
-              <div class="btn-group btn-group-sm">
-                <button class="btn btn-outline-info" title="Print Invoice" onclick="openPrintModal('${i.id}', 'invoice')">
-                  <i class="fa fa-print"></i> Invoice
+              <div class="d-flex gap-1 justify-content-center flex-nowrap">
+                <button class="btn btn-xs btn-outline-info" title="Print Invoice" onclick="openPrintModal('${i.id}', 'invoice')">
+                  <i class="fa fa-print"></i>
                 </button>
-                <button class="btn btn-outline-success" title="Print Official Receipt" onclick="openPrintModal('${i.id}', 'receipt')">
-                  <i class="fa fa-file-invoice"></i> Receipt
+                <button class="btn btn-xs btn-outline-success" title="Print Official Receipt" onclick="openPrintModal('${i.id}', 'receipt')">
+                  <i class="fa fa-file-invoice"></i>
                 </button>
-                <button class="btn btn-outline-primary" title="Edit Invoice" onclick="openEditInvoiceModal('${i.id}')">
+                <button class="btn btn-xs btn-outline-primary" title="Edit Invoice" onclick="openEditInvoiceModal('${i.id}')">
                   <i class="fa fa-edit"></i>
                 </button>
                 ${SupabaseDB.isAdmin() ? `
-                  <button class="btn btn-outline-danger" title="Delete Invoice" onclick="deleteInvoice('${i.id}')">
+                  <button class="btn btn-xs btn-outline-danger" title="Delete Invoice" onclick="deleteInvoice('${i.id}')">
                     <i class="fa fa-trash"></i>
                   </button>
                 ` : `
-                  <button class="btn btn-outline-secondary opacity-50" disabled title="Admin Rights Required">
+                  <button class="btn btn-xs btn-outline-secondary opacity-50" disabled title="Admin Rights Required">
                     <i class="fa fa-lock"></i>
                   </button>
                 `}

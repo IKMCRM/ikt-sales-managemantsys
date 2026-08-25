@@ -108,7 +108,7 @@
     <!-- Navbar & Sidebar Injected via app.js -->
 
     <!-- Main Content Stage Area -->
-    <main class="app-main p-3" style="min-height: 100vh; margin-left: 250px;">
+    <main class="app-main p-3" style="min-height: 100vh;">
       <!-- Content Header -->
       <div class="container-fluid mb-3 pt-2">
         <div class="row align-items-center">
@@ -199,7 +199,7 @@
         </div>
 
         <!-- SO List Table Card -->
-        <div class="card shadow-sm border-0">
+        <div class="card shadow-sm border-0 overflow-hidden">
           <div class="card-header bg-white border-bottom py-3">
             <h5 class="m-0 fw-bold text-dark"><i class="fas fa-list-check me-1 text-primary"></i> Sales Order & Work Order Tracking</h5>
           </div>
@@ -208,16 +208,16 @@
               <table class="google-sheet-table table-hover align-middle mb-0" id="so-table">
                 <thead class="table-light text-uppercase small font-bold">
                   <tr>
-                    <th>SO Number</th>
-                    <th>Job Number</th>
-                    <th>Customer PO Ref</th>
-                    <th>Sales Representative</th>
-                    <th>Delivery Plan</th>
-                    <th>Customer Account</th>
-                    <th>Project / Service Campaign</th>
-                    <th>Amount (Excl. VAT) (฿)</th>
-                    <th class="text-center">Delivery Status</th>
-                    <th class="text-center" style="width: 280px;">Actions</th>
+                    <th style="min-width: 120px;">SO Number</th>
+                    <th style="min-width: 100px;">Job Number</th>
+                    <th style="min-width: 110px;">Customer PO</th>
+                    <th style="min-width: 120px;">Sales Rep</th>
+                    <th style="min-width: 110px;">Delivery Plan</th>
+                    <th style="min-width: 160px;">Customer Account</th>
+                    <th style="min-width: 180px;">Project / Campaign</th>
+                    <th style="min-width: 140px;" class="text-end">Amount (฿)</th>
+                    <th class="text-center" style="min-width: 110px;">Status</th>
+                    <th class="text-center" style="min-width: 180px; width: 180px;">Actions</th>
                   </tr>
                 </thead>
                 <tbody id="so-table-body">
@@ -763,16 +763,16 @@
             </td>
             <td><span class="badge bg-secondary font-monospace" style="font-size: 0.85rem;">${so.job_no || '-'}</span></td>
             <td><span class="font-monospace text-dark fw-bold">${so.po_no || '-'}</span></td>
-            <td><span class="text-muted small">${window.SupabaseDB.getUsernameOrDisplayName(so.sales_person_id || so.sales_person, true) || so.sales_person || 'System'}</span></td>
-            <td><span class="text-primary fw-bold font-monospace">${so.target_delivery_date ? (so.target_delivery_date.length === 10 ? new Date(so.target_delivery_date).toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: 'numeric'}) : so.target_delivery_date) : '-'}</span></td>
-            <td>${custName}</td>
+            <td><span class="text-muted small text-break-word">${window.SupabaseDB.getUsernameOrDisplayName(so.sales_person_id || so.sales_person, true) || so.sales_person || 'System'}</span></td>
+            <td><span class="text-primary fw-bold font-monospace text-nowrap">${so.target_delivery_date ? (so.target_delivery_date.length === 10 ? new Date(so.target_delivery_date).toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: 'numeric'}) : so.target_delivery_date) : '-'}</span></td>
+            <td><div class="text-break-word" style="max-width: 220px;">${custName}</div></td>
             <td>
-              <div class="fw-bold text-dark d-flex align-items-center gap-2">
+              <div class="fw-bold text-dark text-break-word" style="max-width: 240px;">
                 ${so.project_name || '-'}
-                <span class="badge bg-secondary font-monospace" style="font-size: 0.72rem; padding: 0.2em 0.5em;">${so.version || 'v1.0'}</span>
+                <span class="badge bg-secondary font-monospace ms-1" style="font-size: 0.72rem; padding: 0.2em 0.5em;">${so.version || 'v1.0'}</span>
               </div>
             </td>
-            <td class="font-monospace fw-bold text-dark">
+            <td class="font-monospace fw-bold text-dark text-end">
               <div>${curSymbol}${val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${isForeign ? `<span class="badge bg-indigo-subtle text-indigo" style="font-size: 0.68rem;">${currency}</span>` : ''}</div>
               ${isForeign ? `
                 <div class="text-muted small font-sans" style="font-size: 10px; font-weight: normal;">
@@ -781,11 +781,11 @@
                 </div>
               ` : ''}
             </td>
-            <td class="text-center">
+            <td class="text-center text-nowrap">
               <span class="${badgeClass}">${currentStatus === 'Invoiced' ? 'Approved' : currentStatus}</span>
             </td>
             <td class="text-center">
-              <div class="d-flex gap-1 justify-content-center">
+              <div class="d-flex gap-1 justify-content-center flex-nowrap">
                 ${actionButtonsHtml}
               </div>
             </td>

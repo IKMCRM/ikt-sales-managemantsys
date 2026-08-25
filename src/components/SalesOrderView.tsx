@@ -206,7 +206,7 @@ export default function SalesOrderView({
   };
 
   return (
-    <div className="space-y-6" id="salesorder-module">
+    <div className="space-y-6 max-w-full overflow-hidden" id="salesorder-module">
       {/* Title Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-150 shadow-xs">
         <div className="flex items-center gap-3">
@@ -220,7 +220,7 @@ export default function SalesOrderView({
         </div>
         <button
           onClick={handleOpenAddForm}
-          className="flex items-center justify-center gap-1.5 bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 px-5 rounded-xl transition-all cursor-pointer shadow-xs text-sm"
+          className="flex items-center justify-center gap-1.5 bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 px-5 rounded-xl transition-all cursor-pointer shadow-xs text-sm shrink-0"
         >
           <Plus className="w-4 h-4" />
           เปิดใบสั่งขาย SO / New Sales Order
@@ -228,7 +228,7 @@ export default function SalesOrderView({
       </div>
 
       {/* filter tools */}
-      <div className="bg-white p-5 rounded-2xl border border-slate-150 shadow-xs space-y-4">
+      <div className="bg-white p-5 rounded-2xl border border-slate-150 shadow-xs space-y-4 max-w-full overflow-hidden">
         <div className="relative w-full">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-4.5 h-4.5" />
           <input
@@ -240,7 +240,7 @@ export default function SalesOrderView({
           />
         </div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
           {/* Status Filter */}
           <div className="space-y-1 bg-white p-2 rounded-lg border border-slate-200/60 shadow-xxs">
             <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">สถานะใบสั่งขาย / Status:</span>
@@ -302,9 +302,9 @@ export default function SalesOrderView({
       </div>
 
       {/* Main Grid table in Google Sheet style */}
-      <div className="bg-white rounded-b-2xl border border-[#DADCE0] shadow-xs overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[950px]">
+      <div className="bg-white rounded-b-2xl border border-[#DADCE0] shadow-xs overflow-hidden w-full max-w-full">
+        <div className="overflow-x-auto w-full max-w-full">
+          <table className="w-full text-left border-collapse min-w-[900px]">
             <thead>
               {/* Excel Column Headers A, B, C... */}
               <tr className="bg-[#F8F9FA] border-b border-slate-250 text-[10px] font-mono text-slate-400 select-none">

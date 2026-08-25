@@ -345,7 +345,7 @@ export default function InvoiceView({
   };
 
   return (
-    <div className="space-y-6 font-sans text-slate-800" id="invoice-module">
+    <div className="space-y-6 font-sans text-slate-800 max-w-full overflow-hidden" id="invoice-module">
       
       {/* Title Header / Breadcrumb - AdminLTE 4 Clean Styled */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between p-6 bg-white rounded-xl border border-slate-200/80 shadow-xs gap-4">
@@ -367,7 +367,7 @@ export default function InvoiceView({
         {canModify && (
           <button
             onClick={handleOpenAddForm}
-            className="flex items-center justify-center gap-1.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-sm py-3 px-6 rounded-xl transition-all cursor-pointer shadow-md shadow-rose-600/10 hover:-translate-y-0.5 duration-200"
+            className="flex items-center justify-center gap-1.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-sm py-3 px-6 rounded-xl transition-all cursor-pointer shadow-md shadow-rose-600/10 hover:-translate-y-0.5 duration-200 shrink-0"
           >
             <Plus className="w-4 h-4" />
             ออกใบวางบิลชุดใหม่ / New Invoice
@@ -469,9 +469,9 @@ export default function InvoiceView({
       </div>
 
       {/* Main Table Grid in Google Sheet style */}
-      <div className="bg-white rounded-b-2xl border border-[#DADCE0] shadow-xs overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[950px]">
+      <div className="bg-white rounded-b-2xl border border-[#DADCE0] shadow-xs overflow-hidden w-full max-w-full">
+        <div className="overflow-x-auto w-full max-w-full">
+          <table className="w-full text-left border-collapse min-w-[900px]">
             <thead>
               {/* Excel Column Headers A, B, C... */}
               <tr className="bg-[#F8F9FA] border-b border-slate-250 text-[10px] font-mono text-slate-400 select-none">

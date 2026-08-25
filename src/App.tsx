@@ -1965,7 +1965,7 @@ export default function App() {
                 {/* 5. INVOICES / BILLINGS TAB VIEW            */}
                 {/* ========================================== */}
                 {activeTab === 'invoices' && (
-                  <div className="space-y-6">
+                  <div className="space-y-6 max-w-full overflow-hidden">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div>
                         <h2 className="text-xl font-black text-white flex items-center gap-2">
@@ -1977,21 +1977,21 @@ export default function App() {
 
                       <button 
                         onClick={() => setShowInvoiceModal(true)}
-                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-md w-fit"
+                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-md w-fit shrink-0"
                       >
                         <Plus className="w-4 h-4" /> ออกใบแจ้งหนี้ใหม่
                       </button>
                     </div>
 
-                    <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow">
+                    <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow max-w-full">
                       <div className="p-4 bg-slate-850/40 border-b border-slate-800 flex items-center justify-between">
                         <span className="text-xs font-black text-white flex items-center gap-1.5">
                           <Database className="w-4 h-4 text-indigo-400" /> ประวัติการวางบิลลูกค้านิติบุคคล (MySQL invoices)
                         </span>
                       </div>
 
-                      <div className="p-4 overflow-x-auto">
-                        <table className="w-full text-left border-collapse text-xs">
+                      <div className="p-4 overflow-x-auto w-full max-w-full">
+                        <table className="w-full text-left border-collapse text-xs min-w-[700px]">
                           <thead>
                             <tr className="border-b border-slate-800 text-slate-400 uppercase font-bold text-[10px] tracking-wider">
                               <th className="py-3 px-3">เลขที่ใบสำคัญ</th>
@@ -2007,9 +2007,9 @@ export default function App() {
                           <tbody>
                             {invoices.map(inv => (
                               <tr key={inv.id} className="border-b border-slate-850 hover:bg-slate-850/30 transition-all text-slate-300">
-                                <td className="py-4 px-3 font-mono text-rose-400 font-bold">{inv.invoice_no}</td>
-                                <td className="font-extrabold text-white">{inv.customer_name}</td>
-                                <td>
+                                <td className="py-4 px-3 font-mono text-rose-400 font-bold whitespace-nowrap">{inv.invoice_no}</td>
+                                <td className="font-extrabold text-white max-w-[200px] truncate" title={inv.customer_name}>{inv.customer_name}</td>
+                                <td className="whitespace-nowrap">
                                   {inv.quotation_no ? (
                                     <span className="badge bg-slate-800 text-slate-300 border border-slate-700 text-[9px] font-mono py-1 px-1.5 rounded">
                                       {inv.quotation_no}
@@ -2018,16 +2018,16 @@ export default function App() {
                                     <span className="text-slate-500">วางบิลตรง</span>
                                   )}
                                 </td>
-                                <td>{inv.invoice_date}</td>
-                                <td>
+                                <td className="whitespace-nowrap">{inv.invoice_date}</td>
+                                <td className="whitespace-nowrap">
                                   <span className={`font-semibold ${new Date(inv.due_date) < new Date() && inv.status === 'Unpaid' ? 'text-rose-400' : ''}`}>
                                     {inv.due_date}
                                   </span>
                                 </td>
-                                <td className="font-mono">
+                                <td className="font-mono whitespace-nowrap">
                                   {inv.currency === 'USD' ? '$' : (inv.currency && inv.currency !== 'THB' ? `${inv.currency} ` : '฿')}{inv.subtotal.toLocaleString('th-TH', { minimumFractionDigits: 2 })}
                                 </td>
-                                <td className="font-mono text-rose-400 font-extrabold text-[13px]">
+                                <td className="font-mono text-rose-400 font-extrabold text-[13px] whitespace-nowrap">
                                   <div className="flex items-center gap-1.5">
                                     <span>{inv.currency === 'USD' ? '$' : (inv.currency && inv.currency !== 'THB' ? `${inv.currency} ` : '฿')}{inv.grand_total.toLocaleString('th-TH', { minimumFractionDigits: 2 })}</span>
                                     {inv.currency && inv.currency !== 'THB' && (
@@ -2042,7 +2042,7 @@ export default function App() {
                                     </div>
                                   )}
                                 </td>
-                                <td className="text-center">
+                                <td className="text-center whitespace-nowrap">
                                   <span className={`inline-block py-1 px-2.5 rounded-full text-[9px] font-bold ${
                                     inv.status === 'Paid' ? 'bg-emerald-950/50 text-emerald-400 border border-emerald-900' : 'bg-amber-950/50 text-amber-400 border border-amber-900'
                                   }`}>
