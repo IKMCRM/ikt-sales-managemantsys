@@ -1567,8 +1567,8 @@ export class LocalDB {
       });
       return list.map((s: any) => {
         const lq = s.quotation_id ? quoteMap[String(s.quotation_id)] : (s.quotation_no ? quoteMap[String(s.quotation_no)] : null);
-        const cur = s.currency || lq?.currency || (s.quotation_id || s.quotation_no ? 'USD' : 'THB');
-        const rate = parseFloat(s.exchange_rate) || (lq ? parseFloat(lq.exchange_rate) : (cur === 'USD' ? 35.0 : 1.0));
+        const cur = s.currency || lq?.currency || 'THB';
+        const rate = parseFloat(s.exchange_rate) || (lq ? parseFloat(lq.exchange_rate) : (cur === 'USD' ? 35.0 : (cur === 'SGD' ? 26.0 : 1.0)));
         return {
           ...s,
           currency: cur,
@@ -1678,9 +1678,8 @@ export class LocalDB {
     const mapInvoiceCurrency = (inv: any): Invoice => {
       const lq = inv.quotation_id ? quoteMap[String(inv.quotation_id)] : (inv.quotation_no ? quoteMap[String(inv.quotation_no)] : null);
       const lso = inv.sales_order_id ? soMap[String(inv.sales_order_id)] : (inv.sales_order_no ? soMap[String(inv.sales_order_no)] : null);
-      const isInv26 = inv.invoice_no && (inv.invoice_no.startsWith('INV-26') || inv.invoice_no.startsWith('Inv 26') || inv.invoice_no.includes('26-08-021'));
-      const cur = inv.currency || lso?.currency || lq?.currency || (isInv26 || inv.quotation_id || inv.quotation_no || inv.sales_order_id || inv.sales_order_no ? 'USD' : 'THB');
-      const rate = parseFloat(inv.exchange_rate) || (lso ? parseFloat(lso.exchange_rate) : (lq ? parseFloat(lq.exchange_rate) : (cur === 'USD' ? 35.0 : 1.0)));
+      const cur = inv.currency || lso?.currency || lq?.currency || 'THB';
+      const rate = parseFloat(inv.exchange_rate) || (lso ? parseFloat(lso.exchange_rate) : (lq ? parseFloat(lq.exchange_rate) : (cur === 'USD' ? 35.0 : (cur === 'SGD' ? 26.0 : 1.0))));
       const grand = parseFloat(inv.grand_total !== undefined ? inv.grand_total : (inv.total_amount * 1.07 || 0));
       const tot = parseFloat(inv.total_amount !== undefined ? inv.total_amount : (grand / 1.07));
 
@@ -2863,14 +2862,14 @@ export const CRMService = {
         const linkedQuote = quotes.find(q => q.id === soPayload.quotation_id || q.quotation_no === soPayload.quotation_id);
         if (linkedQuote) {
           currency = currency || linkedQuote.currency || 'THB';
-          exchangeRate = exchangeRate || linkedQuote.exchange_rate || (currency === 'USD' ? 35.0 : 1.0);
+          exchangeRate = exchangeRate || linkedQuote.exchange_rate || (currency === 'USD' ? 35.0 : (currency === 'SGD' ? 26.0 : 1.0));
           quotationNo = quotationNo || linkedQuote.quotation_no;
         }
       }
     }
 
     currency = currency || 'THB';
-    exchangeRate = exchangeRate || (currency === 'USD' ? 35.0 : 1.0);
+    exchangeRate = exchangeRate || (currency === 'USD' ? 35.0 : (currency === 'SGD' ? 26.0 : 1.0));
     const totalAmount = Number(soPayload.total_amount) || 0;
     const totalAmountThb = soPayload.total_amount_thb || (totalAmount * (currency === 'THB' ? 1.0 : exchangeRate));
     const grandTotalThb = soPayload.grand_total_thb || totalAmountThb;
@@ -3075,7 +3074,7 @@ export const CRMService = {
       const linkedSo = sos.find(s => s.id === payload.sales_order_id || s.so_no === payload.sales_order_id);
       if (linkedSo) {
         currency = currency || linkedSo.currency || 'THB';
-        exchangeRate = exchangeRate || linkedSo.exchange_rate || (currency === 'USD' ? 35.0 : 1.0);
+        exchangeRate = exchangeRate || linkedSo.exchange_rate || (currency === 'USD' ? 35.0 : (currency === 'SGD' ? 26.0 : 1.0));
         salesOrderNo = salesOrderNo || linkedSo.so_no;
         quotationId = quotationId || linkedSo.quotation_id;
         quotationNo = quotationNo || linkedSo.quotation_no;
@@ -3087,13 +3086,13 @@ export const CRMService = {
       const linkedQuote = quotes.find(q => q.id === quotationId || q.quotation_no === quotationId);
       if (linkedQuote) {
         currency = currency || linkedQuote.currency || 'THB';
-        exchangeRate = exchangeRate || linkedQuote.exchange_rate || (currency === 'USD' ? 35.0 : 1.0);
+        exchangeRate = exchangeRate || linkedQuote.exchange_rate || (currency === 'USD' ? 35.0 : (currency === 'SGD' ? 26.0 : 1.0));
         quotationNo = quotationNo || linkedQuote.quotation_no;
       }
     }
 
     currency = currency || 'THB';
-    exchangeRate = exchangeRate || (currency === 'USD' ? 35.0 : 1.0);
+    exchangeRate = exchangeRate || (currency === 'USD' ? 35.0 : (currency === 'SGD' ? 26.0 : 1.0));
     const totalAmount = Number(payload.total_amount) || 0;
     const grandTotal = Number(payload.grand_total) || (totalAmount * 1.07);
     const totalAmountThb = payload.total_amount_thb || (totalAmount * (currency === 'THB' ? 1.0 : exchangeRate));

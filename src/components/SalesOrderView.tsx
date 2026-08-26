@@ -303,8 +303,8 @@ export default function SalesOrderView({
 
       {/* Main Grid table in Google Sheet style */}
       <div className="bg-white rounded-b-2xl border border-[#DADCE0] shadow-xs overflow-hidden w-full max-w-full">
-        <div className="overflow-x-auto w-full max-w-full">
-          <table className="w-full text-left border-collapse min-w-[900px]">
+        <div className="w-full max-w-full">
+          <table className="w-full text-left border-collapse">
             <thead>
               {/* Excel Column Headers A, B, C... */}
               <tr className="bg-[#F8F9FA] border-b border-slate-250 text-[10px] font-mono text-slate-400 select-none">
