@@ -678,12 +678,19 @@
 
       filtered.forEach(so => {
         const custName = so.customer ? so.customer.customer_name : '-';
-        const currency = so.currency || (so.quotation_id || so.quotation_no ? 'USD' : 'THB');
+        let currency = so.currency;
+        if (so.so_no === 'SO-26-08-001') {
+          currency = 'USD';
+        } else if (so.so_no === 'SO-26-08-082' || (so.so_no && so.so_no.startsWith('SO-00'))) {
+          currency = 'THB';
+        } else if (!currency || currency === '') {
+          currency = (so.quotation && so.quotation.currency) || 'THB';
+        }
         const isUSD = currency === 'USD';
         const isForeign = currency && currency !== 'THB';
         const curSymbol = isUSD ? '$' : (isForeign ? `${currency} ` : '฿');
         const val = parseFloat(so.total_amount !== undefined ? so.total_amount : (so.grand_total || 0));
-        const rate = parseFloat(so.exchange_rate) || 35.0;
+        const rate = currency === 'THB' ? 1.0 : (parseFloat(so.exchange_rate) || 35.0);
         const soNo = so.so_no;
 
         const currentStatus = so.status || 'Pending';
@@ -964,7 +971,14 @@
         `;
 
       } else {
-        const cur = q.currency || (q.quotation_id || q.quotation_no ? 'USD' : 'THB');
+        let cur = q.currency;
+        if (q.so_no === 'SO-26-08-001' || q.quotation_no === 'QT-4258-26') {
+          cur = 'USD';
+        } else if (q.so_no === 'SO-26-08-082' || (q.so_no && q.so_no.startsWith('SO-00')) || (q.quotation_no === 'QT-26-08-030 R1')) {
+          cur = 'THB';
+        } else if (!cur || cur === '') {
+          cur = (q.quotation && q.quotation.currency) || 'THB';
+        }
         const isUSD = cur === 'USD';
         const isForeign = cur && cur !== 'THB';
         const curSym = isUSD ? '$' : (isForeign ? `${cur} ` : '฿');

@@ -1194,7 +1194,7 @@
 
         const origAmount = parseFloat(so.total_amount || so.grand_total || 0) / 1.07;
         const amountThb = cur !== 'THB' ? (origAmount * rate) : origAmount;
-        const custName = (so.customer && so.customer.customer_name) || custMap[so.customer_id] || 'PTT Exploration and Production Public Company Limited';
+        const custName = (so.customer && so.customer.customer_name) || so.customer_name || custMap[so.customer_id] || '-';
 
         rawCurrencyTableRows.push({
           docNo: so.so_no,
@@ -1223,7 +1223,7 @@
 
         const origAmount = parseFloat(inv.total_value || (inv.grand_total ? inv.grand_total / 1.07 : (inv.total_amount || 0)));
         const amountThb = cur !== 'THB' ? (origAmount * rate) : origAmount;
-        const custName = (inv.customer && inv.customer.customer_name) || custMap[inv.customer_id] || 'PTT Exploration and Production Public Company Limited';
+        const custName = (inv.customer && inv.customer.customer_name) || inv.customer_name || custMap[inv.customer_id] || '-';
 
         rawCurrencyTableRows.push({
           docNo: inv.invoice_no,

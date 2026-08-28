@@ -704,8 +704,8 @@ function QuoteList({
                                 };
                               });
 
-                              const quoteCur = q.currency || "USD";
-                              const quoteRate = q.exchange_rate || 35.00;
+                              const quoteCur = q.currency || "THB";
+                              const quoteRate = (quoteCur === "THB") ? 1.0 : (parseFloat(q.exchange_rate) || (quoteCur === "USD" ? 35.00 : (quoteCur === "SGD" ? 26.00 : 1.0)));
                               const originalAmount = parseFloat(q.total_value !== undefined ? q.total_value : (q.grand_total ? q.grand_total / 1.07 : (q.total_amount || 0)));
                               const originalGrandTotal = parseFloat(q.grand_total || q.total_value || q.total_amount || 0);
 
@@ -1020,8 +1020,8 @@ function QuoteForm({ id, onClose, quotations, customers, onToast }: any) {
               };
             });
 
-            const quoteCur = savedQuote.currency || "USD";
-            const quoteRate = savedQuote.exchange_rate || 35.00;
+            const quoteCur = savedQuote.currency || "THB";
+            const quoteRate = (quoteCur === "THB") ? 1.0 : (parseFloat(savedQuote.exchange_rate) || (quoteCur === "USD" ? 35.00 : (quoteCur === "SGD" ? 26.00 : 1.0)));
             const originalAmount = parseFloat(savedQuote.total_value !== undefined ? savedQuote.total_value : (savedQuote.grand_total ? savedQuote.grand_total / 1.07 : (savedQuote.total_amount || 0)));
             const originalGrandTotal = parseFloat(savedQuote.grand_total || savedQuote.total_value || savedQuote.total_amount || 0);
 

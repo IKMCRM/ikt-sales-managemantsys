@@ -902,11 +902,18 @@
       }
 
       filtered.forEach(i => {
-        const cur = i.currency || ((i.invoice_no && i.invoice_no.startsWith('INV-26')) || i.quotation_no || i.sales_order_no ? 'USD' : 'THB');
+        let cur = i.currency;
+        if (i.invoice_no === 'INV-26-08-021') {
+          cur = 'USD';
+        } else if (i.invoice_no === 'INV-26-08-061' || i.invoice_no === 'INV-26-08-062' || (i.invoice_no && i.invoice_no.startsWith('INV-00'))) {
+          cur = 'THB';
+        } else if (!cur || cur === '') {
+          cur = (i.sales_order && i.sales_order.currency) || (i.quotation && i.quotation.currency) || 'THB';
+        }
         const isUSD = cur === 'USD';
         const isForeign = cur && cur !== 'THB';
         const curSym = isUSD ? '$' : (isForeign ? `${cur} ` : '฿');
-        const rate = parseFloat(i.exchange_rate) || 35.0;
+        const rate = cur === 'THB' ? 1.0 : (parseFloat(i.exchange_rate) || 35.0);
         const grandVal = parseFloat(i.grand_total !== undefined ? i.grand_total : (i.total_value * 1.07 || 0));
         const subVal = parseFloat(i.total_value !== undefined ? i.total_value : (grandVal / 1.07));
         const sub = (subVal * 0.07).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -1297,11 +1304,18 @@
         document.getElementById('print-job-no').innerText = i.job_no || 'None';
         document.getElementById('print-sales-person').innerText = i.sales_person || 'None';
 
-        const cur = i.currency || ((i.invoice_no && i.invoice_no.startsWith('INV-26')) || i.quotation_no || i.sales_order_no ? 'USD' : 'THB');
+        let cur = i.currency;
+        if (i.invoice_no === 'INV-26-08-021') {
+          cur = 'USD';
+        } else if (i.invoice_no === 'INV-26-08-061' || i.invoice_no === 'INV-26-08-062' || (i.invoice_no && i.invoice_no.startsWith('INV-00'))) {
+          cur = 'THB';
+        } else if (!cur || cur === '') {
+          cur = (i.sales_order && i.sales_order.currency) || (i.quotation && i.quotation.currency) || 'THB';
+        }
         const isUSD = cur === 'USD';
         const isForeign = cur && cur !== 'THB';
         const curSym = isUSD ? '$' : (isForeign ? `${cur} ` : '฿');
-        const rate = parseFloat(i.exchange_rate) || 35.0;
+        const rate = cur === 'THB' ? 1.0 : (parseFloat(i.exchange_rate) || 35.0);
 
         const thLabel = document.getElementById('print-amount-th-label');
         if (thLabel) thLabel.innerText = `Amount ${cur}`;

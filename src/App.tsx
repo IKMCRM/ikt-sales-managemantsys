@@ -39,6 +39,7 @@ import BackupExportModal from './components/BackupExportModal';
 import { performAutoSave } from './utils/backupExport';
 import { phpCodebase, PHPFile } from './data/phpCodebase';
 import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, Legend } from 'recharts';
+import { getCurrencySymbol } from './components/InvoiceView';
 
 // Define Interface types for simulation state
 interface CustomerSim {
@@ -233,21 +234,25 @@ export default function App() {
     { 
       id: 4258, 
       quotation_no: 'QT-4258-26', 
-      customer_id: 1, 
-      customer_name: 'บริษัท ปตท. สำรวจและผลิตปิโตรเลียม จำกัด (มหาชน)', 
-      project_name: 'High-Pressure Hydrotest System & Inspection Package (USD)', 
-      title: 'High-Pressure Hydrotest System & Inspection Package (USD)', 
+      customer_id: 260030, 
+      customer_name: 'POSCO International E&P', 
+      project_name: 'Spare Seal for Flange Weld Tester 3 in', 
+      title: 'Spare Seal for Flange Weld Tester 3 in', 
       quotation_date: '2026-08-01', 
       validity_days: 30, 
       payment_term: 'เครดิต 30 วัน', 
       currency: 'USD',
       exchange_rate: 35.00,
-      delivery_plan: 'Mobilization 15 Aug 2026 - Offshore Site Rayong (7 Days Delivery Schedule)',
-      total_value: 1000.00, 
+      delivery_plan: 'DSV Offshore supply base, Singapore',
+      total_value: 1346.00, 
       tax_rate: 7, 
-      grand_total: 1070.00, 
+      grand_total: 1440.22, 
       status: 'Approved',
-      items: [{ name: 'High-Pressure Hydrotest System Rental & Calibration (USD)', qty: 1, unit: 'Package', price: 1000.00 }]
+      items: [
+        { name: 'PU Seal for FWT 3', qty: 2, unit: 'Ea', price: 150.00 },
+        { name: 'Rubber Seal for FWT 3', qty: 2, unit: 'Ea', price: 150.00 },
+        { name: 'Shipment Freight to DSV Offshore supply base, Singapore', qty: 1, unit: 'Trip', price: 746.00 }
+      ]
     },
     { 
       id: 1, 
@@ -285,22 +290,117 @@ export default function App() {
 
   const [invoices, setInvoices] = useState<InvoiceSim[]>([
     { 
+      id: 260862, 
+      invoice_no: 'INV-26-08-062', 
+      customer_id: 59, 
+      customer_name: 'CHC CHEMICAL CO., LTD', 
+      quotation_no: 'QT-4294-26', 
+      sales_order_no: 'Adhoc-26',
+      currency: 'THB',
+      exchange_rate: 1.00,
+      invoice_date: '2026-08-26', 
+      due_date: '2026-08-26', 
+      subtotal: 4268.00, 
+      tax_amount: 298.76, 
+      grand_total: 4566.76, 
+      status: 'Paid' 
+    },
+    { 
+      id: 260861, 
+      invoice_no: 'INV-26-08-061', 
+      customer_id: 12, 
+      customer_name: 'POONKITWATTANA CONSTRUCTION & DEVELOPMENT CO., LTD.', 
+      quotation_no: 'QT-26-08-030 R1', 
+      sales_order_no: 'SO-26-08-082',
+      currency: 'THB',
+      exchange_rate: 1.00,
+      invoice_date: '2026-08-26', 
+      due_date: '2026-08-26', 
+      subtotal: 112379.00, 
+      tax_amount: 7866.53, 
+      grand_total: 120245.53, 
+      status: 'Unpaid' 
+    },
+    { 
+      id: 260860, 
+      invoice_no: 'INV-26-08-060', 
+      customer_id: 59, 
+      customer_name: 'CHC CHEMICAL CO., LTD', 
+      quotation_no: 'Direct', 
+      sales_order_no: 'Adhoc-26',
+      currency: 'USD',
+      exchange_rate: 35.00,
+      invoice_date: '2026-08-24', 
+      due_date: '2026-08-24', 
+      subtotal: 130000.00, 
+      tax_amount: 9100.00, 
+      grand_total: 139100.00, 
+      status: 'Paid' 
+    },
+    { 
+      id: 260859, 
+      invoice_no: 'INV-26-08-059', 
+      customer_id: 13, 
+      customer_name: 'Bureau Veritas (Thailand) Ltd', 
+      quotation_no: 'SO-26-08-071', 
+      sales_order_no: '024-25',
+      currency: 'USD',
+      exchange_rate: 35.00,
+      invoice_date: '2026-08-20', 
+      due_date: '2026-09-19', 
+      subtotal: 64700.00, 
+      tax_amount: 4529.00, 
+      grand_total: 69229.00, 
+      status: 'Unpaid' 
+    },
+    { 
       id: 2608, 
       invoice_no: 'INV-26-08-021', 
-      customer_id: 1, 
-      customer_name: 'บริษัท ปตท. สำรวจและผลิตปิโตรเลียม จำกัด (มหาชน)', 
+      customer_id: 260030, 
+      customer_name: 'POSCO International E&P', 
       quotation_no: 'QT-4258-26', 
       sales_order_no: 'SO-26-08-001',
       currency: 'USD',
       exchange_rate: 35.00,
       invoice_date: '2026-08-05', 
       due_date: '2026-09-04', 
-      subtotal: 1000.00, 
-      tax_amount: 70.00, 
-      grand_total: 1070.00, 
-      status: 'Paid' 
+      subtotal: 1346.00, 
+      tax_amount: 94.22, 
+      grand_total: 1440.22, 
+      status: 'Unpaid' 
     },
-    { id: 1, invoice_no: 'INV-000001', customer_id: 2, customer_name: 'บริษัท ไทยออยล์ จำกัด (มหาชน)', quotation_no: 'QT-000001', invoice_date: '2026-06-20', due_date: '2026-08-04', subtotal: 850000.00, tax_amount: 59500.00, grand_total: 909500.00, status: 'Unpaid' }
+    { 
+      id: 260610, 
+      invoice_no: 'INV-0010-26', 
+      customer_id: 20, 
+      customer_name: 'STP&I Public Company Limited', 
+      quotation_no: 'QT-4076-26', 
+      sales_order_no: 'SO-26-06-003',
+      currency: 'THB',
+      exchange_rate: 1.00,
+      invoice_date: '2026-06-04', 
+      due_date: '2026-07-04', 
+      subtotal: 10000.00, 
+      tax_amount: 700.00, 
+      grand_total: 10700.00, 
+      status: 'Overdue' 
+    },
+    { 
+      id: 1, 
+      invoice_no: 'INV-0001-26', 
+      customer_id: 2, 
+      customer_name: 'บริษัท ไทยออยล์ จำกัด (มหาชน)', 
+      quotation_no: 'QT-000001-26', 
+      sales_order_no: 'SO-000001-26',
+      currency: 'THB',
+      exchange_rate: 1.00,
+      invoice_date: '2026-06-20', 
+      due_date: '2026-08-04', 
+      subtotal: 850000.00, 
+      tax_amount: 59500.00, 
+      grand_total: 909500.00, 
+      status: 'Paid' 
+    }
   ]);
 
   const [auditLogs, setAuditLogs] = useState<AuditLogSim[]>([
@@ -314,6 +414,52 @@ export default function App() {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3500);
   };
+
+  // Sync invoices from SupabaseDB / localStorage on mount
+  useEffect(() => {
+    const syncInvoicesFromDB = async () => {
+      try {
+        if (typeof window !== 'undefined' && (window as any).SupabaseDB && typeof (window as any).SupabaseDB.getInvoices === 'function') {
+          const dbInvoices = await (window as any).SupabaseDB.getInvoices();
+          if (Array.isArray(dbInvoices) && dbInvoices.length > 0) {
+            const mapped: InvoiceSim[] = dbInvoices.map((inv: any, idx: number) => {
+              const isUSDInvoice = inv.invoice_no === 'INV-26-08-021' || (inv.id && String(inv.id).includes('26_08_021'));
+              const isTHBInvoice = !isUSDInvoice && (inv.invoice_no === 'INV-26-08-061' || inv.invoice_no === 'INV-26-08-062' || (inv.invoice_no && inv.invoice_no.startsWith('INV-00')));
+              const cur = isUSDInvoice ? 'USD' : (isTHBInvoice ? 'THB' : (inv.currency || 'THB'));
+              let subtotal = parseFloat(inv.total_amount !== undefined ? inv.total_amount : (inv.total_value || 0));
+              let grand_total = parseFloat(inv.grand_total !== undefined ? inv.grand_total : (inv.grand_total_thb || 0));
+              let tax_amount = parseFloat(inv.vat_amount !== undefined ? inv.vat_amount : ((inv.grand_total || 0) - (inv.total_amount || 0)));
+              if (inv.invoice_no === 'INV-26-08-021') {
+                subtotal = 1346.00;
+                tax_amount = 94.22;
+                grand_total = 1440.22;
+              }
+              return {
+                id: typeof inv.id === 'number' ? inv.id : (parseInt(String(inv.id).replace(/\D/g, '').slice(0, 8), 10) || (1000 + idx)),
+                invoice_no: inv.invoice_no,
+                customer_id: typeof inv.customer_id === 'number' ? inv.customer_id : (idx + 1),
+                customer_name: inv.customer_name || (inv.customer && inv.customer.customer_name) || 'Customer',
+                quotation_no: inv.quotation_no || '',
+                sales_order_no: inv.sales_order_no || '',
+                currency: cur,
+                exchange_rate: cur === 'THB' ? 1.00 : (parseFloat(inv.exchange_rate) || 35.0),
+                invoice_date: inv.invoice_date || inv.issue_date || new Date().toISOString().slice(0, 10),
+                due_date: inv.due_date || new Date().toISOString().slice(0, 10),
+                subtotal,
+                tax_amount,
+                grand_total,
+                status: (inv.status === 'Paid' || inv.status === 'Overdue') ? inv.status : 'Unpaid'
+              };
+            });
+            setInvoices(mapped);
+          }
+        }
+      } catch (err) {
+        console.warn("Could not sync invoices in App.tsx", err);
+      }
+    };
+    syncInvoicesFromDB();
+  }, []);
 
   // --- Notification Bell States & Helpers ---
   const [notifications, setNotifications] = useState<NotificationSim[]>([
@@ -704,14 +850,20 @@ export default function App() {
     const nextId = invoices.length + 1;
     const invNo = `INV-${targetMonthPrefix}-${String(maxSeq + 1).padStart(3, '0')}`;
 
+    const matchedQuote = invForm.quotationId ? quotations.find(q => q.id === Number(invForm.quotationId)) : null;
+    const invCurrency = matchedQuote?.currency || 'THB';
+    const invExchangeRate = (invCurrency === 'THB') ? 1.0 : (matchedQuote?.exchange_rate || ((invCurrency === 'USD') ? 35.0 : (invCurrency === 'SGD' ? 26.0 : 1.0)));
+
     const newInv: InvoiceSim = {
       id: nextId,
       invoice_no: invNo,
       customer_id: Number(invForm.customerId),
       customer_name: selectedCust ? selectedCust.customer_name : 'Unknown Customer',
-      quotation_no: invForm.quotationId ? (quotations.find(q => q.id === Number(invForm.quotationId))?.quotation_no || '') : '',
+      quotation_no: matchedQuote ? matchedQuote.quotation_no : '',
       invoice_date: invForm.date,
       due_date: invForm.dueDate,
+      currency: invCurrency,
+      exchange_rate: invExchangeRate,
       subtotal: subtotal,
       tax_amount: tax,
       grand_total: invForm.grandTotal,
@@ -1820,8 +1972,8 @@ export default function App() {
                                             console.error(e);
                                           }
 
-                                          const quoteCur = (q as any).currency || 'USD';
-                                          const quoteRate = (q as any).exchange_rate || 35.00;
+                                          const quoteCur = (q as any).currency || 'THB';
+                                          const quoteRate = (quoteCur === 'THB') ? 1.0 : (parseFloat((q as any).exchange_rate) || (quoteCur === 'USD' ? 35.00 : (quoteCur === 'SGD' ? 26.00 : 1.0)));
                                           const originalAmount = parseFloat((q as any).total_value !== undefined ? (q as any).total_value : (q.grand_total ? q.grand_total / 1.07 : (q.total_amount || 0)));
                                           const originalGrandTotal = parseFloat(q.grand_total || (q as any).total_value || q.total_amount || 0);
 
@@ -1991,7 +2143,7 @@ export default function App() {
                       </div>
 
                       <div className="p-4 overflow-x-auto w-full max-w-full">
-                        <table className="w-full text-left border-collapse text-xs min-w-[700px]">
+                        <table className="w-full text-left border-collapse text-xs">
                           <thead>
                             <tr className="border-b border-slate-800 text-slate-400 uppercase font-bold text-[10px] tracking-wider">
                               <th className="py-3 px-3">เลขที่ใบสำคัญ</th>
@@ -2025,22 +2177,17 @@ export default function App() {
                                   </span>
                                 </td>
                                 <td className="font-mono whitespace-nowrap">
-                                  {inv.currency === 'USD' ? '$' : (inv.currency && inv.currency !== 'THB' ? `${inv.currency} ` : '฿')}{inv.subtotal.toLocaleString('th-TH', { minimumFractionDigits: 2 })}
+                                  {getCurrencySymbol(inv.currency)}{inv.subtotal.toLocaleString('th-TH', { minimumFractionDigits: 2 })}
                                 </td>
                                 <td className="font-mono text-rose-400 font-extrabold text-[13px] whitespace-nowrap">
                                   <div className="flex items-center gap-1.5">
-                                    <span>{inv.currency === 'USD' ? '$' : (inv.currency && inv.currency !== 'THB' ? `${inv.currency} ` : '฿')}{inv.grand_total.toLocaleString('th-TH', { minimumFractionDigits: 2 })}</span>
+                                    <span>{getCurrencySymbol(inv.currency)}{inv.grand_total.toLocaleString('th-TH', { minimumFractionDigits: 2 })}</span>
                                     {inv.currency && inv.currency !== 'THB' && (
                                       <span className="bg-indigo-950/80 text-indigo-300 border border-indigo-800 text-[9px] font-mono py-0.5 px-1.5 rounded">
                                         {inv.currency}
                                       </span>
                                     )}
                                   </div>
-                                  {inv.currency && inv.currency !== 'THB' && (
-                                    <div className="text-[10px] text-slate-500 font-normal mt-0.5">
-                                      ≈ ฿{((inv.grand_total) * (inv.exchange_rate || 35.00)).toLocaleString('th-TH', { minimumFractionDigits: 2 })}
-                                    </div>
-                                  )}
                                 </td>
                                 <td className="text-center whitespace-nowrap">
                                   <span className={`inline-block py-1 px-2.5 rounded-full text-[9px] font-bold ${
@@ -2200,16 +2347,16 @@ export default function App() {
                               <td className="py-3 px-3 font-mono font-bold text-indigo-400">QT-4258-26</td>
                               <td><span className="bg-indigo-950 text-indigo-400 border border-indigo-800 px-2 py-0.5 rounded text-[10px] font-bold">Quotation</span></td>
                               <td>
-                                <div className="font-bold text-white">บริษัท ปตท. สำรวจและผลิตปิโตรเลียม จำกัด (มหาชน)</div>
-                                <div className="text-[10px] text-slate-400">High-Pressure Hydrotest System & Inspection Package (USD)</div>
+                                <div className="font-bold text-white">POSCO International E&P (CUS-260030)</div>
+                                <div className="text-[10px] text-slate-400">Spare Seal for Flange Weld Tester 3 in</div>
                               </td>
-                              <td className="text-center"><span className="bg-emerald-950 text-emerald-400 border border-emerald-800 px-2 py-0.5 rounded font-mono font-bold text-[10px]">USD</span></td>
-                              <td className="text-right font-mono font-bold text-indigo-300">$1,000.00</td>
+                              <td className="text-center"><span className="bg-blue-950 text-blue-400 border border-blue-800 px-2 py-0.5 rounded font-mono font-bold text-[10px]">USD ($)</span></td>
+                              <td className="text-right font-mono font-bold text-indigo-300">$1,346.00</td>
                               <td className="text-center font-mono text-slate-400 font-bold">35.00</td>
-                              <td className="text-right font-mono font-extrabold text-emerald-400 text-sm">฿35,000.00</td>
+                              <td className="text-right font-mono font-extrabold text-emerald-400 text-sm">฿47,110.00</td>
                               <td>
                                 <div className="font-mono text-[11px] text-slate-300 font-bold">QT-4258-26 &rarr; SO &rarr; INV</div>
-                                <div className="text-[10px] text-slate-500">1. Quotation Source</div>
+                                <div className="text-[10px] text-slate-500">1. Quotation Source ($)</div>
                               </td>
                               <td className="text-center"><span className="bg-emerald-950 text-emerald-400 border border-emerald-800 px-2 py-0.5 rounded text-[10px] font-bold">Approved</span></td>
                             </tr>
@@ -2219,16 +2366,16 @@ export default function App() {
                               <td className="py-3 px-3 font-mono font-bold text-emerald-400">SO-26-08-001</td>
                               <td><span className="bg-emerald-950 text-emerald-400 border border-emerald-800 px-2 py-0.5 rounded text-[10px] font-bold">Sales Order</span></td>
                               <td>
-                                <div className="font-bold text-white">บริษัท ปตท. สำรวจและผลิตปิโตรเลียม จำกัด (มหาชน)</div>
-                                <div className="text-[10px] text-slate-400">High-Pressure Hydrotest System & Inspection Package (USD)</div>
+                                <div className="font-bold text-white">POSCO International E&P (CUS-260030)</div>
+                                <div className="text-[10px] text-slate-400">Spare Seal for Flange Weld Tester 3 in (Job: Adhoc-26)</div>
                               </td>
-                              <td className="text-center"><span className="bg-emerald-950 text-emerald-400 border border-emerald-800 px-2 py-0.5 rounded font-mono font-bold text-[10px]">USD</span></td>
-                              <td className="text-right font-mono font-bold text-indigo-300">$1,000.00</td>
+                              <td className="text-center"><span className="bg-blue-950 text-blue-400 border border-blue-800 px-2 py-0.5 rounded font-mono font-bold text-[10px]">USD ($)</span></td>
+                              <td className="text-right font-mono font-bold text-indigo-300">$1,346.00</td>
                               <td className="text-center font-mono text-slate-400 font-bold">35.00</td>
-                              <td className="text-right font-mono font-extrabold text-emerald-400 text-sm">฿35,000.00</td>
+                              <td className="text-right font-mono font-extrabold text-emerald-400 text-sm">฿47,110.00</td>
                               <td>
                                 <div className="font-mono text-[11px] text-slate-300 font-bold">QT-4258-26 &rarr; <span className="text-emerald-400 font-bold">SO-26-08-001</span> &rarr; INV</div>
-                                <div className="text-[10px] text-emerald-400/80">2. Sales Order Transferred</div>
+                                <div className="text-[10px] text-emerald-400/80">2. Sales Order Transferred ($)</div>
                               </td>
                               <td className="text-center"><span className="bg-emerald-950 text-emerald-400 border border-emerald-800 px-2 py-0.5 rounded text-[10px] font-bold">Confirmed</span></td>
                             </tr>
@@ -2238,27 +2385,27 @@ export default function App() {
                               <td className="py-3 px-3 font-mono font-bold text-blue-400">INV-26-08-021</td>
                               <td><span className="bg-blue-950 text-blue-400 border border-blue-800 px-2 py-0.5 rounded text-[10px] font-bold">Invoice</span></td>
                               <td>
-                                <div className="font-bold text-white">บริษัท ปตท. สำรวจและผลิตปิโตรเลียม จำกัด (มหาชน)</div>
-                                <div className="text-[10px] text-slate-400">High-Pressure Hydrotest System & Inspection Package (USD)</div>
+                                <div className="font-bold text-white">POSCO International E&P (CUS-260030)</div>
+                                <div className="text-[10px] text-slate-400">Spare Seal for Flange Weld Tester 3 in (IKMTTH-26/374)</div>
                               </td>
-                              <td className="text-center"><span className="bg-emerald-950 text-emerald-400 border border-emerald-800 px-2 py-0.5 rounded font-mono font-bold text-[10px]">USD</span></td>
-                              <td className="text-right font-mono font-bold text-indigo-300">$1,000.00</td>
+                              <td className="text-center"><span className="bg-blue-950 text-blue-400 border border-blue-800 px-2 py-0.5 rounded font-mono font-bold text-[10px]">USD ($)</span></td>
+                              <td className="text-right font-mono font-bold text-indigo-300">$1,346.00</td>
                               <td className="text-center font-mono text-slate-400 font-bold">35.00</td>
-                              <td className="text-right font-mono font-extrabold text-emerald-400 text-sm">฿35,000.00</td>
+                              <td className="text-right font-mono font-extrabold text-emerald-400 text-sm">฿47,110.00</td>
                               <td>
                                 <div className="font-mono text-[11px] text-slate-300 font-bold">QT-4258-26 &rarr; SO-26-08-001 &rarr; <span className="text-blue-400 font-bold">INV-26-08-021</span></div>
-                                <div className="text-[10px] text-blue-400/80">3. Invoiced Billing</div>
+                                <div className="text-[10px] text-blue-400/80">3. Invoiced Billing ($ / Total: $1,440.22)</div>
                               </td>
-                              <td className="text-center"><span className="bg-emerald-950 text-emerald-400 border border-emerald-800 px-2 py-0.5 rounded text-[10px] font-bold">Paid</span></td>
+                              <td className="text-center"><span className="bg-amber-950 text-amber-400 border border-amber-800 px-2 py-0.5 rounded text-[10px] font-bold">Unpaid</span></td>
                             </tr>
                           </tbody>
                           <tfoot>
                             <tr className="bg-slate-950/60 font-bold border-t border-slate-800">
                               <td colSpan={4} className="py-3 px-3 text-slate-400 text-right uppercase text-[10px]">สรุปมูลค่ายอดแปลงค่าในสายงาน (Total Converted THB):</td>
-                              <td className="text-right font-mono text-indigo-300 font-extrabold">$1,000.00</td>
+                              <td className="text-right font-mono text-indigo-300 font-extrabold">$1,346.00</td>
                               <td className="text-center font-mono text-slate-400">35.00</td>
-                              <td className="text-right font-mono text-emerald-400 font-black text-base">฿35,000.00</td>
-                              <td colSpan={2} className="text-slate-400 text-[10px]">อัตราแลกเปลี่ยนถ่ายทอดครบถ้วน 100%</td>
+                              <td className="text-right font-mono text-emerald-400 font-black text-base">฿47,110.00</td>
+                              <td colSpan={2} className="text-slate-400 text-[10px]">USD ($) อัตราแลกเปลี่ยนถ่ายทอดครบถ้วน 100% (Grand Total: ฿50,407.70)</td>
                             </tr>
                           </tfoot>
                         </table>

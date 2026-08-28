@@ -43,6 +43,8 @@ export default function QuotationView({
   const [oppId, setOppId] = useState('');
   const [custId, setCustId] = useState('');
   const [subject, setSubject] = useState('');
+  const [currency, setCurrency] = useState<'THB' | 'USD' | 'SGD'>('THB');
+  const [exchangeRate, setExchangeRate] = useState<number>(1.0);
   const [totalAmount, setTotalAmount] = useState<number>(0);
   const [issueDate, setIssueDate] = useState(new Date().toISOString().split('T')[0]);
   const [validUntil, setValidUntil] = useState(() => {
@@ -75,6 +77,8 @@ export default function QuotationView({
     setOppId('');
     setCustId('');
     setSubject('');
+    setCurrency('THB');
+    setExchangeRate(1.0);
     setTotalAmount(0);
     setIssueDate(new Date().toISOString().split('T')[0]);
     const d = new Date();
@@ -93,6 +97,9 @@ export default function QuotationView({
     setOppId(q.opportunity_id);
     setCustId(q.customer_id);
     setSubject(q.subject);
+    const cur = (q.currency as any) || 'THB';
+    setCurrency(cur);
+    setExchangeRate((cur === 'THB') ? 1.0 : (q.exchange_rate || (cur === 'USD' ? 35.0 : (cur === 'SGD' ? 26.0 : 1.0))));
     setTotalAmount(q.total_amount);
     setIssueDate(q.issue_date);
     setValidUntil(q.valid_until);
@@ -146,14 +153,19 @@ export default function QuotationView({
 
     const vat = Math.round(totalAmount * 0.07);
     const grand = totalAmount + vat;
+    const rate = (currency === 'THB') ? 1.0 : (Number(exchangeRate) || (currency === 'USD' ? 35.0 : (currency === 'SGD' ? 26.0 : 1.0)));
 
     const payload = {
       opportunity_id: oppId,
       customer_id: custId,
       subject,
+      currency,
+      exchange_rate: rate,
       total_amount: Number(totalAmount),
       vat_amount: vat,
       grand_total: grand,
+      total_amount_thb: currency === 'THB' ? Number(totalAmount) : (Number(totalAmount) * rate),
+      grand_total_thb: currency === 'THB' ? grand : (grand * rate),
       status,
       issue_date: issueDate,
       valid_until: validUntil,
@@ -182,13 +194,20 @@ export default function QuotationView({
       return;
     }
 
+    const cur = q.currency || 'THB';
+    const rate = (cur === 'THB') ? 1.0 : (q.exchange_rate || (cur === 'USD' ? 35.0 : (cur === 'SGD' ? 26.0 : 1.0)));
+
     const payload = {
       opportunity_id: q.opportunity_id || '',
       customer_id: q.customer_id,
       subject: q.subject,
+      currency: cur,
+      exchange_rate: rate,
       total_amount: q.total_amount,
       vat_amount: q.vat_amount,
       grand_total: q.grand_total,
+      total_amount_thb: cur === 'THB' ? q.total_amount : (q.total_amount * rate),
+      grand_total_thb: cur === 'THB' ? q.grand_total : (q.grand_total * rate),
       status: 'Draft' as const,
       issue_date: new Date().toISOString().split('T')[0],
       valid_until: (() => {
@@ -365,10 +384,17 @@ export default function QuotationView({
                       <span className="text-[10px] text-slate-400 font-normal block max-w-xs truncate mt-0.5" title={q.subject}>{q.subject}</span>
                     </td>
                     <td className="border border-slate-200 px-3 py-1.5 text-right font-mono font-medium text-slate-600">
-                      ฿{q.total_amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      {q.currency === 'USD' ? '$' : (q.currency === 'SGD' ? 'SGD ' : (q.currency && q.currency !== 'THB' ? `${q.currency} ` : '฿'))}{q.total_amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td className="border border-slate-200 px-3 py-1.5 text-right font-mono font-bold text-indigo-600">
-                      ฿{q.grand_total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      <div className="flex items-center justify-end gap-1">
+                        <span>{q.currency === 'USD' ? '$' : (q.currency === 'SGD' ? 'SGD ' : (q.currency && q.currency !== 'THB' ? `${q.currency} ` : '฿'))}{q.grand_total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        {q.currency && q.currency !== 'THB' && (
+                          <span className="text-[9px] bg-indigo-50 text-indigo-700 border border-indigo-200 px-1 rounded font-sans font-bold">
+                            {q.currency}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="border border-slate-200 px-3 py-1.5">
                       <span className="text-[11px] block font-bold text-slate-600">{q.issue_date}</span>
@@ -564,8 +590,42 @@ export default function QuotationView({
                   />
                 </div>
 
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1.5">สกุลเงิน (Currency) *</label>
+                    <select
+                      value={currency}
+                      onChange={(e) => {
+                        const cur = e.target.value as 'THB' | 'USD' | 'SGD';
+                        setCurrency(cur);
+                        if (cur === 'THB') setExchangeRate(1.0);
+                        else if (cur === 'USD') setExchangeRate(35.0);
+                        else if (cur === 'SGD') setExchangeRate(26.0);
+                      }}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-bold text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                    >
+                      <option value="THB">THB (฿ - บาท)</option>
+                      <option value="USD">USD ($ - ดอลลาร์สหรัฐ)</option>
+                      <option value="SGD">SGD (S$ - ดอลลาร์สิงคโปร์)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1.5">
+                      อัตราแลกเปลี่ยน (THB / 1 {currency})
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      disabled={currency === 'THB'}
+                      value={currency === 'THB' ? 1.0 : exchangeRate}
+                      onChange={(e) => setExchangeRate(parseFloat(e.target.value) || 1.0)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 disabled:bg-slate-100 disabled:text-slate-400"
+                    />
+                  </div>
+                </div>
+
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 mb-1.5">มูลค่ารวมก่อนภาษี (฿) *</label>
+                  <label className="block text-xs font-bold text-slate-500 mb-1.5">มูลค่ารวมก่อนภาษี ({currency === 'USD' ? '$' : (currency === 'SGD' ? 'SGD ' : '฿')}) *</label>
                   <input
                     type="number"
                     required
@@ -576,6 +636,11 @@ export default function QuotationView({
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
                   />
                   <span className="text-[10px] text-indigo-500 block mt-1 font-bold">ภาษีมูลค่าเพิ่มจะถูกคำนวณอัตโนมัติ (7% VAT)</span>
+                  {currency !== 'THB' && (
+                    <span className="text-[10px] text-emerald-600 block mt-0.5 font-bold">
+                      ≈ ฿{((totalAmount || 0) * 1.07 * exchangeRate).toLocaleString(undefined, { minimumFractionDigits: 2 })} (รวม VAT แปลงเป็น THB ที่เรท {exchangeRate})
+                    </span>
+                  )}
                 </div>
 
                 <div>

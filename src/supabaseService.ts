@@ -255,6 +255,54 @@ const DEFAULT_CUSTOMERS: Customer[] = [
     created_at: new Date('2024-05-13T08:00:00Z').toISOString()
   },
   {
+    id: 'c_chc',
+    customer_code: 'CUS-260059',
+    customer_name: 'CHC CHEMICAL CO., LTD',
+    tax_id: '0105536087190',
+    industry_type: 'Chemical & Industrial',
+    address: '789 Sukhumvit Rd, Rayong 21000 Thailand',
+    province: 'ระยอง',
+    country: 'ประเทศไทย',
+    phone: '038-615-888',
+    email: 'info@chc-chemical.com',
+    payment_term: '30 Days',
+    status: 'Active',
+    contacts: [{ contact_name: 'Nichapa Kosol', position: 'Sales & Project Coordinator', phone: '081-999-1122', email: 'nichapa@chc-chemical.com' }],
+    created_at: new Date('2026-01-01T08:00:00Z').toISOString()
+  },
+  {
+    id: 'c_poonkit',
+    customer_code: 'CUS-26-08-012',
+    customer_name: 'POONKITWATTANA CONSTRUCTION & DEVELOPMENT CO., LTD.',
+    tax_id: '0215557001842',
+    industry_type: 'Construction & Development',
+    address: '123/45 Moo 2, Samnakthon, Banchang, Rayong 21130 Thailand',
+    province: 'ระยอง',
+    country: 'ประเทศไทย',
+    phone: '038-603-123',
+    email: 'contact@poonkit.co.th',
+    payment_term: '30 Days',
+    status: 'Active',
+    contacts: [{ contact_name: 'Tepdecha Deekaew', position: 'Project Engineer & Procurement', phone: '089-777-3344', email: 'tepdecha@poonkit.co.th' }],
+    created_at: new Date('2026-01-01T08:00:00Z').toISOString()
+  },
+  {
+    id: 'c_bv',
+    customer_code: 'CUS-260013',
+    customer_name: 'Bureau Veritas (Thailand) Ltd',
+    tax_id: '0105535043818',
+    industry_type: 'Testing & Certification',
+    address: '16th Floor, Bangkok Tower, 2170 New Petchburi Road, Bangkapi, Huaykwang, Bangkok 10310 Thailand',
+    province: 'กรุงเทพมหานคร',
+    country: 'ประเทศไทย',
+    phone: '02-670-4800',
+    email: 'th_sales@bureauveritas.com',
+    payment_term: '30 Days',
+    status: 'Active',
+    contacts: [{ contact_name: 'Chaweewan Somsri', position: 'Commercial Coordinator', phone: '086-444-8899', email: 'chaweewan.s@bureauveritas.com' }],
+    created_at: new Date('2026-01-01T08:00:00Z').toISOString()
+  },
+  {
     id: 'c_marvel',
     customer_code: 'CUS-MARVEL',
     customer_name: 'Marvel Engineering & Service Co., Ltd.',
@@ -285,6 +333,21 @@ const DEFAULT_CUSTOMERS: Customer[] = [
     status: 'Active',
     contacts: [{ contact_name: 'เกรียงไกร ธาดา', position: 'Procurement Manager', phone: '083-777-6666', email: 'kriengkrai@insee.co.th' }],
     created_at: new Date('2024-05-13T08:00:00Z').toISOString()
+  },
+  {
+    id: 'c_posco_260030',
+    customer_code: 'CUS-260030',
+    customer_name: 'POSCO International E&P',
+    tax_id: '0105559012345',
+    address: 'Offshore Supply Base / Singapore / Bangkok',
+    industry_type: 'Oil & Gas Exploration & Production',
+    industry: 'Oil & Gas Exploration & Production',
+    phone: '+66-2-123-4567',
+    email: 'procurement@posco-ep.com',
+    payment_term: '30 Days',
+    status: 'Active',
+    contacts: [{ contact_name: 'Thiha Soe', position: 'Billing Representative', phone: '+66-89-123-7890', email: 'thiha.soe@ikm-testing.com' }],
+    created_at: new Date('2026-08-01T08:00:00Z').toISOString()
   }
 ];
 
@@ -668,28 +731,30 @@ const DEFAULT_QUOTATIONS: Quotation[] = [
   {
     id: 'qt_4258_26',
     quotation_no: 'QT-4258-26',
-    opportunity_id: 'o1',
-    customer_id: 'c1',
-    subject: 'High-Pressure Hydrotest System & Inspection Package (USD)',
-    title: 'High-Pressure Hydrotest System & Inspection Package (USD)',
+    opportunity_id: 'o_posco_260030',
+    customer_id: 'c_posco_260030',
+    subject: 'Spare Seal for Flange Weld Tester 3 in',
+    title: 'Spare Seal for Flange Weld Tester 3 in',
     currency: 'USD',
     exchange_rate: 35.00,
-    total_amount: 1000,
-    vat_amount: 70,
-    grand_total: 1070,
-    grand_total_thb: 37450,
-    total_amount_thb: 35000,
-    total_value: 1000,
-    total_value_thb: 35000,
+    total_amount: 1346.00,
+    vat_amount: 94.22,
+    grand_total: 1440.22,
+    grand_total_thb: 50407.70,
+    total_amount_thb: 47110.00,
+    total_value: 1346.00,
+    total_value_thb: 47110.00,
     status: 'Approved',
     issue_date: '2026-08-01',
     valid_until: '2026-08-31',
     created_at: new Date('2026-08-01T09:00:00Z').toISOString(),
-    sales_person: 'เอกชัย วงศ์ดี (S01)',
-    delivery_plan: 'Mobilization 15 Aug 2026 - Offshore Site Rayong (7 Days Delivery Schedule)',
-    remarks: 'Target currency USD with exchange rate 35.00 THB/USD',
+    sales_person: 'Thiha Soe',
+    delivery_plan: 'DSV Offshore supply base, Singapore',
+    remarks: 'Generated for POSCO International E&P (Job: Adhoc-26) / USD Currency & Without VAT',
     items: [
-      { id: 'qti_4258_1', item_no: 1, qty: 1, unit: 'Package', description: 'High-Pressure Hydrotest System Rental & Calibration (USD)', duration_days: 10, unit_rate: 1000, total_price: 1000 }
+      { id: 'qti_4258_1', item_no: 1, qty: 2, unit: 'Ea', description: 'PU Seal for FWT 3', duration_days: 1, unit_rate: 150.00, total_price: 300.00 },
+      { id: 'qti_4258_2', item_no: 2, qty: 2, unit: 'Ea', description: 'Rubber Seal for FWT 3', duration_days: 1, unit_rate: 150.00, total_price: 300.00 },
+      { id: 'qti_4258_3', item_no: 3, qty: 1, unit: 'Trip', description: 'Shipment Freight to DSV Offshore supply base, Singapore', duration_days: 1, unit_rate: 746.00, total_price: 746.00 }
     ]
   },
   {
@@ -910,6 +975,94 @@ const DEFAULT_QUOTATIONS: Quotation[] = [
     items: [
       { id: 'qti3238_1', item_no: 1, qty: 1, unit: 'Set', description: 'Pneumatic torque wrench complete package rental', duration_days: 3, unit_rate: 10000, total_price: 30000 }
     ]
+  },
+  {
+    id: 'qt_4294_26',
+    quotation_no: 'QT-4294-26',
+    opportunity_id: 'o_qt4294',
+    customer_id: 'c_chc',
+    customer_name: 'CHC CHEMICAL CO., LTD',
+    subject: 'Bag Filter - Product Sales',
+    currency: 'THB',
+    exchange_rate: 1.00,
+    total_amount: 4268.00,
+    vat_amount: 298.76,
+    grand_total: 4566.76,
+    grand_total_thb: 4566.76,
+    status: 'Approved',
+    issue_date: '2026-08-26',
+    valid_until: '2026-09-26',
+    sales_person: 'Nichapa Kosol',
+    created_at: new Date('2026-08-26T08:00:00Z').toISOString(),
+    items: [
+      { id: 'qti4294_1', item_no: 1, qty: 1, unit: 'Set', description: 'Bag Filter - Product Sales', duration_days: 1, unit_rate: 4268.00, total_price: 4268.00 }
+    ]
+  },
+  {
+    id: 'qt_poonkit',
+    quotation_no: 'QT-26-08-030 R1',
+    opportunity_id: 'o_poonkit',
+    customer_id: 'c_poonkit',
+    customer_name: 'POONKITWATTANA CONSTRUCTION & DEVELOPMENT CO., LTD.',
+    subject: 'Electrical Installation Works v1.0',
+    currency: 'THB',
+    exchange_rate: 1.00,
+    total_amount: 112379.00,
+    vat_amount: 7866.53,
+    grand_total: 120245.53,
+    grand_total_thb: 120245.53,
+    status: 'Approved',
+    issue_date: '2026-08-26',
+    valid_until: '2026-09-26',
+    sales_person: 'Tepdecha Deekaew',
+    created_at: new Date('2026-08-26T08:00:00Z').toISOString(),
+    items: [
+      { id: 'qti_poonkit_1', item_no: 1, qty: 1, unit: 'Lot', description: 'Electrical Installation Works v1.0', duration_days: 1, unit_rate: 112379.00, total_price: 112379.00 }
+    ]
+  },
+  {
+    id: 'qt_4188_26',
+    quotation_no: 'QT-4188-26',
+    opportunity_id: 'o_qt4188',
+    customer_id: 'c_chc',
+    customer_name: 'CHC CHEMICAL CO., LTD',
+    subject: 'CFC Project Supply Oil Flushing Pump',
+    currency: 'USD',
+    exchange_rate: 35.00,
+    total_amount: 130000.00,
+    vat_amount: 9100.00,
+    grand_total: 139100.00,
+    grand_total_thb: 4868500.00,
+    status: 'Approved',
+    issue_date: '2026-08-24',
+    valid_until: '2026-09-24',
+    sales_person: 'Nichapa Kosol',
+    created_at: new Date('2026-08-24T08:00:00Z').toISOString(),
+    items: [
+      { id: 'qti4188_1', item_no: 1, qty: 1, unit: 'Lot', description: 'CFC Project Supply Oil Flushing Pump', duration_days: 1, unit_rate: 130000.00, total_price: 130000.00 }
+    ]
+  },
+  {
+    id: 'qt_bv',
+    quotation_no: 'SO-26-08-071',
+    opportunity_id: 'o_bv',
+    customer_id: 'c_bv',
+    customer_name: 'Bureau Veritas (Thailand) Ltd',
+    subject: 'Higth Pressure Water Cleaning of 200 BBL MUD TANK- PTTEP-MT-T05',
+    currency: 'USD',
+    exchange_rate: 35.00,
+    total_amount: 64700.00,
+    vat_amount: 4529.00,
+    grand_total: 69229.00,
+    grand_total_thb: 2423015.00,
+    status: 'Approved',
+    issue_date: '2026-08-20',
+    valid_until: '2026-09-20',
+    sales_person: 'Chaweewan Somsri',
+    created_at: new Date('2026-08-20T08:00:00Z').toISOString(),
+    items: [
+      { id: 'qti_bv_1', item_no: 1, qty: 1, unit: 'Lot', description: 'Higth Pressure Water Cleaning of 200 BBL MUD TANK- PTTEP-MT-T05', duration_days: 1, unit_rate: 64700.00, total_price: 64700.00 }
+    ]
   }
 ];
 
@@ -919,20 +1072,120 @@ const DEFAULT_SALES_ORDERS: SalesOrder[] = [
     so_no: 'SO-26-08-001',
     quotation_id: 'qt_4258_26',
     quotation_no: 'QT-4258-26',
-    customer_id: 'c1',
-    project_name: 'High-Pressure Hydrotest System & Inspection Package (USD)',
+    customer_id: 'c_posco_260030',
+    customer_name: 'POSCO International E&P',
+    customer_code: 'CUS-260030',
+    project_name: 'Spare Seal for Flange Weld Tester 3 in',
+    job_no: 'Adhoc-26',
+    po_no: '4500019481',
+    po_reference: '4500019481',
     currency: 'USD',
     exchange_rate: 35.00,
-    total_amount: 1000,
-    total_amount_thb: 35000,
-    grand_total_thb: 37450,
+    total_amount: 1346.00,
+    total_amount_thb: 47110.00,
+    grand_total: 1440.22,
+    grand_total_thb: 50407.70,
     status: 'In Progress',
     order_date: '2026-08-02',
     target_delivery_date: '2026-08-25',
-    sales_person: 'เอกชัย วงศ์ดี (S01)',
+    sales_person: 'Thiha Soe',
     created_at: new Date('2026-08-02T10:00:00Z').toISOString(),
     items: [
-      { item_no: 1, qty: 1, remaining_qty: 0, unit: 'Package', description: 'High-Pressure Hydrotest System Rental & Calibration (USD)', unit_price: 1000 }
+      { item_no: 1, qty: 2, remaining_qty: 0, unit: 'Ea', description: 'PU Seal for FWT 3', unit_price: 150.00 },
+      { item_no: 2, qty: 2, remaining_qty: 0, unit: 'Ea', description: 'Rubber Seal for FWT 3', unit_price: 150.00 },
+      { item_no: 3, qty: 1, remaining_qty: 0, unit: 'Trip', description: 'Shipment Freight to DSV Offshore supply base, Singapore', unit_price: 746.00 }
+    ]
+  },
+  {
+    id: 'so_adhoc_26',
+    so_no: 'Adhoc-26',
+    quotation_id: 'qt_4294_26',
+    quotation_no: 'QT-4294-26',
+    customer_id: 'c_chc',
+    customer_name: 'CHC CHEMICAL CO., LTD',
+    project_name: 'Bag Filter - Product Sales',
+    po_no: 'CASH Refer QT-4294-26',
+    currency: 'THB',
+    exchange_rate: 1.00,
+    total_amount: 4268.00,
+    total_amount_thb: 4268.00,
+    grand_total_thb: 4566.76,
+    status: 'Completed',
+    order_date: '2026-08-26',
+    target_delivery_date: '2026-08-26',
+    sales_person: 'Nichapa Kosol',
+    created_at: new Date('2026-08-26T08:30:00Z').toISOString(),
+    items: [
+      { item_no: 1, qty: 1, remaining_qty: 0, unit: 'Lot', description: 'Bag Filter - Product Sales', unit_price: 4268.00 }
+    ]
+  },
+  {
+    id: 'so_poonkit',
+    so_no: 'SO-26-08-082',
+    quotation_no: 'QT-26-08-030 R1',
+    quotation_id: 'qt_poonkit',
+    customer_id: 'c_poonkit',
+    customer_name: 'POONKITWATTANA CONSTRUCTION & DEVELOPMENT CO., LTD.',
+    project_name: 'Electrical Installation Works v1.0',
+    po_no: 'PO202608-010',
+    currency: 'THB',
+    exchange_rate: 1.00,
+    total_amount: 112379.00,
+    total_amount_thb: 112379.00,
+    grand_total: 120245.53,
+    grand_total_thb: 120245.53,
+    status: 'In Progress',
+    order_date: '2026-08-26',
+    target_delivery_date: '2026-10-03',
+    sales_person: 'Tepdecha Deekaew',
+    created_at: new Date('2026-08-26T08:30:00Z').toISOString(),
+    items: [
+      { item_no: 1, qty: 1, remaining_qty: 0, unit: 'Lot', description: 'Electrical Installation Works v1.0', unit_price: 112379.00 }
+    ]
+  },
+  {
+    id: 'so_cfc',
+    so_no: 'Adhoc-26',
+    quotation_no: 'Direct',
+    quotation_id: 'qt_4188_26',
+    customer_id: 'c_chc',
+    customer_name: 'CHC CHEMICAL CO., LTD',
+    project_name: 'CFC Project Supply Oil Flushing Pump',
+    po_no: 'PO256908/0074, QT-4188-26',
+    currency: 'USD',
+    exchange_rate: 35.00,
+    total_amount: 130000.00,
+    total_amount_thb: 4550000.00,
+    grand_total_thb: 4868500.00,
+    status: 'Completed',
+    order_date: '2026-08-24',
+    target_delivery_date: '2026-08-24',
+    sales_person: 'Nichapa Kosol',
+    created_at: new Date('2026-08-24T08:30:00Z').toISOString(),
+    items: [
+      { item_no: 1, qty: 1, remaining_qty: 0, unit: 'Lot', description: 'CFC Project Supply Oil Flushing Pump', unit_price: 130000.00 }
+    ]
+  },
+  {
+    id: 'so_bv',
+    so_no: '024-25',
+    quotation_no: 'SO-26-08-071',
+    customer_id: 'c_bv',
+    customer_name: 'Bureau Veritas (Thailand) Ltd',
+    project_name: 'Higth Pressure Water Cleaning of 200 BBL MUD TANK- PTTEP-MT-T05',
+    po_no: '26002526-OP-00128',
+    currency: 'USD',
+    exchange_rate: 35.00,
+    total_amount: 64700.00,
+    total_amount_thb: 2264500.00,
+    grand_total_thb: 2423015.00,
+    status: 'In Progress',
+    order_date: '2026-08-20',
+    target_delivery_date: '2026-09-19',
+    sales_person: 'Chaweewan Somsri',
+    created_at: new Date('2026-08-20T08:30:00Z').toISOString(),
+    items: [
+      { item_no: 1, qty: 1, remaining_qty: 0, unit: 'Lot', description: 'Higth Pressure Water Cleaning of 200 BBL MUD TANK- PTTEP-MT-T05', unit_price: 64700.00 }
     ]
   },
   {
@@ -940,6 +1193,7 @@ const DEFAULT_SALES_ORDERS: SalesOrder[] = [
     so_no: 'SO-002-25',
     customer_id: 'c2',
     project_name: 'Tank storage x 2 Unit',
+    currency: 'THB',
     total_amount: 14000,
     status: 'Completed',
     order_date: '2024-12-01',
@@ -951,6 +1205,7 @@ const DEFAULT_SALES_ORDERS: SalesOrder[] = [
     so_no: 'SO-017-25',
     customer_id: 'c_cr3',
     project_name: 'FF 1500i',
+    currency: 'THB',
     total_amount: 15000,
     status: 'In Progress',
     order_date: '2025-03-15',
@@ -962,6 +1217,7 @@ const DEFAULT_SALES_ORDERS: SalesOrder[] = [
     so_no: 'SO-001-25',
     customer_id: 'c_egat',
     project_name: 'Lube Oil Flushing GNS - C2, C21, C22',
+    currency: 'THB',
     total_amount: 544880,
     status: 'In Progress',
     order_date: '2024-12-15',
@@ -987,52 +1243,285 @@ const DEFAULT_DELIVERY_JOBS: DeliveryJob[] = [
 
 const DEFAULT_INVOICES: Invoice[] = [
   {
+    id: 'inv_26_08_062',
+    invoice_no: 'INV-26-08-062',
+    billing_no: 'IKMTTH-26/431',
+    ikm_inv: 'IKMTTH-26/431',
+    sales_order_id: 'Adhoc-26',
+    sales_order_no: 'Adhoc-26',
+    job_no: 'Adhoc-26',
+    quotation_no: 'QT-4294-26',
+    quotation_id: 'qt_4294_26',
+    reference_po: 'CASH Refer QT-4294-26',
+    po_reference: 'CASH Refer QT-4294-26',
+    customer_id: 'c_chc',
+    customer_name: 'CHC CHEMICAL CO., LTD',
+    customer_code: 'CUS-260059',
+    project_name: 'Bag Filter - Product Sales',
+    currency: 'THB',
+    exchange_rate: 1.00,
+    total_amount: 4268.00,
+    vat_amount: 298.76,
+    grand_total: 4566.76,
+    grand_total_thb: 4566.76,
+    total_amount_thb: 4268.00,
+    status: 'Paid',
+    issue_date: '2026-08-26',
+    due_date: '2026-08-26',
+    sales_person: 'Nichapa Kosol',
+    remarks: 'Adhoc-26, CASH Refer QT-4294-26',
+    created_at: new Date('2026-08-26T10:00:00Z').toISOString(),
+    items: [
+      {
+        id: 'invi_62_1',
+        item_no: 1,
+        description: 'Bag Filter - Product Sales\nCASH Refer QT-4294-26',
+        quantity: 1,
+        unit_price: 4268.00,
+        tax_rate: 7,
+        amount: 4268.00
+      }
+    ]
+  },
+  {
+    id: 'inv_26_08_061',
+    invoice_no: 'INV-26-08-061',
+    billing_no: 'IKMTTH-26/430',
+    ikm_inv: 'IKMTTH-26/430',
+    sales_order_id: 'so_poonkit',
+    sales_order_no: 'SO-26-08-082',
+    job_no: 'SO-26-08-082',
+    quotation_no: 'QT-26-08-030 R1',
+    quotation_id: 'qt_poonkit',
+    reference_po: 'PO202608-010',
+    po_reference: 'PO202608-010',
+    customer_id: 'c_poonkit',
+    customer_name: 'POONKITWATTANA CONSTRUCTION & DEVELOPMENT CO., LTD.',
+    customer_code: 'CUS-26-08-012',
+    project_name: 'Electrical Installation Works v1.0',
+    currency: 'THB',
+    exchange_rate: 1.00,
+    total_amount: 112379.00,
+    vat_amount: 7866.53,
+    grand_total: 120245.53,
+    total_amount_thb: 112379.00,
+    grand_total_thb: 120245.53,
+    status: 'Unpaid',
+    issue_date: '2026-08-26',
+    due_date: '2026-08-26',
+    sales_person: 'Tepdecha Deekaew',
+    remarks: 'IKMTTH-26/430, QT-26-08-030 R1, PO202608-010',
+    created_at: new Date('2026-08-26T11:00:00Z').toISOString(),
+    items: [
+      {
+        id: 'invi_61_1',
+        item_no: 1,
+        description: 'Electrical Installation Works v1.0\nPO Ref: PO202608-010',
+        quantity: 1,
+        unit_price: 112379.00,
+        tax_rate: 7,
+        amount: 112379.00
+      }
+    ]
+  },
+  {
+    id: 'inv_26_08_060',
+    invoice_no: 'INV-26-08-060',
+    billing_no: 'IKMTTH-26/429',
+    ikm_inv: 'IKMTTH-26/429',
+    sales_order_id: 'Adhoc-26',
+    sales_order_no: 'Adhoc-26',
+    job_no: 'Adhoc-26',
+    quotation_no: 'Direct',
+    quotation_id: 'qt_4188_26',
+    reference_po: 'PO256908/0074, QT-4188-26',
+    po_reference: 'PO256908/0074, QT-4188-26',
+    customer_id: 'c_chc',
+    customer_name: 'CHC CHEMICAL CO., LTD',
+    customer_code: 'CUS-260059',
+    project_name: 'CFC Project Supply Oil Flushing Pump',
+    currency: 'USD',
+    exchange_rate: 35.00,
+    total_amount: 130000.00,
+    vat_amount: 9100.00,
+    grand_total: 139100.00,
+    total_amount_thb: 4550000.00,
+    grand_total_thb: 4868500.00,
+    status: 'Paid',
+    issue_date: '2026-08-24',
+    due_date: '2026-08-24',
+    sales_person: 'Nichapa Kosol',
+    remarks: 'Adhoc-26, PO256908/0074, QT-4188-26',
+    created_at: new Date('2026-08-24T10:00:00Z').toISOString(),
+    items: [
+      {
+        id: 'invi_60_1',
+        item_no: 1,
+        description: 'CFC Project Supply Oil Flushing Pump\nPO256908/0074, QT-4188-26',
+        quantity: 1,
+        unit_price: 130000.00,
+        tax_rate: 7,
+        amount: 130000.00
+      }
+    ]
+  },
+  {
+    id: 'inv_26_08_059',
+    invoice_no: 'INV-26-08-059',
+    billing_no: 'IKMTTH-26/427',
+    ikm_inv: 'IKMTTH-26/427',
+    sales_order_id: '024-25',
+    sales_order_no: '024-25',
+    job_no: '024-25',
+    quotation_no: 'SO-26-08-071',
+    quotation_id: 'qt_bv',
+    reference_po: '26002526-OP-00128',
+    po_reference: '26002526-OP-00128',
+    customer_id: 'c_bv',
+    customer_name: 'Bureau Veritas (Thailand) Ltd',
+    customer_code: 'CUS-260013',
+    project_name: 'Higth Pressure Water Cleaning of 200 BBL MUD TANK- PTTEP-MT-T05',
+    currency: 'USD',
+    exchange_rate: 35.00,
+    total_amount: 64700.00,
+    vat_amount: 4529.00,
+    grand_total: 69229.00,
+    total_amount_thb: 2264500.00,
+    grand_total_thb: 2423015.00,
+    status: 'Unpaid',
+    issue_date: '2026-08-20',
+    due_date: '2026-09-19',
+    sales_person: 'Chaweewan Somsri',
+    remarks: '024-25, 26002526-OP-00128, SO-26-08-071',
+    created_at: new Date('2026-08-20T10:00:00Z').toISOString(),
+    items: [
+      {
+        id: 'invi_59_1',
+        item_no: 1,
+        description: 'Higth Pressure Water Cleaning of 200 BBL MUD TANK- PTTEP-MT-T05\nPO Ref: 26002526-OP-00128',
+        quantity: 1,
+        unit_price: 64700.00,
+        tax_rate: 7,
+        amount: 64700.00
+      }
+    ]
+  },
+  {
     id: 'inv_26_08_021',
-    invoice_no: 'Inv 26-08-021',
+    invoice_no: 'INV-26-08-021',
+    billing_no: 'IKMTTH-26/374',
+    ikm_inv: 'IKMTTH-26/374',
     quotation_id: 'qt_4258_26',
     quotation_no: 'QT-4258-26',
     sales_order_id: 'so_26_08_001',
     sales_order_no: 'SO-26-08-001',
-    customer_id: 'c1',
-    project_name: 'High-Pressure Hydrotest System & Inspection Package (USD)',
+    job_no: 'Adhoc-26',
+    reference_po: '4500019481',
+    po_reference: '4500019481',
+    customer_id: 'c_posco_260030',
+    customer_name: 'POSCO International E&P',
+    customer_code: 'CUS-260030',
+    project_name: 'Spare Seal for Flange Weld Tester 3 in',
     currency: 'USD',
     exchange_rate: 35.00,
-    total_amount: 1000,
-    vat_amount: 70,
-    grand_total: 1070,
-    grand_total_thb: 37450,
-    total_amount_thb: 35000,
-    status: 'Paid',
+    total_amount: 1346.00,
+    vat_amount: 94.22,
+    grand_total: 1440.22,
+    grand_total_thb: 50407.70,
+    total_amount_thb: 47110.00,
+    status: 'Unpaid',
     issue_date: '2026-08-05',
+    invoice_date: '2026-08-05',
     due_date: '2026-09-04',
-    sales_person: 'เอกชัย วงศ์ดี (S01)',
-    remarks: 'Transfer USD from Quotation QT-4258-26 → Sales Order SO-26-08-001',
+    sales_person: 'Thiha Soe',
+    billing_representative: 'Thiha Soe',
+    remarks: 'Generated from Sales Order SO-26-08-001 (Job: Adhoc-26) / This is USD Currency & Without VAT',
     created_at: new Date('2026-08-05T11:00:00Z').toISOString(),
     items: [
-      { id: 'invi_26_08_021_1', item_no: 1, quantity: 1, unit_price: 1000, tax_rate: 7, amount: 1000, description: 'High-Pressure Hydrotest System Rental & Calibration (USD)' }
+      { id: 'invi_26_08_021_1', item_no: 1, quantity: 2, unit_price: 150.00, duration_days: 1, tax_rate: 7, amount: 300.00, description: 'PU Seal for FWT 3', unit: 'Ea' },
+      { id: 'invi_26_08_021_2', item_no: 2, quantity: 2, unit_price: 150.00, duration_days: 1, tax_rate: 7, amount: 300.00, description: 'Rubber Seal for FWT 3', unit: 'Ea' },
+      { id: 'invi_26_08_021_3', item_no: 3, quantity: 1, unit_price: 746.00, duration_days: 1, tax_rate: 7, amount: 746.00, description: 'Shipment Freight to DSV Offshore supply base, Singapore', unit: 'Trip' }
     ]
   },
   {
-    id: 'inv_demo',
-    invoice_no: 'IKMTTH-26/256',
+    id: 'inv_0010_26',
+    invoice_no: 'INV-0010-26',
+    billing_no: 'IKMTTH-26/010',
+    ikm_inv: 'IKMTTH-26/010',
     sales_order_id: 'so_qt3018',
+    sales_order_no: 'SO-26-06-003',
+    job_no: 'SO-26-06-003',
+    quotation_no: 'QT-4076-26',
+    quotation_id: 'qt_4076_26',
+    reference_po: 'PO-STPI-260604',
+    po_reference: 'PO-STPI-260604',
     customer_id: 'c_stpi',
-    total_amount: 10000,
-    vat_amount: 700,
-    grand_total: 10700,
-    status: 'Unpaid',
+    customer_name: 'STP&I Public Company Limited',
+    customer_code: 'CUS-260020',
+    project_name: 'Hydraulic Bolt Torque Service & Rental Package (#75, #70, #65, #55, #50)',
+    currency: 'THB',
+    exchange_rate: 1.00,
+    total_amount: 10000.00,
+    vat_amount: 700.00,
+    grand_total: 10700.00,
+    total_amount_thb: 10000.00,
+    grand_total_thb: 10700.00,
+    status: 'Overdue',
     issue_date: '2026-06-04',
-    due_date: '2026-07-03',
+    due_date: '2026-07-04',
+    sales_person: 'Tanapol C.',
+    remarks: 'Service per job Hyd Bolt Torque #75,#70,#65,#55,#50 with Operator Team',
     created_at: new Date('2026-06-04T10:00:00Z').toISOString(),
     items: [
       {
-        id: 'invi_demo_1',
+        id: 'invi_0010_1',
         item_no: 1,
-        description: '(3000650001) Service per job\n(ค่าบริการต่องาน) Hyd Bolt Torque\n#75,#70,#65,#55,#50 1 Lot ,\nSupervisor 1 Pax\nBolt Torque Operator 3 Pax\nPick Up Truck for Transportation\nPErsonal and equipment 1 Unit\nIncluding Transportation of the\nAircompressor on site 1 Unit\n31/3/2026 08.00-12.00 1/2 day เลขที่\nQT-4076-26',
+        description: '(3000650001) Service per job\n(ค่าบริการต่องาน) Hyd Bolt Torque #75,#70,#65,#55,#50 1 Lot\nSupervisor 1 Pax, Bolt Torque Operator 3 Pax\nPick Up Truck for Transportation\nAircompressor on site 1 Unit (QT-4076-26)',
         quantity: 1,
-        unit_price: 10000,
+        unit_price: 10000.00,
         tax_rate: 7,
-        amount: 10000
+        amount: 10000.00
+      }
+    ]
+  },
+  {
+    id: 'inv_0001_26',
+    invoice_no: 'INV-0001-26',
+    billing_no: 'IKMTTH-26/001',
+    ikm_inv: 'IKMTTH-26/001',
+    sales_order_id: 'so_000001_26',
+    sales_order_no: 'SO-000001-26',
+    job_no: 'SO-000001-26',
+    quotation_no: 'QT-000001-26',
+    quotation_id: 'qt_000001_26',
+    reference_po: 'PO-PTTEP-260601',
+    po_reference: 'PO-PTTEP-260601',
+    customer_id: 'c2',
+    customer_name: 'บริษัท ไทยออยล์ จำกัด (มหาชน)',
+    customer_code: 'CUS-260002',
+    project_name: 'โครงการบริการทดสอบแรงดันระบบท่อส่งน้ำมัน (Testing Service)',
+    currency: 'THB',
+    exchange_rate: 1.00,
+    total_amount: 850000.00,
+    vat_amount: 59500.00,
+    grand_total: 909500.00,
+    total_amount_thb: 850000.00,
+    grand_total_thb: 909500.00,
+    status: 'Paid',
+    issue_date: '2026-06-20',
+    due_date: '2026-08-04',
+    sales_person: 'Chaloempon Kittisak',
+    remarks: 'Transfer from Quotation QT-000001-26 → Sales Order SO-000001-26',
+    created_at: new Date('2026-06-20T10:00:00Z').toISOString(),
+    items: [
+      {
+        id: 'invi_0001_1',
+        item_no: 1,
+        description: 'บริการทดสอบแรงดันระบบท่อส่งน้ำมัน (High-Pressure Pipeline Testing Service)',
+        quantity: 1,
+        unit_price: 850000.00,
+        tax_rate: 7,
+        amount: 850000.00
       }
     ]
   },
@@ -1041,26 +1530,58 @@ const DEFAULT_INVOICES: Invoice[] = [
     invoice_no: 'INV-3000',
     sales_order_id: 'so_qt3000',
     customer_id: 'c2',
+    customer_name: 'บริษัท ไทยออยล์ จำกัด (มหาชน)',
+    currency: 'THB',
+    exchange_rate: 1.00,
     total_amount: 14000,
     vat_amount: 980,
     grand_total: 14980,
+    total_amount_thb: 14000,
+    grand_total_thb: 14980,
     status: 'Unpaid',
     issue_date: '2025-01-20',
     due_date: '2025-02-20',
-    created_at: new Date('2025-01-20T10:00:00Z').toISOString()
+    created_at: new Date('2025-01-20T10:00:00Z').toISOString(),
+    items: [
+      {
+        id: 'invi_3000_1',
+        item_no: 1,
+        description: 'Tank storage rental and installation (Map Ta Phut Yard)',
+        quantity: 2,
+        unit_price: 7000,
+        tax_rate: 7,
+        amount: 14000
+      }
+    ]
   },
   {
     id: 'inv_3018',
     invoice_no: 'INV-3018',
     sales_order_id: 'so_qt3018',
     customer_id: 'c_cr3',
+    customer_name: 'CR3 (Thailand) Co., Ltd.',
+    currency: 'THB',
+    exchange_rate: 1.00,
     total_amount: 15000,
     vat_amount: 1050,
     grand_total: 16050,
+    total_amount_thb: 15000,
+    grand_total_thb: 16050,
     status: 'Paid',
     issue_date: '2025-03-25',
     due_date: '2025-04-25',
-    created_at: new Date('2025-03-25T10:00:00Z').toISOString()
+    created_at: new Date('2025-03-25T10:00:00Z').toISOString(),
+    items: [
+      {
+        id: 'invi_3018_1',
+        item_no: 1,
+        description: 'FF 1500i Equipment rental & technical support',
+        quantity: 1,
+        unit_price: 15000,
+        tax_rate: 7,
+        amount: 15000
+      }
+    ]
   }
 ];
 
@@ -1487,11 +2008,31 @@ export class LocalDB {
         localStorage.setItem('crm_quotations', JSON.stringify(mapped));
         return mapped;
       }
-      // Merge missing default quotations like qt_4258_26 if not in localStorage
+      // Merge missing default quotations and sync predefined fields
       let list = parsed;
       DEFAULT_QUOTATIONS.forEach(dq => {
-        if (!list.some((item: any) => item.id === dq.id || item.quotation_no === dq.quotation_no)) {
+        const existingIdx = list.findIndex((item: any) => item.id === dq.id || item.quotation_no === dq.quotation_no);
+        if (existingIdx === -1) {
           list = [dq, ...list];
+        } else {
+          list[existingIdx] = { 
+            ...list[existingIdx], 
+            customer_id: dq.customer_id,
+            subject: dq.subject,
+            title: dq.title,
+            currency: dq.currency, 
+            exchange_rate: dq.exchange_rate, 
+            total_amount: dq.total_amount, 
+            total_value: dq.total_value,
+            grand_total: dq.grand_total, 
+            vat_amount: dq.vat_amount, 
+            total_amount_thb: dq.total_amount_thb,
+            grand_total_thb: dq.grand_total_thb, 
+            sales_person: dq.sales_person,
+            delivery_plan: dq.delivery_plan,
+            remarks: dq.remarks,
+            items: dq.items && dq.items.length > 0 ? dq.items : list[existingIdx].items
+          };
         }
       });
       return list.map((q: any) => ({
@@ -1561,8 +2102,32 @@ export class LocalDB {
       }
       let list = parsed;
       DEFAULT_SALES_ORDERS.forEach(dso => {
-        if (!list.some((item: any) => item.id === dso.id || item.so_no === dso.so_no)) {
+        const existingIdx = list.findIndex((item: any) => item.id === dso.id || item.so_no === dso.so_no || (dso.so_no === 'SO-26-08-082' && (item.so_no === 'QT-26-08-030 R1' || item.id === 'so_poonkit')));
+        if (existingIdx === -1) {
           list = [dso, ...list];
+        } else {
+          list[existingIdx] = { 
+            ...list[existingIdx], 
+            so_no: dso.so_no, 
+            quotation_no: dso.quotation_no, 
+            quotation_id: dso.quotation_id, 
+            customer_id: dso.customer_id,
+            customer_name: dso.customer_name,
+            customer_code: dso.customer_code,
+            job_no: dso.job_no,
+            po_no: dso.po_no,
+            po_reference: dso.po_reference,
+            sales_person: dso.sales_person,
+            currency: dso.currency, 
+            exchange_rate: dso.exchange_rate, 
+            total_amount: dso.total_amount, 
+            total_amount_thb: dso.total_amount_thb, 
+            grand_total: dso.grand_total,
+            grand_total_thb: dso.grand_total_thb, 
+            project_name: dso.project_name, 
+            target_delivery_date: dso.target_delivery_date,
+            items: dso.items && dso.items.length > 0 ? dso.items : list[existingIdx].items
+          };
         }
       });
       return list.map((s: any) => {
@@ -1678,19 +2243,43 @@ export class LocalDB {
     const mapInvoiceCurrency = (inv: any): Invoice => {
       const lq = inv.quotation_id ? quoteMap[String(inv.quotation_id)] : (inv.quotation_no ? quoteMap[String(inv.quotation_no)] : null);
       const lso = inv.sales_order_id ? soMap[String(inv.sales_order_id)] : (inv.sales_order_no ? soMap[String(inv.sales_order_no)] : null);
-      const cur = inv.currency || lso?.currency || lq?.currency || 'THB';
+      const cur = inv.currency || (lso && lso.currency) || (lq && lq.currency) || 'THB';
       const rate = parseFloat(inv.exchange_rate) || (lso ? parseFloat(lso.exchange_rate) : (lq ? parseFloat(lq.exchange_rate) : (cur === 'USD' ? 35.0 : (cur === 'SGD' ? 26.0 : 1.0))));
-      const grand = parseFloat(inv.grand_total !== undefined ? inv.grand_total : (inv.total_amount * 1.07 || 0));
+      
+      const grand = parseFloat(inv.grand_total !== undefined ? inv.grand_total : (inv.total_amount ? inv.total_amount * 1.07 : 0));
       const tot = parseFloat(inv.total_amount !== undefined ? inv.total_amount : (grand / 1.07));
+      const vat = parseFloat(inv.vat_amount !== undefined ? inv.vat_amount : (grand - tot));
+      let items = inv.items;
+
+      if (!items || items.length === 0) {
+        const dMatch = DEFAULT_INVOICES.find(d => d.id === inv.id || d.invoice_no === inv.invoice_no);
+        if (dMatch && dMatch.items && dMatch.items.length > 0) {
+          items = dMatch.items;
+        } else {
+          items = [
+            {
+              id: `invi_${inv.id}_1`,
+              item_no: 1,
+              description: inv.project_name || 'บริการงานตามสัญญาเรียกเก็บเงิน',
+              quantity: 1,
+              unit_price: tot,
+              tax_rate: 7,
+              amount: tot
+            }
+          ];
+        }
+      }
 
       return {
         ...inv,
         currency: cur,
         exchange_rate: rate,
         total_amount: tot,
+        vat_amount: vat,
         grand_total: grand,
-        total_amount_thb: inv.total_amount_thb || (cur !== 'THB' ? tot * rate : tot),
-        grand_total_thb: inv.grand_total_thb || (cur !== 'THB' ? grand * rate : grand),
+        total_amount_thb: cur === 'THB' ? tot : (inv.total_amount_thb || (tot * rate)),
+        grand_total_thb: cur === 'THB' ? grand : (inv.grand_total_thb || (grand * rate)),
+        items,
         id: ensureUUID(inv.id),
         customer_id: ensureUUID(inv.customer_id),
         sales_order_id: ensureUUID(inv.sales_order_id)
@@ -1705,15 +2294,40 @@ export class LocalDB {
     }
     try {
       const parsed = JSON.parse(data);
-      if (!Array.isArray(parsed) || !parsed.some(i => i.id === ensureUUID('inv_demo'))) {
-        const mapped = DEFAULT_INVOICES.map(i => mapInvoiceCurrency(i));
-        localStorage.setItem('crm_invoices', JSON.stringify(mapped));
-        return mapped;
-      }
-      let list = parsed;
+      let list = Array.isArray(parsed) ? parsed : [];
       DEFAULT_INVOICES.forEach(dinv => {
-        if (!list.some((item: any) => item.id === dinv.id || item.invoice_no === dinv.invoice_no)) {
-          list = [dinv, ...list];
+        const existingIdx = list.findIndex((item: any) => item.id === dinv.id || item.invoice_no === dinv.invoice_no);
+        if (existingIdx === -1) {
+          list.unshift(dinv);
+        } else {
+          list[existingIdx] = { 
+            ...list[existingIdx], 
+            currency: dinv.currency, 
+            exchange_rate: dinv.exchange_rate, 
+            sales_order_no: dinv.sales_order_no, 
+            sales_order_id: dinv.sales_order_id, 
+            job_no: dinv.job_no, 
+            quotation_no: dinv.quotation_no, 
+            quotation_id: dinv.quotation_id, 
+            customer_id: dinv.customer_id,
+            customer_name: dinv.customer_name,
+            customer_code: dinv.customer_code,
+            reference_po: dinv.reference_po,
+            po_reference: dinv.po_reference,
+            billing_no: dinv.billing_no,
+            ikm_inv: dinv.ikm_inv,
+            billing_representative: dinv.billing_representative,
+            sales_person: dinv.sales_person,
+            status: dinv.status,
+            total_amount: dinv.total_amount, 
+            vat_amount: dinv.vat_amount, 
+            grand_total: dinv.grand_total, 
+            total_amount_thb: dinv.total_amount_thb, 
+            grand_total_thb: dinv.grand_total_thb, 
+            project_name: dinv.project_name, 
+            remarks: dinv.remarks, 
+            items: dinv.items && dinv.items.length > 0 ? dinv.items : list[existingIdx].items 
+          };
         }
       });
       return list.map((i: any) => mapInvoiceCurrency(i));

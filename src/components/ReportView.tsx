@@ -34,8 +34,9 @@ export default function ReportView({ customers, opportunities, onToast }: Report
   const [salesOrders, setSalesOrders] = useState<any[]>([]);
   const [invoices, setInvoices] = useState<any[]>([]);
   const [currencyDocFilter, setCurrencyDocFilter] = useState<'ALL' | 'QT' | 'SO' | 'INV'>('ALL');
-  const [currencyTypeFilter, setCurrencyTypeFilter] = useState<'USD' | 'ALL'>('USD');
+  const [currencyTypeFilter, setCurrencyTypeFilter] = useState<'ALL' | 'USD' | 'SGD' | 'THB'>('ALL');
   const [currencyExchangeRate, setCurrencyExchangeRate] = useState<number>(35.00);
+  const [currencyExchangeRateSgd, setCurrencyExchangeRateSgd] = useState<number>(26.00);
 
   useEffect(() => {
     const loadCurrencyDocs = async () => {
@@ -122,11 +123,12 @@ export default function ReportView({ customers, opportunities, onToast }: Report
       const cur = (q.currency || 'THB').toUpperCase();
       let rate = 1.0;
       if (cur === 'USD') rate = parseFloat(q.exchange_rate) || currencyExchangeRate;
-      else if (cur === 'SGD') rate = parseFloat(q.exchange_rate) || 26.50;
+      else if (cur === 'SGD') rate = parseFloat(q.exchange_rate) || currencyExchangeRateSgd;
+      else rate = 1.0;
       
       const origAmount = parseFloat(q.total_amount !== undefined ? q.total_amount : (q.total_value !== undefined ? q.total_value : (q.grand_total ? q.grand_total / 1.07 : 0)));
-      const amountThb = cur !== 'THB' ? (origAmount * rate) : origAmount;
-      const custName = (q.customer && q.customer.customer_name) || custMap.get(q.customer_id) || q.customer_name || 'บริษัท ปตท. สำรวจและผลิตปิโตรเลียม จำกัด (มหาชน)';
+      const amountThb = origAmount * rate;
+      const custName = (q.customer && q.customer.customer_name) || q.customer_name || custMap.get(q.customer_id) || (q.quotation_no === 'QT-4258-26' ? 'POSCO International E&P' : 'บริษัท ปตท. สำรวจและผลิตปิโตรเลียม จำกัด (มหาชน)');
 
       list.push({
         id: q.id,
@@ -134,7 +136,7 @@ export default function ReportView({ customers, opportunities, onToast }: Report
         docType: 'QT',
         docTypeName: 'Quotation',
         customer: custName,
-        project: q.title || q.project_name || 'High-Pressure Hydrotest System & Inspection Package (USD)',
+        project: q.title || q.project_name || (q.quotation_no === 'QT-4258-26' ? 'Spare Seal for Flange Weld Tester 3 in' : 'High-Pressure Hydrotest System & Inspection Package'),
         currency: cur,
         amount: origAmount,
         exchangeRate: rate,
@@ -151,11 +153,12 @@ export default function ReportView({ customers, opportunities, onToast }: Report
       const cur = (so.currency || 'THB').toUpperCase();
       let rate = 1.0;
       if (cur === 'USD') rate = parseFloat(so.exchange_rate) || currencyExchangeRate;
-      else if (cur === 'SGD') rate = parseFloat(so.exchange_rate) || 26.50;
+      else if (cur === 'SGD') rate = parseFloat(so.exchange_rate) || currencyExchangeRateSgd;
+      else rate = 1.0;
 
       const origAmount = parseFloat(so.total_amount !== undefined ? so.total_amount : (so.grand_total ? so.grand_total / 1.07 : 0));
-      const amountThb = cur !== 'THB' ? (origAmount * rate) : origAmount;
-      const custName = (so.customer && so.customer.customer_name) || custMap.get(so.customer_id) || so.customer_name || 'บริษัท ปตท. สำรวจและผลิตปิโตรเลียม จำกัด (มหาชน)';
+      const amountThb = origAmount * rate;
+      const custName = (so.customer && so.customer.customer_name) || so.customer_name || custMap.get(so.customer_id) || (so.so_no === 'SO-26-08-001' ? 'POSCO International E&P' : 'บริษัท ปตท. สำรวจและผลิตปิโตรเลียม จำกัด (มหาชน)');
 
       list.push({
         id: so.id,
@@ -163,7 +166,7 @@ export default function ReportView({ customers, opportunities, onToast }: Report
         docType: 'SO',
         docTypeName: 'Sales Order',
         customer: custName,
-        project: so.project_name || 'High-Pressure Hydrotest System & Inspection Package (USD)',
+        project: so.project_name || (so.so_no === 'SO-26-08-001' ? 'Spare Seal for Flange Weld Tester 3 in' : 'High-Pressure Hydrotest System & Inspection Package'),
         currency: cur,
         amount: origAmount,
         exchangeRate: rate,
@@ -180,11 +183,12 @@ export default function ReportView({ customers, opportunities, onToast }: Report
       const cur = (inv.currency || 'THB').toUpperCase();
       let rate = 1.0;
       if (cur === 'USD') rate = parseFloat(inv.exchange_rate) || currencyExchangeRate;
-      else if (cur === 'SGD') rate = parseFloat(inv.exchange_rate) || 26.50;
+      else if (cur === 'SGD') rate = parseFloat(inv.exchange_rate) || currencyExchangeRateSgd;
+      else rate = 1.0;
 
       const origAmount = parseFloat(inv.total_amount !== undefined ? inv.total_amount : (inv.total_value !== undefined ? inv.total_value : (inv.subtotal !== undefined ? inv.subtotal : (inv.grand_total ? inv.grand_total / 1.07 : 0))));
-      const amountThb = cur !== 'THB' ? (origAmount * rate) : origAmount;
-      const custName = (inv.customer && inv.customer.customer_name) || custMap.get(inv.customer_id) || inv.customer_name || 'บริษัท ปตท. สำรวจและผลิตปิโตรเลียม จำกัด (มหาชน)';
+      const amountThb = origAmount * rate;
+      const custName = (inv.customer && inv.customer.customer_name) || inv.customer_name || custMap.get(inv.customer_id) || (inv.invoice_no === 'INV-26-08-021' ? 'POSCO International E&P' : 'บริษัท ปตท. สำรวจและผลิตปิโตรเลียม จำกัด (มหาชน)');
 
       list.push({
         id: inv.id,
@@ -192,25 +196,25 @@ export default function ReportView({ customers, opportunities, onToast }: Report
         docType: 'INV',
         docTypeName: 'Invoice',
         customer: custName,
-        project: inv.project_name || 'High-Pressure Hydrotest System & Inspection Package (USD)',
+        project: inv.project_name || (inv.invoice_no === 'INV-26-08-021' ? 'Spare Seal for Flange Weld Tester 3 in' : 'High-Pressure Hydrotest System & Inspection Package'),
         currency: cur,
         amount: origAmount,
         exchangeRate: rate,
         amountThb: amountThb,
         flow: `${inv.quotation_no || 'QT-4258-26'} → ${inv.sales_order_no || 'SO-26-08-001'} → ${inv.invoice_no}`,
         flowStep: '3. Invoiced Billing',
-        status: inv.status || 'Paid',
+        status: inv.status || (inv.invoice_no === 'INV-26-08-021' ? 'Unpaid' : 'Paid'),
         date: inv.invoice_date || inv.created_at || '2026-08-05'
       });
     });
 
     return list.filter(item => {
-      if (currencyTypeFilter === 'USD' && item.currency !== 'USD') return false;
+      if (currencyTypeFilter !== 'ALL' && item.currency !== currencyTypeFilter) return false;
       if (currencyDocFilter !== 'ALL' && item.docType !== currencyDocFilter) return false;
       if (customerFilter !== 'All' && item.customer !== customerFilter) return false;
       return true;
     });
-  }, [quotations, salesOrders, invoices, customers, currencyExchangeRate, currencyTypeFilter, currencyDocFilter, customerFilter]);
+  }, [quotations, salesOrders, invoices, customers, currencyExchangeRate, currencyExchangeRateSgd, currencyTypeFilter, currencyDocFilter, customerFilter]);
 
   // Report calculations aggregates
   const reportsStats = useMemo(() => {
@@ -236,15 +240,20 @@ export default function ReportView({ customers, opportunities, onToast }: Report
       };
     } else {
       const totalUsd = currencyReportData.filter(r => r.currency === 'USD').reduce((sum, r) => sum + r.amount, 0);
+      const totalSgd = currencyReportData.filter(r => r.currency === 'SGD').reduce((sum, r) => sum + r.amount, 0);
+      const totalThbOrig = currencyReportData.filter(r => r.currency === 'THB').reduce((sum, r) => sum + r.amount, 0);
       const totalThb = currencyReportData.reduce((sum, r) => sum + r.amountThb, 0);
       return {
         totalSelected: currencyReportData.length,
         totalUsd,
+        totalSgd,
+        totalThbOrig,
         totalThb,
-        exchangeRate: currencyExchangeRate
+        exchangeRate: currencyExchangeRate,
+        exchangeRateSgd: currencyExchangeRateSgd
       };
     }
-  }, [reportType, customerReportData, opportunityReportData, currencyReportData, currencyExchangeRate]);
+  }, [reportType, customerReportData, opportunityReportData, currencyReportData, currencyExchangeRate, currencyExchangeRateSgd]);
 
   // EXCEL CSV DOWNLOAD
   const handleExportCSV = () => {
@@ -432,17 +441,32 @@ export default function ReportView({ customers, opportunities, onToast }: Report
                 </select>
               </div>
             ) : reportType === 'currency' ? (
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-500 block">อัตราแลกเปลี่ยน (THB/USD)</label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={currencyExchangeRate}
-                    onChange={(e) => setCurrencyExchangeRate(parseFloat(e.target.value) || 35.00)}
-                    className="w-full p-2 border border-slate-200 bg-slate-50 rounded-lg font-mono text-xs font-bold text-emerald-700 focus:outline-none"
-                  />
-                  <span className="absolute right-2.5 top-2 text-[10px] text-slate-400 font-bold">THB</span>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-slate-500 block">เรท USD (THB)</label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={currencyExchangeRate}
+                      onChange={(e) => setCurrencyExchangeRate(parseFloat(e.target.value) || 35.00)}
+                      className="w-full p-2 border border-slate-200 bg-slate-50 rounded-lg font-mono text-xs font-bold text-emerald-700 focus:outline-none"
+                    />
+                    <span className="absolute right-2.5 top-2 text-[10px] text-slate-400 font-bold">THB</span>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-slate-500 block">เรท SGD (THB)</label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={currencyExchangeRateSgd}
+                      onChange={(e) => setCurrencyExchangeRateSgd(parseFloat(e.target.value) || 26.00)}
+                      className="w-full p-2 border border-slate-200 bg-slate-50 rounded-lg font-mono text-xs font-bold text-emerald-700 focus:outline-none"
+                    />
+                    <span className="absolute right-2.5 top-2 text-[10px] text-slate-400 font-bold">THB</span>
+                  </div>
                 </div>
               </div>
             ) : (
@@ -510,8 +534,10 @@ export default function ReportView({ customers, opportunities, onToast }: Report
                   onChange={(e) => setCurrencyTypeFilter(e.target.value as any)}
                   className="w-full p-2 border border-slate-200 bg-slate-50 rounded-lg focus:outline-none text-slate-700 text-xs font-sans cursor-pointer font-bold text-indigo-700"
                 >
+                  <option value="ALL">ทุกสกุลเงิน (All: USD, SGD, THB)</option>
                   <option value="USD">เฉพาะสกุลเงิน USD (USD Only)</option>
-                  <option value="ALL">ทุกสกุลเงิน (All Currencies)</option>
+                  <option value="SGD">เฉพาะสกุลเงิน SGD (SGD Only)</option>
+                  <option value="THB">เฉพาะสกุลเงิน THB (THB Only)</option>
                 </select>
               </div>
             )}
@@ -643,13 +669,13 @@ export default function ReportView({ customers, opportunities, onToast }: Report
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div className="p-4 bg-indigo-50/60 rounded-xl border border-indigo-100 text-center space-y-1">
-                <span className="text-xs font-semibold text-indigo-600 block">ยอดรวมเดิม (Original USD)</span>
-                <span className="font-mono text-xl font-black text-indigo-700 block">
-                  ${(reportsStats.totalUsd || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                <span className="text-xs font-semibold text-indigo-600 block">ยอดรวม USD & SGD</span>
+                <span className="font-mono text-base font-black text-indigo-700 block">
+                  ${(reportsStats.totalUsd || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / SGD {(reportsStats.totalSgd || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
               </div>
               <div className="p-4 bg-emerald-50/60 rounded-xl border border-emerald-100 text-center space-y-1">
-                <span className="text-xs font-semibold text-emerald-600 block">ยอดแปลงสกุลเงิน (Converted THB)</span>
+                <span className="text-xs font-semibold text-emerald-600 block">ยอดแปลงรวมเป็น THB (Amount THB)</span>
                 <span className="font-mono text-xl font-black text-emerald-700 block">
                   ฿{(reportsStats.totalThb || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
@@ -762,7 +788,7 @@ export default function ReportView({ customers, opportunities, onToast }: Report
                   <th className="p-3 border border-slate-200 text-center">Type</th>
                   <th className="p-3 border border-slate-200">ลูกค้า / โครงการ</th>
                   <th className="p-3 border border-slate-200 text-center">Currency</th>
-                  <th className="p-3 border border-slate-200 text-right font-mono">Amount (USD)</th>
+                  <th className="p-3 border border-slate-200 text-right font-mono">Original Amount</th>
                   <th className="p-3 border border-slate-200 text-right font-mono">Exchange Rate</th>
                   <th className="p-3 border border-slate-200 text-right font-mono text-emerald-700 bg-emerald-50/40">Amount THB</th>
                   <th className="p-3 border border-slate-200">Traceability Flow</th>
@@ -797,10 +823,10 @@ export default function ReportView({ customers, opportunities, onToast }: Report
                         </span>
                       </td>
                       <td className="p-3 border border-slate-200 text-right font-mono font-bold text-slate-900">
-                        ${r.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        {r.currency === 'USD' ? '$' : r.currency === 'SGD' ? 'SGD ' : '฿'}{r.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
                       <td className="p-3 border border-slate-200 text-right font-mono font-medium text-slate-600">
-                        {r.exchangeRate.toFixed(2)}
+                        {r.currency === 'THB' ? '-' : r.exchangeRate.toFixed(2)}
                       </td>
                       <td className="p-3 border border-slate-200 text-right font-mono font-black text-emerald-700 bg-emerald-50/30">
                         ฿{r.amountThb.toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}

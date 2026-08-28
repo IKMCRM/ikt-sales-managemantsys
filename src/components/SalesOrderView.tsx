@@ -15,6 +15,16 @@ interface SalesOrderViewProps {
   currentUserId: string;
 }
 
+const getCurrencySymbol = (cur?: string) => {
+  if (!cur || cur === 'THB') return '฿';
+  if (cur === 'USD') return '$';
+  if (cur === 'SGD') return 'SGD ';
+  if (cur === 'EUR') return '€';
+  if (cur === 'GBP') return '£';
+  if (cur === 'JPY') return '¥';
+  return `${cur} `;
+};
+
 export default function SalesOrderView({
   salesOrders,
   customers,
@@ -36,6 +46,8 @@ export default function SalesOrderView({
   // Form State
   const [custId, setCustId] = useState('');
   const [projectName, setProjectName] = useState('');
+  const [currency, setCurrency] = useState<'THB' | 'USD' | 'SGD'>('THB');
+  const [exchangeRate, setExchangeRate] = useState<number>(1.0);
   const [totalAmount, setTotalAmount] = useState<number>(0);
   const [orderDate, setOrderDate] = useState(new Date().toISOString().split('T')[0]);
   const [targetDeliveryDate, setTargetDeliveryDate] = useState(() => {
@@ -56,6 +68,8 @@ export default function SalesOrderView({
     setEditingSO(null);
     setCustId('');
     setProjectName('');
+    setCurrency('THB');
+    setExchangeRate(1.0);
     setTotalAmount(0);
     setOrderDate(new Date().toISOString().split('T')[0]);
     const d = new Date();
@@ -82,6 +96,9 @@ export default function SalesOrderView({
     setEditingSO(so);
     setCustId(so.customer_id);
     setProjectName(so.project_name);
+    const cur = (so.currency as any) || 'THB';
+    setCurrency(cur);
+    setExchangeRate(cur === 'THB' ? 1.0 : (so.exchange_rate || (cur === 'USD' ? 35.0 : (cur === 'SGD' ? 26.0 : 1.0))));
     setTotalAmount(so.total_amount);
     setOrderDate(so.order_date);
     setTargetDeliveryDate(so.target_delivery_date);
@@ -100,12 +117,20 @@ export default function SalesOrderView({
       return;
     }
 
+    const rate = currency === 'THB' ? 1.0 : (Number(exchangeRate) || (currency === 'USD' ? 35.0 : (currency === 'SGD' ? 26.0 : 1.0)));
+    const totalAmountVal = Number(totalAmount);
+
     const payload = {
       so_no: soNo,
       customer_id: custId,
       customer_name: customers.find(c => c.id === custId)?.customer_name || '',
       project_name: projectName,
-      total_amount: Number(totalAmount),
+      currency,
+      exchange_rate: rate,
+      total_amount: totalAmountVal,
+      grand_total: totalAmountVal,
+      total_amount_thb: currency === 'THB' ? totalAmountVal : (totalAmountVal * rate),
+      grand_total_thb: currency === 'THB' ? totalAmountVal : (totalAmountVal * rate),
       status,
       order_date: orderDate,
       target_delivery_date: targetDeliveryDate,
@@ -177,10 +202,19 @@ export default function SalesOrderView({
       return;
     }
 
+    const cur = so.currency || 'THB';
+    const rate = cur === 'THB' ? 1.0 : (so.exchange_rate || (cur === 'USD' ? 35.0 : (cur === 'SGD' ? 26.0 : 1.0)));
+
     const payload = {
       customer_id: so.customer_id,
+      customer_name: so.customer_name,
       project_name: so.project_name,
+      currency: cur,
+      exchange_rate: rate,
       total_amount: so.total_amount,
+      grand_total: so.grand_total || so.total_amount,
+      total_amount_thb: cur === 'THB' ? so.total_amount : (so.total_amount * rate),
+      grand_total_thb: cur === 'THB' ? (so.grand_total || so.total_amount) : ((so.grand_total || so.total_amount) * rate),
       status: 'Pending' as const,
       order_date: new Date().toISOString().split('T')[0],
       target_delivery_date: so.target_delivery_date,
@@ -389,20 +423,14 @@ export default function SalesOrderView({
                       )}
                     </td>
                     <td className="border border-slate-200 px-3 py-1.5 text-right font-mono font-bold text-slate-900">
-                      <div>
-                        {so.currency === 'USD' ? '$' : (so.currency && so.currency !== 'THB' ? `${so.currency} ` : '฿')}
-                        {(so.total_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      <div className="flex items-center justify-end gap-1">
+                        <span>{getCurrencySymbol(so.currency)}{(so.total_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                         {so.currency && so.currency !== 'THB' && (
-                          <span className="ml-1 text-[10px] text-indigo-600 font-bold bg-indigo-50 px-1 py-0.5 rounded border border-indigo-100">
+                          <span className="text-[10px] text-indigo-600 font-bold bg-indigo-50 px-1 py-0.5 rounded border border-indigo-100 font-sans">
                             {so.currency}
                           </span>
                         )}
                       </div>
-                      {so.currency && so.currency !== 'THB' && (
-                        <div className="text-[10px] text-slate-400 font-normal mt-0.5">
-                          ≈ ฿{(so.total_amount_thb || ((so.total_amount || 0) * (so.exchange_rate || 35.00))).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </div>
-                      )}
                     </td>
                     <td className="border border-slate-200 px-3 py-1.5">
                       <span className="text-xs block text-slate-600 font-bold">เริ่ม: {so.order_date}</span>
@@ -577,8 +605,44 @@ export default function SalesOrderView({
 
               {/* Amount and Status and Dates */}
               <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1.5">สกุลเงิน (Currency) *</label>
+                    <select
+                      value={currency}
+                      onChange={(e) => {
+                        const cur = e.target.value as 'THB' | 'USD' | 'SGD';
+                        setCurrency(cur);
+                        if (cur === 'THB') setExchangeRate(1.0);
+                        else if (cur === 'USD') setExchangeRate(35.0);
+                        else if (cur === 'SGD') setExchangeRate(26.0);
+                      }}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-bold text-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                    >
+                      <option value="THB">THB (฿ - บาท)</option>
+                      <option value="USD">USD ($ - ดอลลาร์สหรัฐ)</option>
+                      <option value="SGD">SGD (S$ - ดอลลาร์สิงคโปร์)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1.5">
+                      อัตราแลกเปลี่ยน (THB / 1 {currency})
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      disabled={currency === 'THB'}
+                      value={currency === 'THB' ? 1.0 : exchangeRate}
+                      onChange={(e) => setExchangeRate(parseFloat(e.target.value) || 1.0)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-teal-500/20 disabled:bg-slate-100 disabled:text-slate-400"
+                    />
+                  </div>
+                </div>
+
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 mb-1.5">ยอดงบประมาณจัดจ้าง (฿) *</label>
+                  <label className="block text-xs font-bold text-slate-500 mb-1.5">
+                    ยอดงบประมาณจัดจ้าง ({currency === 'USD' ? '$' : (currency === 'SGD' ? 'SGD ' : '฿')}) *
+                  </label>
                   <input
                     type="number"
                     required
@@ -587,6 +651,11 @@ export default function SalesOrderView({
                     onChange={(e) => setTotalAmount(Number(e.target.value))}
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-teal-500/20"
                   />
+                  {currency !== 'THB' && (
+                    <span className="text-[10px] text-emerald-600 block mt-0.5 font-bold">
+                      ≈ ฿{((totalAmount || 0) * exchangeRate).toLocaleString(undefined, { minimumFractionDigits: 2 })} (แปลงเป็น THB ที่เรท {exchangeRate})
+                    </span>
+                  )}
                 </div>
 
                 <div>
@@ -742,13 +811,13 @@ export default function SalesOrderView({
                       <>
                         <th className="px-3 py-2.5 text-center w-28">จำนวนจ้าง</th>
                         <th className="px-3 py-2.5 text-center w-32">คงเหลือยังไม่แจ้งหนี้</th>
-                        <th className="px-3 py-2.5 text-right w-28">ราคาต่อหน่วย ({viewingSO.currency === 'USD' ? '$' : (viewingSO.currency || 'THB')})</th>
-                        <th className="px-3 py-2.5 text-right w-36">รวมมูลค่างาน ({viewingSO.currency === 'USD' ? '$' : (viewingSO.currency || 'THB')})</th>
+                        <th className="px-3 py-2.5 text-right w-28">ราคาต่อหน่วย ({viewingSO.currency || 'THB'})</th>
+                        <th className="px-3 py-2.5 text-right w-36">รวมมูลค่างาน ({viewingSO.currency || 'THB'})</th>
                       </>
                     ) : (
                       <>
                         <th className="px-3 py-2.5 text-right w-56">กำหนดแล้วเสร็จเป้าหมาย / Duration</th>
-                        <th className="px-3 py-2.5 text-right w-44">ยอดเงินงบประมาณ ({viewingSO.currency === 'USD' ? '$' : (viewingSO.currency || 'THB')})</th>
+                        <th className="px-3 py-2.5 text-right w-44">ยอดเงินงบประมาณ ({viewingSO.currency || 'THB'})</th>
                       </>
                     )}
                   </tr>
@@ -756,7 +825,7 @@ export default function SalesOrderView({
                 <tbody className="divide-y divide-slate-100 text-slate-700">
                   {viewingSO.items && viewingSO.items.length > 0 ? (
                     viewingSO.items.map((it, idx) => {
-                      const curSym = viewingSO.currency === 'USD' ? '$' : (viewingSO.currency && viewingSO.currency !== 'THB' ? `${viewingSO.currency} ` : '฿');
+                      const curSym = getCurrencySymbol(viewingSO.currency);
                       return (
                         <tr key={idx} className="hover:bg-slate-50">
                           <td className="px-3 py-3">
@@ -781,11 +850,10 @@ export default function SalesOrderView({
                       </td>
                       <td className="px-4 py-4 text-right">ภายใน {viewingSO.target_delivery_date}</td>
                       <td className="px-4 py-4 text-right font-mono font-extrabold text-teal-700">
-                        {viewingSO.currency === 'USD' ? '$' : (viewingSO.currency && viewingSO.currency !== 'THB' ? `${viewingSO.currency} ` : '฿')}
-                        {viewingSO.total_amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        <span>{getCurrencySymbol(viewingSO.currency)}{viewingSO.total_amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                         {viewingSO.currency && viewingSO.currency !== 'THB' && (
-                          <span className="text-xs block text-slate-400 font-normal mt-0.5">
-                            ≈ ฿{((viewingSO.total_amount_thb || (viewingSO.total_amount * (viewingSO.exchange_rate || 35.00)))).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          <span className="ml-1 text-[11px] text-indigo-600 font-bold bg-indigo-50 px-1 py-0.5 rounded border border-indigo-100 font-sans">
+                            {viewingSO.currency}
                           </span>
                         )}
                       </td>
@@ -803,7 +871,7 @@ export default function SalesOrderView({
                   </div>
                   <div className="space-y-2">
                     {relatedInvoices.map((inv, idx) => {
-                      const invCurSym = inv.currency === 'USD' ? '$' : (inv.currency && inv.currency !== 'THB' ? `${inv.currency} ` : '฿');
+                      const invCurSym = getCurrencySymbol(inv.currency);
                       return (
                         <div key={inv.id} className="bg-white p-3 rounded-lg border border-slate-150 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs shadow-xxs">
                           <div className="space-y-1">

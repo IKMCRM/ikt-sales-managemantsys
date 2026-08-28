@@ -26,6 +26,7 @@ export interface Customer {
   customer_name: string;
   tax_id: string;
   industry_type: string;
+  industry?: string;
   address: string;
   province?: string;
   country?: string;
@@ -181,8 +182,10 @@ export interface SalesOrder {
   quotation_id?: string;
   quotation_no?: string;
   customer_id: string;
+  customer_code?: string;
   project_name: string;
   total_amount: number;
+  grand_total?: number;
   status: 'Pending' | 'Planning' | 'In Progress' | 'Completed' | 'Cancelled' | 'Partially Invoiced' | 'Fully Invoiced';
   order_date: string;
   target_delivery_date: string;
@@ -190,6 +193,7 @@ export interface SalesOrder {
   customer_name?: string;
   job_no?: string;
   po_no?: string;
+  po_reference?: string;
   sales_person?: string;
   currency?: string;
   exchange_rate?: number;
@@ -303,16 +307,20 @@ export interface InvoiceItem {
   unit_price: number;
   tax_rate: number; // e.g. 7 for 7%
   amount: number;
+  duration_days?: number;
+  unit?: string;
 }
 
 export interface Invoice {
   id: string;
   invoice_no: string;
+  billing_no?: string;
   sales_order_id?: string;
   sales_order_no?: string;
   quotation_id?: string;
   quotation_no?: string;
   customer_id: string;
+  customer_code?: string;
   project_name?: string;
   total_amount: number;
   vat_amount: number;
@@ -321,6 +329,7 @@ export interface Invoice {
   tax_rate?: number;
   status: 'Unpaid' | 'Overdue' | 'Paid' | 'Partially Paid';
   issue_date: string;
+  invoice_date?: string;
   due_date: string;
   created_at: string;
   customer_name?: string;
@@ -329,7 +338,9 @@ export interface Invoice {
   grand_total_thb?: number;
   total_amount_thb?: number;
   sales_person?: string;
+  billing_representative?: string;
   po_reference?: string;
+  reference_po?: string;
   ikm_inv?: string;
   job_no?: string;
   remarks?: string;
