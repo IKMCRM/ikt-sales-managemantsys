@@ -33,7 +33,9 @@ import {
   XCircle,
   Ban,
   Bell,
-  HardDrive
+  HardDrive,
+  Truck,
+  Filter
 } from 'lucide-react';
 import BackupExportModal from './components/BackupExportModal';
 import { performAutoSave } from './utils/backupExport';
@@ -146,6 +148,7 @@ export default function App() {
   };
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [oppSubView, setOppSubView] = useState<'list' | 'kanban'>('list');
+  const [appQuotationDeliveryPlanFilter, setAppQuotationDeliveryPlanFilter] = useState<string>('ALL');
 
   // Multi-language translation helper
   const t = {
@@ -1790,10 +1793,26 @@ export default function App() {
 
                     {/* Quotation Beautiful Table */}
                     <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow">
-                      <div className="p-4 bg-slate-850/40 border-b border-slate-800 flex items-center justify-between">
+                      <div className="p-4 bg-slate-850/40 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
                         <span className="text-xs font-black text-white flex items-center gap-1.5">
                           <Database className="w-4 h-4 text-indigo-400" /> แฟ้มรายการเอกสารเสนอราคาทั้งหมด (MySQL quotations)
                         </span>
+
+                        {/* Quick Delivery Plan Filter */}
+                        <div className="flex items-center gap-1.5 bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs">
+                          <Truck className="w-3.5 h-3.5 text-teal-400 shrink-0" />
+                          <select
+                            value={appQuotationDeliveryPlanFilter}
+                            onChange={(e) => setAppQuotationDeliveryPlanFilter(e.target.value)}
+                            className="bg-transparent border-0 text-[11px] font-bold text-teal-300 focus:outline-none cursor-pointer max-w-[220px] truncate"
+                            title="Filter quotations by Delivery Plan"
+                          >
+                            <option value="ALL" className="bg-slate-900 text-white">📦 Delivery Plan: ทั้งหมด</option>
+                            {Array.from(new Set(quotations.map(q => q.delivery_plan).filter(Boolean))).map(plan => (
+                              <option key={plan} value={plan} className="bg-slate-900 text-white">{plan}</option>
+                            ))}
+                          </select>
+                        </div>
                       </div>
 
                       <div className="p-4 overflow-x-auto">
@@ -1803,13 +1822,16 @@ export default function App() {
                               <th className="py-3 px-3">เลขที่เอกสาร / วันที่</th>
                               <th>รายละเอียดชื่อโครงการ / ลูกค้า</th>
                               <th>เชื่อมโยงโอกาสดีล</th>
+                              <th className="text-teal-400">แผนส่งมอบ (Delivery Plan)</th>
                               <th>ยอดรวมสุทธิ (Grand Total)</th>
                               <th className="text-center">สถานะ</th>
                               <th className="text-right pr-6">ดำเนินการ</th>
                             </tr>
                           </thead>
                           <tbody>
-                            {[...quotations].sort((a, b) => {
+                            {[...quotations]
+                              .filter(q => appQuotationDeliveryPlanFilter === 'ALL' || q.delivery_plan === appQuotationDeliveryPlanFilter)
+                              .sort((a, b) => {
                               if (a.created_at && b.created_at && a.created_at !== b.created_at) {
                                 return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
                               }
@@ -1834,6 +1856,16 @@ export default function App() {
                                 </td>
                                 <td>
                                   <span className="text-slate-400 text-xs">{q.project_name || 'ดีลทั่วไป'}</span>
+                                </td>
+                                <td>
+                                  {q.delivery_plan ? (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-teal-950/70 text-teal-300 border border-teal-800" title={q.delivery_plan}>
+                                      <Truck className="w-3 h-3 text-teal-400 shrink-0" />
+                                      <span className="max-w-[150px] truncate">{q.delivery_plan}</span>
+                                    </span>
+                                  ) : (
+                                    <span className="text-slate-600 font-mono text-[11px]">-</span>
+                                  )}
                                 </td>
                                 <td>
                                   <div className="font-mono text-emerald-400 font-extrabold text-[13px]">

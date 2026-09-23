@@ -156,6 +156,7 @@ export default function SalesOrderView({
   // Multiple filter states
   const [selectedJob, setSelectedJob] = useState('All');
   const [selectedCustomerFilter, setSelectedCustomerFilter] = useState('All');
+  const [selectedDeliveryPlan, setSelectedDeliveryPlan] = useState('All');
 
   // Dynamic values extractor for filter selection dropdowns
   const existingJobs = useMemo(() => {
@@ -168,25 +169,36 @@ export default function SalesOrderView({
     return Array.from(new Set(list));
   }, [salesOrders]);
 
+  const existingDeliveryPlans = useMemo(() => {
+    const list = salesOrders
+      .map(so => ((so as any).delivery_plan || so.target_delivery_date))
+      .filter(Boolean) as string[];
+    return Array.from(new Set(list));
+  }, [salesOrders]);
+
   const existingServicesList = useMemo(() => {
     return [];
   }, []);
 
   const filteredSalesOrders = useMemo(() => {
     return salesOrders.filter(so => {
+      const planVal = ((so as any).delivery_plan || so.target_delivery_date || '').trim();
       const matchSearch = 
         so.so_no.toLowerCase().includes(searchTerm.toLowerCase()) ||
         so.project_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (so.customer_name && so.customer_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (so.job_no && so.job_no.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (so.po_no && so.po_no.toLowerCase().includes(searchTerm.toLowerCase()));
+        (so.po_no && so.po_no.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        planVal.toLowerCase().includes(searchTerm.toLowerCase());
       const matchStatus = selectedStatus === 'All' || so.status === selectedStatus;
       const matchJob = selectedJob === 'All' || so.job_no === selectedJob;
       const matchCustomer = selectedCustomerFilter === 'All' || so.customer_name === selectedCustomerFilter;
+      const matchDeliveryPlan = selectedDeliveryPlan === 'All' ||
+        (selectedDeliveryPlan === '__EMPTY__' ? !planVal : (planVal === selectedDeliveryPlan || planVal.includes(selectedDeliveryPlan)));
       
-      return matchSearch && matchStatus && matchJob && matchCustomer;
+      return matchSearch && matchStatus && matchJob && matchCustomer && matchDeliveryPlan;
     });
-  }, [salesOrders, searchTerm, selectedStatus, selectedJob, selectedCustomerFilter]);
+  }, [salesOrders, searchTerm, selectedStatus, selectedJob, selectedCustomerFilter, selectedDeliveryPlan]);
 
   const relatedInvoices = useMemo(() => {
     if (!viewingSO) return [];
@@ -274,7 +286,7 @@ export default function SalesOrderView({
           />
         </div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
           {/* Status Filter */}
           <div className="space-y-1 bg-white p-2 rounded-lg border border-slate-200/60 shadow-xxs">
             <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">สถานะใบสั่งขาย / Status:</span>
@@ -320,6 +332,23 @@ export default function SalesOrderView({
               <option value="All">ทั้งหมด (ทุกเลขที่งาน Job)</option>
               {existingJobs.map(job => (
                 <option key={job} value={job}>{job}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Delivery Plan Filter */}
+          <div className={`space-y-1 p-2 rounded-lg border shadow-xxs transition-colors ${
+            selectedDeliveryPlan !== 'All' ? 'bg-teal-50/70 border-teal-300' : 'bg-white border-slate-200/60'
+          }`}>
+            <span className="text-[10px] font-extrabold text-teal-700 uppercase tracking-wider block">แผนส่งมอบ / Delivery Plan:</span>
+            <select
+              value={selectedDeliveryPlan}
+              onChange={(e) => setSelectedDeliveryPlan(e.target.value)}
+              className="w-full bg-transparent border-0 text-xs focus:outline-none cursor-pointer font-extrabold text-teal-900 mt-0.5"
+            >
+              <option value="All">ทั้งหมด (ทุกแผนงาน)</option>
+              {existingDeliveryPlans.map(plan => (
+                <option key={plan} value={plan}>{plan}</option>
               ))}
             </select>
           </div>
@@ -434,6 +463,11 @@ export default function SalesOrderView({
                     </td>
                     <td className="border border-slate-200 px-3 py-1.5">
                       <span className="text-xs block text-slate-600 font-bold">เริ่ม: {so.order_date}</span>
+                      {(so as any).delivery_plan && (
+                        <span className="text-[10px] text-teal-800 bg-teal-50 border border-teal-200 px-1.5 py-0.5 rounded font-mono font-bold block mt-1 truncate" title={(so as any).delivery_plan}>
+                          📦 {(so as any).delivery_plan}
+                        </span>
+                      )}
                       <span className="text-[10px] text-teal-600 block font-semibold mt-0.5">แผนเสร็จ: {so.target_delivery_date}</span>
                     </td>
                     <td className="border border-slate-200 px-3 py-1.5 text-center">

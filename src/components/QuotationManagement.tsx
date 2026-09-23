@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   ResponsiveContainer,
   BarChart,
@@ -32,6 +32,10 @@ import {
   ChevronDown,
   TrendingUp,
   Settings,
+  Truck,
+  Check,
+  X,
+  RotateCcw,
 } from "lucide-react";
 import FormSettingsView from "./FormSettingsView";
 
@@ -419,6 +423,48 @@ function QuoteList({
     (typeof localStorage !== "undefined" && localStorage.getItem("crm_user_role") === "Admin");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [salesRepFilter, setSalesRepFilter] = useState("ALL");
+  const [deliveryPlanFilter, setDeliveryPlanFilter] = useState("ALL");
+  const [showDeliveryPlanMenu, setShowDeliveryPlanMenu] = useState(false);
+  const [deliveryPlanMenuSearch, setDeliveryPlanMenuSearch] = useState("");
+  const deliveryPlanMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close Excel filter popup on outside click
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        deliveryPlanMenuRef.current &&
+        !deliveryPlanMenuRef.current.contains(event.target as Node)
+      ) {
+        setShowDeliveryPlanMenu(false);
+      }
+    }
+    if (showDeliveryPlanMenu) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showDeliveryPlanMenu]);
+
+  // Extract unique delivery plans with item counts (Excel-style)
+  const deliveryPlanStats = useMemo(() => {
+    const counts = new Map<string, number>();
+    let emptyCount = 0;
+    quotations.forEach((q) => {
+      const plan = (q.delivery_plan || "").trim();
+      if (plan) {
+        counts.set(plan, (counts.get(plan) || 0) + 1);
+      } else {
+        emptyCount++;
+      }
+    });
+    const list = Array.from(counts.entries()).map(([plan, count]) => ({
+      plan,
+      count,
+    }));
+    list.sort((a, b) => b.count - a.count || a.plan.localeCompare(b.plan));
+    return { list, emptyCount, total: quotations.length };
+  }, [quotations]);
 
   const userMap = new Map(users.map((u: any) => [u.id, u.fullname]));
   const filtered = quotations.filter((q) => {
@@ -427,7 +473,8 @@ function QuoteList({
     const matchesSearch =
       q.quotation_no.toLowerCase().includes(search.toLowerCase()) ||
       q.title.toLowerCase().includes(search.toLowerCase()) ||
-      custName.toLowerCase().includes(search.toLowerCase());
+      custName.toLowerCase().includes(search.toLowerCase()) ||
+      (q.delivery_plan && q.delivery_plan.toLowerCase().includes(search.toLowerCase()));
     const matchesStatus =
       statusFilter === "ALL" ||
       q.status === statusFilter ||
@@ -439,7 +486,12 @@ function QuoteList({
       salesRepFilter === "ALL" ||
       salesRepName.toLowerCase() === salesRepFilter.toLowerCase();
     
-    return matchesSearch && matchesStatus && matchesSalesRep;
+    const planText = (q.delivery_plan || "").trim();
+    const matchesDeliveryPlan =
+      deliveryPlanFilter === "ALL" ||
+      (deliveryPlanFilter === "__EMPTY__" ? !planText : planText === deliveryPlanFilter);
+
+    return matchesSearch && matchesStatus && matchesSalesRep && matchesDeliveryPlan;
   }).sort((a, b) => {
     if (a.created_at && b.created_at && a.created_at !== b.created_at) {
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
@@ -453,10 +505,23 @@ function QuoteList({
     return (b.quotation_no || '').localeCompare(a.quotation_no || '', undefined, { numeric: true, sensitivity: 'base' });
   });
 
+  const isAnyFilterActive =
+    statusFilter !== "ALL" ||
+    salesRepFilter !== "ALL" ||
+    deliveryPlanFilter !== "ALL" ||
+    search.trim() !== "";
+
+  const resetAllFilters = () => {
+    setStatusFilter("ALL");
+    setSalesRepFilter("ALL");
+    setDeliveryPlanFilter("ALL");
+    setSearch("");
+  };
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
       <div className="p-4 border-b border-slate-200 bg-slate-50 flex flex-wrap justify-between items-center gap-4">
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => setStatusFilter("ALL")}
             className={`px-4 py-1.5 rounded-full text-sm font-bold transition-colors ${statusFilter === "ALL" ? "bg-slate-800 text-white" : "bg-slate-200 text-slate-600 hover:bg-slate-300"}`}
@@ -487,8 +552,55 @@ function QuoteList({
           >
             Rejected
           </button>
+
+          {isAnyFilterActive && (
+            <button
+              onClick={resetAllFilters}
+              title="รีเซ็ตฟิลเตอร์ทั้งหมด (Reset Filters)"
+              className="px-3 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200 flex items-center gap-1 transition-all cursor-pointer ml-1"
+            >
+              <RotateCcw className="w-3 h-3" /> ล้างตัวกรอง
+            </button>
+          )}
         </div>
-        <div className="flex gap-2 items-center">
+        <div className="flex flex-wrap gap-2 items-center">
+          {/* Excel-style Delivery Plan Filter Dropdown */}
+          <div className="relative">
+            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold transition-all shadow-2xs ${
+              deliveryPlanFilter !== "ALL"
+                ? "bg-teal-50 border-teal-500 text-teal-900 ring-2 ring-teal-200"
+                : "bg-white border-slate-300 text-slate-700 hover:border-teal-400"
+            }`}>
+              <Truck className={`w-3.5 h-3.5 shrink-0 ${deliveryPlanFilter !== "ALL" ? "text-teal-600" : "text-slate-400"}`} />
+              <select
+                value={deliveryPlanFilter}
+                onChange={(e) => setDeliveryPlanFilter(e.target.value)}
+                className="bg-transparent border-0 text-xs font-semibold text-slate-700 focus:outline-none cursor-pointer max-w-[190px] truncate"
+                title="Filter by Delivery Plan (Excel Style)"
+              >
+                <option value="ALL">📦 Delivery Plan: ทั้งหมด ({deliveryPlanStats.total})</option>
+                {deliveryPlanStats.emptyCount > 0 && (
+                  <option value="__EMPTY__">⚪ (Blanks / ไม่ระบุ) ({deliveryPlanStats.emptyCount})</option>
+                )}
+                {deliveryPlanStats.list.map(({ plan, count }) => (
+                  <option key={plan} value={plan}>
+                    {plan} ({count})
+                  </option>
+                ))}
+              </select>
+              {deliveryPlanFilter !== "ALL" && (
+                <button
+                  type="button"
+                  onClick={() => setDeliveryPlanFilter("ALL")}
+                  title="Clear Delivery Plan filter"
+                  className="p-0.5 text-slate-400 hover:text-rose-600 rounded cursor-pointer"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+          </div>
+
           <select
             value={salesRepFilter}
             onChange={(e) => setSalesRepFilter(e.target.value)}
@@ -505,7 +617,7 @@ function QuoteList({
             <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
             <input
               type="text"
-              placeholder="Search quotations..."
+              placeholder="Search quote, title, customer, delivery plan..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-9 pr-4 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -521,7 +633,7 @@ function QuoteList({
             <col className="w-[125px]" />
             <col />
             <col className="w-[85px]" />
-            <col className="w-[125px]" />
+            <col className="w-[145px]" />
             <col className="w-[115px]" />
             <col className="w-[80px]" />
             <col className="w-[115px]" />
@@ -543,8 +655,184 @@ function QuoteList({
               <th className="py-2.5 px-2 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                 Date
               </th>
-              <th className="py-2.5 px-2 text-[11px] font-bold text-teal-700 uppercase tracking-wider">
-                Delivery Plan
+              {/* Excel-style interactive column header filter for Delivery Plan */}
+              <th className="py-2 px-2 text-[11px] font-bold text-teal-700 uppercase tracking-wider relative">
+                <div className="flex items-center justify-between gap-1">
+                  <span>Delivery Plan</span>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowDeliveryPlanMenu(!showDeliveryPlanMenu);
+                    }}
+                    title="Excel Column Filter for Delivery Plan"
+                    className={`p-1 rounded text-xs transition-all flex items-center gap-1 cursor-pointer ${
+                      deliveryPlanFilter !== "ALL"
+                        ? "bg-teal-600 text-white shadow font-black ring-1 ring-teal-400"
+                        : "text-slate-400 hover:text-teal-700 hover:bg-teal-50"
+                    }`}
+                  >
+                    <Filter className="w-3 h-3" />
+                    {deliveryPlanFilter !== "ALL" && (
+                      <span className="text-[9px] bg-amber-400 text-slate-900 px-1 py-0.2 rounded font-mono font-bold leading-none">
+                        Active
+                      </span>
+                    )}
+                  </button>
+                </div>
+
+                {/* Excel-Style Dropdown Popover */}
+                {showDeliveryPlanMenu && (
+                  <div
+                    ref={deliveryPlanMenuRef}
+                    onClick={(e) => e.stopPropagation()}
+                    className="absolute left-0 top-full mt-1 w-72 bg-white rounded-xl shadow-xl border border-slate-200 z-50 text-left normal-case tracking-normal font-sans overflow-hidden"
+                  >
+                    {/* Header */}
+                    <div className="bg-slate-900 text-white p-2.5 flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 text-xs font-bold">
+                        <Filter className="w-3.5 h-3.5 text-teal-400" />
+                        <span>Filter: Delivery Plan</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowDeliveryPlanMenu(false)}
+                        className="text-slate-400 hover:text-white cursor-pointer"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                    {/* Quick Search inside filter (Excel search box) */}
+                    <div className="p-2 border-b border-slate-100 bg-slate-50">
+                      <div className="relative">
+                        <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400" />
+                        <input
+                          type="text"
+                          placeholder="Search delivery plan options..."
+                          value={deliveryPlanMenuSearch}
+                          onChange={(e) => setDeliveryPlanMenuSearch(e.target.value)}
+                          className="w-full pl-8 pr-2 py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Options List */}
+                    <div className="max-h-56 overflow-y-auto p-1 divide-y divide-slate-50">
+                      {/* Select All */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDeliveryPlanFilter("ALL");
+                          setShowDeliveryPlanMenu(false);
+                        }}
+                        className={`w-full px-2.5 py-1.5 text-xs text-left rounded-lg flex items-center justify-between transition-colors cursor-pointer ${
+                          deliveryPlanFilter === "ALL"
+                            ? "bg-teal-50 text-teal-900 font-bold"
+                            : "hover:bg-slate-100 text-slate-700"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 truncate">
+                          {deliveryPlanFilter === "ALL" ? (
+                            <Check className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+                          ) : (
+                            <span className="w-3.5 h-3.5 shrink-0" />
+                          )}
+                          <span>(Select All / แสดงทั้งหมด)</span>
+                        </div>
+                        <span className="text-[10px] text-slate-400 font-mono">
+                          {deliveryPlanStats.total}
+                        </span>
+                      </button>
+
+                      {/* Blanks option */}
+                      {deliveryPlanStats.emptyCount > 0 &&
+                        (deliveryPlanMenuSearch === "" ||
+                          "(blanks) ไม่ระบุ".toLowerCase().includes(deliveryPlanMenuSearch.toLowerCase())) && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setDeliveryPlanFilter("__EMPTY__");
+                              setShowDeliveryPlanMenu(false);
+                            }}
+                            className={`w-full px-2.5 py-1.5 text-xs text-left rounded-lg flex items-center justify-between transition-colors cursor-pointer ${
+                              deliveryPlanFilter === "__EMPTY__"
+                                ? "bg-teal-50 text-teal-900 font-bold"
+                                : "hover:bg-slate-100 text-slate-700"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 truncate">
+                              {deliveryPlanFilter === "__EMPTY__" ? (
+                                <Check className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+                              ) : (
+                                <span className="w-3.5 h-3.5 shrink-0" />
+                              )}
+                              <span className="italic text-slate-500">(Blanks / ไม่ระบุแผน)</span>
+                            </div>
+                            <span className="text-[10px] text-slate-400 font-mono">
+                              {deliveryPlanStats.emptyCount}
+                            </span>
+                          </button>
+                        )}
+
+                      {/* Unique Plans */}
+                      {deliveryPlanStats.list
+                        .filter(({ plan }) =>
+                          plan.toLowerCase().includes(deliveryPlanMenuSearch.toLowerCase())
+                        )
+                        .map(({ plan, count }) => {
+                          const isSelected = deliveryPlanFilter === plan;
+                          return (
+                            <button
+                              key={plan}
+                              type="button"
+                              onClick={() => {
+                                setDeliveryPlanFilter(plan);
+                                setShowDeliveryPlanMenu(false);
+                              }}
+                              className={`w-full px-2.5 py-1.5 text-xs text-left rounded-lg flex items-center justify-between transition-colors cursor-pointer ${
+                                isSelected
+                                  ? "bg-teal-50 text-teal-900 font-bold"
+                                  : "hover:bg-slate-100 text-slate-700"
+                              }`}
+                              title={plan}
+                            >
+                              <div className="flex items-center gap-2 truncate pr-2">
+                                {isSelected ? (
+                                  <Check className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+                                ) : (
+                                  <span className="w-3.5 h-3.5 shrink-0" />
+                                )}
+                                <span className="truncate">{plan}</span>
+                              </div>
+                              <span className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-mono font-bold shrink-0">
+                                {count}
+                              </span>
+                            </button>
+                          );
+                        })}
+                    </div>
+
+                    {/* Footer */}
+                    <div className="p-2 bg-slate-50 border-t border-slate-100 flex justify-between items-center text-xs">
+                      <span className="text-[10px] text-slate-500">
+                        {deliveryPlanFilter !== "ALL" ? `Filtered: 1 item` : "All shown"}
+                      </span>
+                      {deliveryPlanFilter !== "ALL" && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDeliveryPlanFilter("ALL");
+                            setShowDeliveryPlanMenu(false);
+                          }}
+                          className="text-[11px] text-teal-600 font-bold hover:underline cursor-pointer"
+                        >
+                          Clear Filter
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
               </th>
               <th className="py-2.5 px-2 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-right">
                 Amount (Excl. VAT)
