@@ -446,11 +446,43 @@ function QuoteList({
     };
   }, [showDeliveryPlanMenu]);
 
-  // Extract unique delivery plans with item counts (Excel-style)
+  const userMap = useMemo(() => new Map(users.map((u: any) => [u.id, u.fullname])), [users]);
+
+  // Stage 1: Filter by Status, Sales Reps, and Search (Remaining items subset)
+  const preDeliveryFiltered = useMemo(() => {
+    return quotations.filter((q: any) => {
+      const custObj = customers?.find((c: any) => c.id === q.customer_id) || q.customer;
+      const custName = custObj?.customer_name || q.customer_name || "";
+      const matchesSearch =
+        !search.trim() ||
+        q.quotation_no?.toLowerCase().includes(search.toLowerCase()) ||
+        q.title?.toLowerCase().includes(search.toLowerCase()) ||
+        custName.toLowerCase().includes(search.toLowerCase()) ||
+        (q.delivery_plan && q.delivery_plan.toLowerCase().includes(search.toLowerCase()));
+
+      const matchesStatus =
+        statusFilter === "ALL" ||
+        q.status === statusFilter ||
+        (statusFilter === "Approved" && (q.status === "Invoiced" || q.status === "Approved")) ||
+        (statusFilter === "Sent" && (q.status === "Sent" || q.status === "Send")) ||
+        (statusFilter === "Draft" && q.status === "Draft") ||
+        (statusFilter === "Rejected" && (q.status === "Rejected" || q.status === "Cancelled"));
+
+      const salesRepId = q.sales_person || "";
+      const salesRepName = userMap.get(salesRepId) || salesRepId;
+      const matchesSalesRep =
+        salesRepFilter === "ALL" ||
+        salesRepName.toLowerCase() === salesRepFilter.toLowerCase();
+
+      return matchesSearch && matchesStatus && matchesSalesRep;
+    });
+  }, [quotations, customers, search, statusFilter, salesRepFilter, userMap]);
+
+  // Stage 2: Extract unique delivery plans with item counts dynamically from preDeliveryFiltered
   const deliveryPlanStats = useMemo(() => {
     const counts = new Map<string, number>();
     let emptyCount = 0;
-    quotations.forEach((q) => {
+    preDeliveryFiltered.forEach((q: any) => {
       const plan = (q.delivery_plan || "").trim();
       if (plan) {
         counts.set(plan, (counts.get(plan) || 0) + 1);
@@ -463,47 +495,46 @@ function QuoteList({
       count,
     }));
     list.sort((a, b) => b.count - a.count || a.plan.localeCompare(b.plan));
-    return { list, emptyCount, total: quotations.length };
-  }, [quotations]);
+    return { list, emptyCount, total: preDeliveryFiltered.length };
+  }, [preDeliveryFiltered]);
 
-  const userMap = new Map(users.map((u: any) => [u.id, u.fullname]));
-  const filtered = quotations.filter((q) => {
-    const custObj = customers?.find((c: any) => c.id === q.customer_id) || q.customer;
-    const custName = custObj?.customer_name || q.customer_name || "";
-    const matchesSearch =
-      q.quotation_no.toLowerCase().includes(search.toLowerCase()) ||
-      q.title.toLowerCase().includes(search.toLowerCase()) ||
-      custName.toLowerCase().includes(search.toLowerCase()) ||
-      (q.delivery_plan && q.delivery_plan.toLowerCase().includes(search.toLowerCase()));
-    const matchesStatus =
-      statusFilter === "ALL" ||
-      q.status === statusFilter ||
-      (statusFilter === "Approved" && q.status === "Invoiced");
-    
-    const salesRepId = q.sales_person || "";
-    const salesRepName = userMap.get(salesRepId) || salesRepId;
-    const matchesSalesRep =
-      salesRepFilter === "ALL" ||
-      salesRepName.toLowerCase() === salesRepFilter.toLowerCase();
-    
-    const planText = (q.delivery_plan || "").trim();
-    const matchesDeliveryPlan =
-      deliveryPlanFilter === "ALL" ||
-      (deliveryPlanFilter === "__EMPTY__" ? !planText : planText === deliveryPlanFilter);
+  // Auto-reset deliveryPlanFilter if selected plan is no longer available in the remaining subset
+  useEffect(() => {
+    if (deliveryPlanFilter === "ALL") return;
+    if (deliveryPlanFilter === "__EMPTY__") {
+      if (deliveryPlanStats.emptyCount === 0) {
+        setDeliveryPlanFilter("ALL");
+      }
+      return;
+    }
+    const exists = deliveryPlanStats.list.some(item => item.plan === deliveryPlanFilter);
+    if (!exists) {
+      setDeliveryPlanFilter("ALL");
+    }
+  }, [deliveryPlanStats, deliveryPlanFilter]);
 
-    return matchesSearch && matchesStatus && matchesSalesRep && matchesDeliveryPlan;
-  }).sort((a, b) => {
-    if (a.created_at && b.created_at && a.created_at !== b.created_at) {
-      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-    }
-    const dateA = a.quotation_date || a.issue_date || a.created_at || '';
-    const dateB = b.quotation_date || b.issue_date || b.created_at || '';
-    if (dateA && dateB && dateA !== dateB) {
-      const diff = new Date(dateB).getTime() - new Date(dateA).getTime();
-      if (!isNaN(diff) && diff !== 0) return diff;
-    }
-    return (b.quotation_no || '').localeCompare(a.quotation_no || '', undefined, { numeric: true, sensitivity: 'base' });
-  });
+  // Stage 3: Apply the final Delivery Plan filter on the remaining items
+  const filtered = useMemo(() => {
+    return preDeliveryFiltered.filter((q: any) => {
+      const planText = (q.delivery_plan || "").trim();
+      const matchesDeliveryPlan =
+        deliveryPlanFilter === "ALL" ||
+        (deliveryPlanFilter === "__EMPTY__" ? !planText : planText === deliveryPlanFilter);
+
+      return matchesDeliveryPlan;
+    }).sort((a: any, b: any) => {
+      if (a.created_at && b.created_at && a.created_at !== b.created_at) {
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+      const dateA = a.quotation_date || a.issue_date || a.created_at || '';
+      const dateB = b.quotation_date || b.issue_date || b.created_at || '';
+      if (dateA && dateB && dateA !== dateB) {
+        const diff = new Date(dateB).getTime() - new Date(dateA).getTime();
+        if (!isNaN(diff) && diff !== 0) return diff;
+      }
+      return (b.quotation_no || '').localeCompare(a.quotation_no || '', undefined, { numeric: true, sensitivity: 'base' });
+    });
+  }, [preDeliveryFiltered, deliveryPlanFilter]);
 
   const isAnyFilterActive =
     statusFilter !== "ALL" ||
@@ -538,7 +569,7 @@ function QuoteList({
             onClick={() => setStatusFilter("Sent")}
             className={`px-4 py-1.5 rounded-full text-sm font-bold transition-colors ${statusFilter === "Sent" ? "bg-blue-600 text-white" : "bg-slate-200 text-slate-600 hover:bg-slate-300"}`}
           >
-            Sent
+            Send / Sent
           </button>
           <button
             onClick={() => setStatusFilter("Approved")}
@@ -564,7 +595,34 @@ function QuoteList({
           )}
         </div>
         <div className="flex flex-wrap gap-2 items-center">
-          {/* Excel-style Delivery Plan Filter Dropdown */}
+          {/* 1. Sales Rep Dropdown */}
+          <select
+            value={salesRepFilter}
+            onChange={(e) => setSalesRepFilter(e.target.value)}
+            className="px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold text-slate-700 shadow-2xs"
+            title="Filter by Sales Reps"
+          >
+            <option value="ALL">👤 All Sales Reps</option>
+            {users.filter((u: any) => u.fullname !== "ART KIT").map((user: any) => (
+              <option key={user.id} value={user.fullname}>
+                {user.fullname}
+              </option>
+            ))}
+          </select>
+
+          {/* 2. Search Box */}
+          <div className="relative w-64">
+            <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search quote, title, customer..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-2xs"
+            />
+          </div>
+
+          {/* 3. Final Step: Excel-style Delivery Plan Filter Dropdown (Sourced from remaining items) */}
           <div className="relative">
             <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold transition-all shadow-2xs ${
               deliveryPlanFilter !== "ALL"
@@ -575,8 +633,8 @@ function QuoteList({
               <select
                 value={deliveryPlanFilter}
                 onChange={(e) => setDeliveryPlanFilter(e.target.value)}
-                className="bg-transparent border-0 text-xs font-semibold text-slate-700 focus:outline-none cursor-pointer max-w-[190px] truncate"
-                title="Filter by Delivery Plan (Excel Style)"
+                className="bg-transparent border-0 text-xs font-semibold text-slate-700 focus:outline-none cursor-pointer max-w-[200px] truncate"
+                title="Filter by Delivery Plan (Cascading after Sales Reps & Status)"
               >
                 <option value="ALL">📦 Delivery Plan: ทั้งหมด ({deliveryPlanStats.total})</option>
                 {deliveryPlanStats.emptyCount > 0 && (
@@ -599,29 +657,6 @@ function QuoteList({
                 </button>
               )}
             </div>
-          </div>
-
-          <select
-            value={salesRepFilter}
-            onChange={(e) => setSalesRepFilter(e.target.value)}
-            className="px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold text-slate-700"
-          >
-            <option value="ALL">All Sales Reps</option>
-            {users.filter(u => u.fullname !== "ART KIT").map((user) => (
-              <option key={user.id} value={user.fullname}>
-                {user.fullname}
-              </option>
-            ))}
-          </select>
-          <div className="relative w-72">
-            <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Search quote, title, customer, delivery plan..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
           </div>
         </div>
       </div>
@@ -689,18 +724,23 @@ function QuoteList({
                     className="absolute left-0 top-full mt-1 w-72 bg-white rounded-xl shadow-xl border border-slate-200 z-50 text-left normal-case tracking-normal font-sans overflow-hidden"
                   >
                     {/* Header */}
-                    <div className="bg-slate-900 text-white p-2.5 flex items-center justify-between">
-                      <div className="flex items-center gap-1.5 text-xs font-bold">
-                        <Filter className="w-3.5 h-3.5 text-teal-400" />
-                        <span>Filter: Delivery Plan</span>
+                    <div className="bg-slate-900 text-white p-2.5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5 text-xs font-bold">
+                          <Filter className="w-3.5 h-3.5 text-teal-400" />
+                          <span>Filter: Delivery Plan</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setShowDeliveryPlanMenu(false)}
+                          className="text-slate-400 hover:text-white cursor-pointer"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => setShowDeliveryPlanMenu(false)}
-                        className="text-slate-400 hover:text-white cursor-pointer"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
+                      <div className="text-[10px] text-teal-300 mt-1 font-mono flex items-center gap-1 opacity-90">
+                        <span>📊 Sourced from {deliveryPlanStats.total} filtered quotations</span>
+                      </div>
                     </div>
 
                     {/* Quick Search inside filter (Excel search box) */}

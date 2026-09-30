@@ -154,6 +154,7 @@ export default function SalesOrderView({
   };
 
   // Multiple filter states
+  const [selectedSalesRep, setSelectedSalesRep] = useState('All');
   const [selectedJob, setSelectedJob] = useState('All');
   const [selectedCustomerFilter, setSelectedCustomerFilter] = useState('All');
   const [selectedDeliveryPlan, setSelectedDeliveryPlan] = useState('All');
@@ -169,36 +170,77 @@ export default function SalesOrderView({
     return Array.from(new Set(list));
   }, [salesOrders]);
 
-  const existingDeliveryPlans = useMemo(() => {
-    const list = salesOrders
-      .map(so => ((so as any).delivery_plan || so.target_delivery_date))
-      .filter(Boolean) as string[];
+  const existingSalesReps = useMemo(() => {
+    const list = salesOrders.map(so => so.sales_person).filter(Boolean) as string[];
     return Array.from(new Set(list));
   }, [salesOrders]);
 
-  const existingServicesList = useMemo(() => {
-    return [];
-  }, []);
-
-  const filteredSalesOrders = useMemo(() => {
+  // Stage 1: Filter Sales Orders by Status, Sales Rep, Search, Customer, Job (Remaining items subset)
+  const preDeliveryFilteredSalesOrders = useMemo(() => {
     return salesOrders.filter(so => {
       const planVal = ((so as any).delivery_plan || so.target_delivery_date || '').trim();
       const matchSearch = 
+        !searchTerm.trim() ||
         so.so_no.toLowerCase().includes(searchTerm.toLowerCase()) ||
         so.project_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (so.customer_name && so.customer_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (so.job_no && so.job_no.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (so.po_no && so.po_no.toLowerCase().includes(searchTerm.toLowerCase())) ||
         planVal.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchStatus = selectedStatus === 'All' || so.status === selectedStatus;
+
+      const currentStatus = so.status as any;
+      const matchStatus = selectedStatus === 'All' || 
+        currentStatus === selectedStatus ||
+        (selectedStatus === 'Approved' && (currentStatus === 'Partially Invoiced' || currentStatus === 'Fully Invoiced' || currentStatus === 'Approved')) ||
+        (selectedStatus === 'Delivered' && (currentStatus === 'Delivered' || currentStatus === 'Completed'));
+
+      const matchSalesRep = selectedSalesRep === 'All' || so.sales_person === selectedSalesRep;
       const matchJob = selectedJob === 'All' || so.job_no === selectedJob;
       const matchCustomer = selectedCustomerFilter === 'All' || so.customer_name === selectedCustomerFilter;
-      const matchDeliveryPlan = selectedDeliveryPlan === 'All' ||
-        (selectedDeliveryPlan === '__EMPTY__' ? !planVal : (planVal === selectedDeliveryPlan || planVal.includes(selectedDeliveryPlan)));
-      
-      return matchSearch && matchStatus && matchJob && matchCustomer && matchDeliveryPlan;
+
+      return matchSearch && matchStatus && matchSalesRep && matchJob && matchCustomer;
     });
-  }, [salesOrders, searchTerm, selectedStatus, selectedJob, selectedCustomerFilter, selectedDeliveryPlan]);
+  }, [salesOrders, searchTerm, selectedStatus, selectedSalesRep, selectedJob, selectedCustomerFilter]);
+
+  // Stage 2: Extract unique Delivery Plans and counts dynamically from preDeliveryFilteredSalesOrders
+  const existingDeliveryPlans = useMemo(() => {
+    const counts = new Map<string, number>();
+    let emptyCount = 0;
+    preDeliveryFilteredSalesOrders.forEach(so => {
+      const plan = ((so as any).delivery_plan || so.target_delivery_date || '').trim();
+      if (plan) {
+        counts.set(plan, (counts.get(plan) || 0) + 1);
+      } else {
+        emptyCount++;
+      }
+    });
+    const list = Array.from(counts.entries()).map(([plan, count]) => ({ plan, count }));
+    list.sort((a, b) => b.count - a.count || a.plan.localeCompare(b.plan));
+    return { list, emptyCount, total: preDeliveryFilteredSalesOrders.length };
+  }, [preDeliveryFilteredSalesOrders]);
+
+  // Auto-reset selectedDeliveryPlan if no longer present in remaining options
+  React.useEffect(() => {
+    if (selectedDeliveryPlan === 'All') return;
+    if (selectedDeliveryPlan === '__EMPTY__') {
+      if (existingDeliveryPlans.emptyCount === 0) setSelectedDeliveryPlan('All');
+      return;
+    }
+    const exists = existingDeliveryPlans.list.some(p => p.plan === selectedDeliveryPlan);
+    if (!exists) {
+      setSelectedDeliveryPlan('All');
+    }
+  }, [existingDeliveryPlans, selectedDeliveryPlan]);
+
+  // Stage 3: Apply the final Delivery Plan filter on the remaining items
+  const filteredSalesOrders = useMemo(() => {
+    return preDeliveryFilteredSalesOrders.filter(so => {
+      const planVal = ((so as any).delivery_plan || so.target_delivery_date || '').trim();
+      if (selectedDeliveryPlan === 'All') return true;
+      if (selectedDeliveryPlan === '__EMPTY__') return !planVal;
+      return planVal === selectedDeliveryPlan || planVal.includes(selectedDeliveryPlan);
+    });
+  }, [preDeliveryFilteredSalesOrders, selectedDeliveryPlan]);
 
   const relatedInvoices = useMemo(() => {
     if (!viewingSO) return [];
@@ -275,6 +317,75 @@ export default function SalesOrderView({
 
       {/* filter tools */}
       <div className="bg-white p-5 rounded-2xl border border-slate-150 shadow-xs space-y-4 max-w-full overflow-hidden">
+        {/* Quick Status Buttons: Pending, In Progress, Delivered, Approved */}
+        <div className="flex flex-wrap items-center justify-between gap-2 pb-1 border-b border-slate-100">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-xs font-extrabold text-slate-400 uppercase tracking-wider mr-1">Status:</span>
+            <button
+              type="button"
+              onClick={() => setSelectedStatus('All')}
+              className={`px-3 py-1 rounded-full text-xs font-extrabold transition-all cursor-pointer ${
+                selectedStatus === 'All' ? 'bg-slate-800 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              All
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedStatus('Pending')}
+              className={`px-3 py-1 rounded-full text-xs font-extrabold transition-all cursor-pointer ${
+                selectedStatus === 'Pending' ? 'bg-amber-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              Pending
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedStatus('In Progress')}
+              className={`px-3 py-1 rounded-full text-xs font-extrabold transition-all cursor-pointer ${
+                selectedStatus === 'In Progress' ? 'bg-blue-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              In Progress
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedStatus('Delivered')}
+              className={`px-3 py-1 rounded-full text-xs font-extrabold transition-all cursor-pointer ${
+                selectedStatus === 'Delivered' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              Delivered
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedStatus('Approved')}
+              className={`px-3 py-1 rounded-full text-xs font-extrabold transition-all cursor-pointer ${
+                selectedStatus === 'Approved' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              Approved
+            </button>
+          </div>
+
+          {(selectedStatus !== 'All' || selectedSalesRep !== 'All' || selectedCustomerFilter !== 'All' || selectedJob !== 'All' || selectedDeliveryPlan !== 'All' || searchTerm.trim() !== '') && (
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedStatus('All');
+                setSelectedSalesRep('All');
+                setSelectedCustomerFilter('All');
+                setSelectedJob('All');
+                setSelectedDeliveryPlan('All');
+                setSearchTerm('');
+              }}
+              className="text-xs text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-2.5 py-1 rounded-lg font-bold flex items-center gap-1 transition-all cursor-pointer"
+            >
+              <X className="w-3 h-3" /> ล้างตัวกรอง (Reset Filters)
+            </button>
+          )}
+        </div>
+
         <div className="relative w-full">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-4.5 h-4.5" />
           <input
@@ -287,7 +398,7 @@ export default function SalesOrderView({
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
-          {/* Status Filter */}
+          {/* 1. Status Filter Dropdown */}
           <div className="space-y-1 bg-white p-2 rounded-lg border border-slate-200/60 shadow-xxs">
             <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">สถานะใบสั่งขาย / Status:</span>
             <select
@@ -296,9 +407,11 @@ export default function SalesOrderView({
               className="w-full bg-transparent border-0 text-xs focus:outline-none cursor-pointer font-extrabold text-slate-700 mt-0.5"
             >
               <option value="All">ทั้งหมด (ทุกสถานะ)</option>
-              <option value="Pending">Pending</option>
+              <option value="Pending">Pending (รอดำเนินการ)</option>
+              <option value="In Progress">In Progress (กำลังดำเนินการ)</option>
+              <option value="Delivered">Delivered (ส่งมอบเรียบร้อย)</option>
+              <option value="Approved">Approved (อนุมัติ / วางบิล)</option>
               <option value="Planning">Planning</option>
-              <option value="In Progress">In Progress</option>
               <option value="Partially Invoiced">Partially Invoiced</option>
               <option value="Fully Invoiced">Fully Invoiced</option>
               <option value="Completed">Completed</option>
@@ -306,9 +419,24 @@ export default function SalesOrderView({
             </select>
           </div>
 
-          {/* Customer Filter */}
+          {/* 2. Sales Reps Filter */}
           <div className="space-y-1 bg-white p-2 rounded-lg border border-slate-200/60 shadow-xxs">
-            <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">บริษัทคู่ค้า / Customer:</span>
+            <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">พนักงานขาย / Sales Rep:</span>
+            <select
+              value={selectedSalesRep}
+              onChange={(e) => setSelectedSalesRep(e.target.value)}
+              className="w-full bg-transparent border-0 text-xs focus:outline-none cursor-pointer font-extrabold text-slate-700 mt-0.5"
+            >
+              <option value="All">ทั้งหมด (ทุกพนักงานขาย)</option>
+              {existingSalesReps.map(rep => (
+                <option key={rep} value={rep}>{rep}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* 3. Customer & Job No Filter */}
+          <div className="space-y-1 bg-white p-2 rounded-lg border border-slate-200/60 shadow-xxs">
+            <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">ลูกค้า / Customer:</span>
             <select
               value={selectedCustomerFilter}
               onChange={(e) => setSelectedCustomerFilter(e.target.value)}
@@ -321,34 +449,25 @@ export default function SalesOrderView({
             </select>
           </div>
 
-          {/* Job No Filter */}
-          <div className="space-y-1 bg-white p-2 rounded-lg border border-slate-200/60 shadow-xxs">
-            <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">เลขที่งาน / Job No:</span>
-            <select
-              value={selectedJob}
-              onChange={(e) => setSelectedJob(e.target.value)}
-              className="w-full bg-transparent border-0 text-xs focus:outline-none cursor-pointer font-extrabold text-slate-700 mt-0.5"
-            >
-              <option value="All">ทั้งหมด (ทุกเลขที่งาน Job)</option>
-              {existingJobs.map(job => (
-                <option key={job} value={job}>{job}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Delivery Plan Filter */}
+          {/* 4. Delivery Plan Filter (Final Filter) */}
           <div className={`space-y-1 p-2 rounded-lg border shadow-xxs transition-colors ${
             selectedDeliveryPlan !== 'All' ? 'bg-teal-50/70 border-teal-300' : 'bg-white border-slate-200/60'
           }`}>
-            <span className="text-[10px] font-extrabold text-teal-700 uppercase tracking-wider block">แผนส่งมอบ / Delivery Plan:</span>
+            <span className="text-[10px] font-extrabold text-teal-700 uppercase tracking-wider block">📦 Delivery Plan (ลำดับสุดท้าย):</span>
             <select
               value={selectedDeliveryPlan}
               onChange={(e) => setSelectedDeliveryPlan(e.target.value)}
               className="w-full bg-transparent border-0 text-xs focus:outline-none cursor-pointer font-extrabold text-teal-900 mt-0.5"
+              title="Delivery Plan: Cascading filter based on Status & Sales Reps"
             >
-              <option value="All">ทั้งหมด (ทุกแผนงาน)</option>
-              {existingDeliveryPlans.map(plan => (
-                <option key={plan} value={plan}>{plan}</option>
+              <option value="All">ทั้งหมด ({existingDeliveryPlans.total})</option>
+              {existingDeliveryPlans.emptyCount > 0 && (
+                <option value="__EMPTY__">⚪ (Blanks / ไม่ระบุ) ({existingDeliveryPlans.emptyCount})</option>
+              )}
+              {existingDeliveryPlans.list.map(({ plan, count }) => (
+                <option key={plan} value={plan}>
+                  {plan} ({count})
+                </option>
               ))}
             </select>
           </div>
